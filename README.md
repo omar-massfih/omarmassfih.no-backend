@@ -29,10 +29,10 @@ TURSO_AUTH_TOKEN=your-token
 
 Use `GET /db-health` to verify the database connection.
 
-Seed notes from the website repo:
+Seed notes from the backend repo:
 
 ```sh
-uv run python scripts/seed_notes.py --notes-root ../omarmassfih.no/src/notes
+uv run python scripts/seed_notes.py
 ```
 
 ## Endpoints

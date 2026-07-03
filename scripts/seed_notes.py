@@ -26,8 +26,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Seed notes into Turso.")
     parser.add_argument(
         "--notes-root",
-        default="../omarmassfih.no/src/notes",
-        help="Path to the website src/notes directory.",
+        default="notes",
+        help="Path to the backend notes directory.",
     )
     args = parser.parse_args()
 

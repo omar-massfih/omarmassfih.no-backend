@@ -1,0 +1,178 @@
+---
+title: Protect Ingress with oauth2-proxy (K3s + ingress-nginx)
+listTitle: Protect an Ingress with oauth2-proxy
+description: Protect an ingress-nginx Ingress on K3s with oauth2-proxy and any OIDC provider, using auth_request and a Lua snippet for header handling.
+lang: en
+category: Kubernetes/k3s
+date: 2025-09-30
+dateText: Sep 30
+---
+      <h2>Placeholders</h2>
+      <ul>
+        <li><code>&lt;DOMAIN&gt;</code>: FQDN for the app and <code>/oauth2/*</code></li>
+        <li><code>&lt;TLS_SECRET_NAME&gt;</code>: TLS secret for <code>&lt;DOMAIN&gt;</code></li>
+        <li><code>&lt;APP_NAMESPACE&gt;</code>, <code>&lt;AUTH_NAMESPACE&gt;</code>: Namespace names</li>
+        <li><code>&lt;APP_SERVICE_NAME&gt;</code>, <code>&lt;APP_SERVICE_PORT&gt;</code>: Backend service</li>
+        <li><code>&lt;TENANT_OR_ISSUER_URL&gt;</code>: OIDC issuer (e.g., Azure AD, Keycloak)</li>
+        <li><code>&lt;OAUTH_CLIENT_ID&gt;</code>, <code>&lt;OAUTH_CLIENT_SECRET&gt;</code>, <code>&lt;BASE64_32_BYTE_SECRET&gt;</code>: IdP values</li>
+      </ul>
+
+      <h2>Install K3s (without Traefik)</h2>
+      <pre><code class="language-bash">curl -sfL https://get.k3s.io | sh -s - server --disable traefik</code></pre>
+
+      <h2>Install ingress-nginx with snippet annotations enabled</h2>
+      <pre><code class="language-bash">helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx --create-namespace \
+  --set controller.allowSnippetAnnotations=true \
+  --set controller.config.annotations-risk-level=Critical</code></pre>
+
+      <p>
+        <strong>Why:</strong> <code>allowSnippetAnnotations=true</code> +
+        <code>annotations-risk-level=Critical</code> are required to use
+        <code>nginx.ingress.kubernetes.io/configuration-snippet</code> and the
+        Lua block below.
+      </p>
+
+      <h2>Deploy oauth2-proxy (generic OIDC)</h2>
+      <pre><code class="language-bash">kubectl create namespace &lt;AUTH_NAMESPACE&gt;
+
+kubectl -n &lt;AUTH_NAMESPACE&gt; create secret generic oauth2-proxy-secret \
+  --from-literal=client-id='&lt;OAUTH_CLIENT_ID&gt;' \
+  --from-literal=client-secret='&lt;OAUTH_CLIENT_SECRET&gt;' \
+  --from-literal=cookie-secret='&lt;BASE64_32_BYTE_SECRET&gt;'</code></pre>
+
+      <pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: &lt;AUTH_NAMESPACE&gt;
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: oauth2-proxy }
+  template:
+    metadata:
+      labels: { app: oauth2-proxy }
+    spec:
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+          args:
+            - --provider=oidc
+            - --oidc-issuer-url=&lt;TENANT_OR_ISSUER_URL&gt;
+            - --redirect-url=https://&lt;DOMAIN&gt;/oauth2/callback
+            - --email-domain=*
+            - --upstream=file:/dev/null
+            - --cookie-secure=true
+            - --cookie-domain=&lt;DOMAIN&gt;
+            - --cookie-samesite=lax
+            - --set-xauthrequest=true
+            - --pass-authorization-header=true
+            - --pass-access-token=true
+            - --http-address=0.0.0.0:4180
+          env:
+            - name: OAUTH2_PROXY_CLIENT_ID
+              valueFrom: { secretKeyRef: { name: oauth2-proxy-secret, key: client-id } }
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: oauth2-proxy-secret, key: client-secret } }
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom: { secretKeyRef: { name: oauth2-proxy-secret, key: cookie-secret } }
+          ports:
+            - containerPort: 4180
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy
+  namespace: &lt;AUTH_NAMESPACE&gt;
+spec:
+  selector: { app: oauth2-proxy }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4180</code></pre>
+
+      <h2>Expose <code>/oauth2/*</code> on the same host</h2>
+      <pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oauth2-proxy
+  namespace: &lt;AUTH_NAMESPACE&gt;
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: ["&lt;DOMAIN&gt;"]
+      secretName: &lt;TLS_SECRET_NAME&gt;
+  rules:
+    - host: &lt;DOMAIN&gt;
+      http:
+        paths:
+          - path: /oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: oauth2-proxy
+                port:
+                  number: 80</code></pre>
+
+      <h2>Protect the app Ingress with oauth2-proxy</h2>
+      <p>
+        Uses auth-request annotations and a Lua snippet to copy an upstream
+        cookie to the client.
+      </p>
+      <pre><code class="language-yaml">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-frontend
+  namespace: &lt;APP_NAMESPACE&gt;
+  annotations:
+    nginx.ingress.kubernetes.io/auth-response-headers: Authorization
+    nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=$escaped_request_uri
+    nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      auth_request_set $name_upstream_1 $upstream_cookie_name_1;
+
+      access_by_lua_block {
+        if ngx.var.name_upstream_1 ~= "" then
+          ngx.header["Set-Cookie"] = "name_1=" .. ngx.var.name_upstream_1 .. ngx.var.auth_cookie:match("(; .*)")
+        end
+      }
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: ["&lt;DOMAIN&gt;"]
+      secretName: &lt;TLS_SECRET_NAME&gt;
+  rules:
+    - host: &lt;DOMAIN&gt;
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: &lt;APP_SERVICE_NAME&gt;
+                port:
+                  number: &lt;APP_SERVICE_PORT&gt;</code></pre>
+
+      <h2>Verify</h2>
+      <pre><code class="language-bash"># Ingress and oauth2-proxy
+kubectl -n &lt;APP_NAMESPACE&gt; get ingress app-frontend -o wide
+kubectl -n &lt;AUTH_NAMESPACE&gt; get deploy,svc,ingress
+
+# Test locally (replace with your domain)
+curl -I https://&lt;DOMAIN&gt;/ | sed -n '1,20p'
+curl -I https://&lt;DOMAIN&gt;/oauth2/auth | sed -n '1,20p'</code></pre>
+
+      <h2>Common pitfalls</h2>
+      <ul>
+        <li><strong>TLS:</strong> <code>&lt;TLS_SECRET_NAME&gt;</code> must be valid for <code>&lt;DOMAIN&gt;</code>.</li>
+        <li><strong>Same host:</strong> <code>auth-url</code> and <code>auth-signin</code> point to <code>https://$host/...</code> – expose <code>/oauth2/*</code> on the same <code>&lt;DOMAIN&gt;</code>.</li>
+        <li><strong>Secure cookies:</strong> Keep <code>--cookie-secure=true</code> and always use HTTPS.</li>
+        <li><strong>Time sync:</strong> OIDC tokens are time-sensitive; ensure node clocks are correct.</li>
+        <li><strong>Do not protect</strong> <code>/oauth2/*</code> itself; only app paths (e.g., <code>/</code>).</li>
+      </ul>

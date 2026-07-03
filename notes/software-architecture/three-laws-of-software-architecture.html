@@ -1,0 +1,125 @@
+---
+title: The Three Laws of Software Architecture
+heading: The Three Laws of Software Architecture
+listTitle: The Three Laws of Software Architecture
+description: Three simple rules from Fundamentals of Software Architecture. Every choice has a cost, the reason behind a decision matters most, and most architecture choices sit on a scale.
+lang: en
+category: Software Architecture
+date: 2026-07-03
+dateText: Jul 3
+---
+  <p>
+    Software architecture is less about picking the perfect pattern and more
+    about making good choices under limits. A good architect asks: what do we
+    gain, what do we lose, and why does this fit our situation?
+  </p>
+
+  <h2>First Law: Every choice has a trade-off</h2>
+  <p>
+    No architecture decision gives a free win. Every choice gives you
+    something and costs you something.
+  </p>
+  <p>
+    Reusing code is a good example. Shared code sounds efficient because teams
+    avoid writing the same thing twice. But shared code also links teams
+    together. When one team changes the shared code, other teams might need to
+    change, test, and release their systems too.
+  </p>
+  <p>
+    Reuse works best for stable, low-change code, such as logging, security
+    helpers, frameworks, libraries, and infrastructure. Reuse works poorly for
+    business rules which change often, such as pricing, discounts, approval
+    flows, or customer-specific behavior.
+  </p>
+  <p>
+    The lesson: do not ask, “Is reuse good?” Ask, “What kind of code are we
+    sharing, how often does the code change, and who pays the cost when the
+    code changes?”
+  </p>
+  <p>
+    You also need to repeat the trade-off analysis each time. Two problems
+    might look similar, but a small difference in team size, budget, deadline,
+    skill level, or technology might lead to a different answer. A decision
+    from one context should never be copied blindly into another.
+  </p>
+
+  <h2>Second Law: Why matters more than how</h2>
+  <p>
+    Knowing the final design is useful. Knowing the reason behind the design
+    is more useful.
+  </p>
+  <p>
+    Future teams need to understand why a decision was made. They need to know
+    the problem, the options considered, the trade-offs, and the consequences.
+    Without the reason, people might keep an old decision long after the
+    original problem has changed.
+  </p>
+  <p>
+    This is why architecture decision records, often called ADRs, are useful.
+    An ADR is a short note which explains a design decision. It usually
+    records the context, the options, the chosen solution, and the expected
+    results.
+  </p>
+  <p>
+    Diagrams help too, but a diagram without reasoning is incomplete. A good
+    diagram shows the structure. A good ADR explains why the structure exists.
+  </p>
+  <p>
+    The lesson: do not only document what the system looks like. Document why
+    the system was built that way.
+  </p>
+
+  <h2>Third Law: Most decisions are not yes-or-no choices</h2>
+  <p>
+    Architecture decisions often sit on a scale. The best answer depends on
+    the situation, not on a fixed rule.
+  </p>
+  <p>
+    For example, a shared library and a shared service both solve the problem
+    of shared behavior. Neither one is always better.
+  </p>
+  <ul>
+    <li>
+      Use a <strong>shared library</strong> when the teams use the same
+      language or platform, the shared code changes slowly, and performance
+      matters. A library avoids network calls and keeps the caller more
+      resilient if another service goes down.
+    </li>
+    <li>
+      Use a <strong>shared service</strong> when teams use different
+      languages or platforms, or when the shared behavior changes often. A
+      service lets one team update behavior in one place without forcing every
+      caller to rebuild and release.
+    </li>
+  </ul>
+  <p>
+    Queues and topics are another example.
+  </p>
+  <ul>
+    <li>
+      Use a <strong>queue</strong> when you want strong control over who
+      processes each message, easier monitoring of each consumer, and clear
+      handling of work items.
+    </li>
+    <li>
+      Use a <strong>topic</strong> when many systems need to react to the same
+      event. New consumers subscribe without requiring the producer to change.
+    </li>
+  </ul>
+  <p>
+    The lesson: avoid turning architecture into simple rules like “always use
+    services” or “always use events.” Better decisions come from matching the
+    option to the problem.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    A strong architect does not sell one favorite technology as the answer to
+    every problem. A strong architect weighs options fairly, explains the
+    trade-offs, and changes direction when the context changes.
+  </p>
+  <p>
+    Good architecture is not about being right once. It is about making the
+    best decision for the current situation, while leaving enough clarity for
+    the next team to understand the choice.
+  </p>

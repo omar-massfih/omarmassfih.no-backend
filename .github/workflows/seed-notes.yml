@@ -1,0 +1,35 @@
+name: Seed notes
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "notes/**"
+      - "app/notes.py"
+      - "app/database.py"
+      - "scripts/seed_notes.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/seed-notes.yml"
+  workflow_dispatch:
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Seed notes
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: uv run python scripts/seed_notes.py
