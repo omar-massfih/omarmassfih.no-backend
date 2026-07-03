@@ -18,8 +18,20 @@ uv run pytest
 uv run ruff check .
 ```
 
+## Turso
+
+Set these environment variables locally and in Vercel:
+
+```sh
+TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-token
+```
+
+Use `GET /db-health` to verify the database connection.
+
 ## Endpoints
 
 - `GET /` returns service metadata.
 - `GET /health` returns service health.
+- `GET /db-health` checks the Turso connection.
 - `GET /docs` opens the FastAPI docs.
