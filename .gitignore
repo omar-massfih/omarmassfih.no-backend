@@ -8,3 +8,5 @@ coverage/
 dist/
 *.egg-info/
 *.log
+.vercel/
+.env.local
