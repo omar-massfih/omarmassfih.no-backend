@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from fastapi.testclient import TestClient
 
 from app import main
+from app.database import DatabaseConfigError
 from app.main import app
 
 client = TestClient(app)
@@ -28,13 +29,22 @@ def test_root_returns_service_links() -> None:
         "links": {
             "health": "/health",
             "database": "/db-health",
+            "notes": "/notes",
             "docs": "/docs",
         },
     }
 
 
 def test_db_health_returns_503_without_turso_config() -> None:
+    @asynccontextmanager
+    async def fake_turso_client():
+        raise DatabaseConfigError("Turso is not configured")
+        yield
+
+    original_turso_client = main.turso_client
+    main.turso_client = fake_turso_client
     response = client.get("/db-health")
+    main.turso_client = original_turso_client
 
     assert response.status_code == 503
     assert response.json() == {"detail": "Turso is not configured"}

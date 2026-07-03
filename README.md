@@ -29,9 +29,17 @@ TURSO_AUTH_TOKEN=your-token
 
 Use `GET /db-health` to verify the database connection.
 
+Seed notes from the website repo:
+
+```sh
+uv run python scripts/seed_notes.py --notes-root ../omarmassfih.no/src/notes
+```
+
 ## Endpoints
 
 - `GET /` returns service metadata.
 - `GET /health` returns service health.
 - `GET /db-health` checks the Turso connection.
+- `GET /notes` returns published note metadata.
+- `GET /notes/{slug}` returns a published note.
 - `GET /docs` opens the FastAPI docs.

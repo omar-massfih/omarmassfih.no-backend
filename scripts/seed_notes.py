@@ -1,0 +1,39 @@
+from __future__ import annotations
+
+import argparse
+import asyncio
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.database import turso_client
+from app.notes import init_notes_schema, parse_notes_tree, upsert_note
+
+
+async def seed_notes(notes_root: Path) -> int:
+    notes = parse_notes_tree(notes_root)
+
+    async with turso_client() as client:
+        await init_notes_schema(client)
+        for note in notes:
+            await upsert_note(client, note)
+
+    return len(notes)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Seed notes into Turso.")
+    parser.add_argument(
+        "--notes-root",
+        default="../omarmassfih.no/src/notes",
+        help="Path to the website src/notes directory.",
+    )
+    args = parser.parse_args()
+
+    count = asyncio.run(seed_notes(Path(args.notes_root).resolve()))
+    print(f"Seeded {count} notes.")
+
+
+if __name__ == "__main__":
+    main()
