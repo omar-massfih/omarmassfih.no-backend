@@ -57,6 +57,8 @@ async def read_notes() -> list[dict[str, Any]]:
             notes = await list_published_notes(client)
     except DatabaseConfigError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="Turso notes query failed") from error
 
     return [note.model_dump() for note in notes]
 
@@ -70,6 +72,8 @@ async def read_note(slug: str) -> dict[str, Any]:
             note = await get_published_note(client, slug)
     except DatabaseConfigError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except Exception as error:
+        raise HTTPException(status_code=503, detail="Turso note query failed") from error
 
     if note is None:
         raise HTTPException(status_code=404, detail="Note not found")
