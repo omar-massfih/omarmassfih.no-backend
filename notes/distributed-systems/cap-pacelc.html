@@ -1,0 +1,89 @@
+---
+title: CAP and PACELC
+heading: CAP and PACELC
+listTitle: CAP and PACELC
+description: A short note on how CAP explains behavior during network partitions, and how PACELC adds the everyday trade-off between latency and consistency.
+lang: en
+category: Distributed Systems
+date: 2026-07-05
+dateText: Jul 5
+tags: distributed-systems, cap, pacelc, consistency, availability
+---
+  <p>
+    CAP is about what a replicated system does when parts of it cannot talk to
+    each other. When this happens, the system has to choose between keeping the
+    service available and keeping one consistent view of the data.
+  </p>
+
+  <p>
+    Consistency means clients see data that fits together, usually the latest
+    write or a result that looks as if all operations happened in one clear
+    order. Availability means healthy nodes keep responding to requests.
+    Partition tolerance means the system still works when messages between
+    nodes are delayed or lost.
+  </p>
+
+  <p>
+    In real distributed systems, network partitions are a fact of life. The
+    useful question is therefore not whether the system tolerates partitions,
+    but what it gives up when a partition happens: consistency or availability.
+  </p>
+
+  <h2>CP and AP during a partition</h2>
+  <p>
+    A CP system chooses consistency when communication is uncertain. It might
+    reject writes, block reads, or wait for enough replicas to agree before it
+    accepts work. This makes parts of the system unavailable for a while, but it
+    avoids conflicting updates that are hard to fix later.
+  </p>
+
+  <p>
+    An AP system chooses availability. Nodes keep accepting requests even when
+    they cannot coordinate with every other node. This keeps the service
+    responsive, but clients might see old or conflicting values until
+    replication catches up and conflicts are resolved.
+  </p>
+
+  <p>
+    A bank balance is usually closer to CP. Rejecting a transfer during a
+    partition is painful, but accepting two conflicting transfers is worse. A
+    social feed is often closer to AP. Showing an older post list for a few
+    seconds is usually better than making the whole page unavailable.
+  </p>
+
+  <h2>PACELC explains the normal case</h2>
+  <p>
+    CAP is useful, but it focuses on the failure case: what should happen when
+    the network is split? PACELC adds the question that matters during normal
+    operation: when the network is healthy, should the system prefer lower
+    latency or stronger consistency?
+  </p>
+
+  <p>
+    This is often the trade-off users feel most. A system that waits for
+    multiple replicas before answering gives fresher, more reliable data, but
+    each request takes longer. A system that answers from the nearest replica
+    feels faster, but the response might be slightly out of date.
+  </p>
+
+  <p>
+    For example, a product page might accept slightly stale inventory data to
+    load faster. A payment system should usually wait longer to avoid showing or
+    accepting the wrong balance. PACELC makes this explicit: even when nothing
+    is broken, distributed systems still trade consistency against speed.
+  </p>
+
+  <h2>The useful question</h2>
+  <p>
+    CAP and PACELC are not labels to memorize. They are tools for asking better
+    design questions. What should happen when coordination is impossible? When
+    coordination is possible, how much delay is worth paying for a fresher
+    answer?
+  </p>
+
+  <p>
+    The answer depends on the data. A shopping cart, a bank balance, a chat
+    timeline, and a feature flag have different tolerance for stale reads,
+    rejected writes, duplicate work, and slow responses. CAP and PACELC are
+    useful because they make those costs visible.
+  </p>

@@ -29,6 +29,7 @@ class FakeNotesClient:
                 "date_text": "Jul 3",
                 "content_html": "<p>Hello</p>",
                 "published": 1,
+                "tags": '["software-architecture", "trade-offs"]',
             },
             {
                 "slug": "drafts/private",
@@ -43,6 +44,7 @@ class FakeNotesClient:
                 "date_text": "Jul 4",
                 "content_html": "<p>Draft</p>",
                 "published": 0,
+                "tags": "[]",
             },
         ]
 
@@ -52,6 +54,9 @@ class FakeNotesClient:
 
         if normalized.startswith("create table") or normalized.startswith("create index"):
             return SimpleNamespace(rows=[])
+
+        if normalized.startswith("alter table"):
+            raise RuntimeError("duplicate column name: tags")
 
         if "where published = 1 and slug = ?" in normalized:
             rows = [
@@ -75,6 +80,7 @@ class FakeNotesClient:
                     "date",
                     "date_text",
                     "content_html",
+                    "tags",
                 ]
             else:
                 columns = [
@@ -87,6 +93,7 @@ class FakeNotesClient:
                     "category",
                     "date",
                     "date_text",
+                    "tags",
                 ]
 
             rows = [
@@ -113,6 +120,7 @@ lang: en
 category: Software Architecture
 date: 2026-07-03
 dateText: Jul 3
+tags: Software Architecture, Trade-Offs , software-architecture
 ---
 <p>Hello</p>
 """,
@@ -127,6 +135,23 @@ dateText: Jul 3
     assert note.heading == "The Three Laws"
     assert note.list_title == "The Three Laws of Software Architecture"
     assert note.content_html == "<p>Hello</p>"
+    assert note.tags == ("software-architecture", "trade-offs")
+
+
+def test_parse_note_file_without_tags_line(tmp_path: Path) -> None:
+    notes_root = tmp_path / "notes"
+    note_path = notes_root / "untagged.html"
+    note_path.parent.mkdir(parents=True)
+    note_path.write_text(
+        """---
+title: Untagged
+---
+<p>Hello</p>
+""",
+        encoding="utf-8",
+    )
+
+    assert parse_note_file(note_path, notes_root).tags == ()
 
 
 def test_init_notes_schema_creates_table_and_index() -> None:
@@ -134,9 +159,10 @@ def test_init_notes_schema_creates_table_and_index() -> None:
 
     asyncio.run(init_notes_schema(fake_client))
 
-    assert len(fake_client.executed) == 2
+    assert len(fake_client.executed) == 3
     assert "create table if not exists notes" in fake_client.executed[0][0]
-    assert "create index if not exists" in fake_client.executed[1][0]
+    assert "alter table notes add column tags" in fake_client.executed[1][0]
+    assert "create index if not exists" in fake_client.executed[2][0]
 
 
 def test_list_published_notes_filters_drafts() -> None:
@@ -144,6 +170,7 @@ def test_list_published_notes_filters_drafts() -> None:
 
     assert len(notes) == 1
     assert notes[0].slug == "software-architecture/three-laws"
+    assert notes[0].tags == ["software-architecture", "trade-offs"]
     assert not hasattr(notes[0], "content_html")
 
 
@@ -185,6 +212,7 @@ def test_notes_endpoint_returns_published_notes(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json()[0]["slug"] == "software-architecture/three-laws"
+    assert response.json()[0]["tags"] == ["software-architecture", "trade-offs"]
 
 
 def test_notes_endpoint_includes_content_when_requested(monkeypatch) -> None:
