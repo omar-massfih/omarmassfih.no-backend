@@ -33,3 +33,17 @@ jobs:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
         run: uv run python scripts/seed_notes.py
+
+      - name: Trigger frontend deploy
+        if: success() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.FRONTEND_REDEPLOY_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "FRONTEND_REDEPLOY_TOKEN is not set; skipping frontend deploy"
+            exit 0
+          fi
+
+          gh api repos/omar-massfih/omarmassfih.no/dispatches \
+            -f event_type=notes_updated \
+            -F client_payload[backend_sha]=${{ github.sha }}
