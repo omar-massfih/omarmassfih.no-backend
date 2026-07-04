@@ -4,8 +4,13 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
+from app.chat import ChatRequest, stream_answer
+from app.config import settings
 from app.database import DatabaseConfigError, turso_client
+from app.gateway import GatewayConfigError, resolve_token
 from app.notes import get_published_note, list_published_notes
 
 SERVICE_NAME = "omarmassfih.no-backend"
@@ -13,6 +18,13 @@ STARTED_AT = datetime.now(UTC)
 CACHE_CONTROL = "public, max-age=0, s-maxage=300, stale-while-revalidate=86400"
 
 app = FastAPI(title=SERVICE_NAME, version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://omarmassfih.no", "http://localhost:8080"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 
 
 def cached_json(payload: Any, request: Request) -> Response:
@@ -62,6 +74,25 @@ async def read_db_health() -> dict[str, Any]:
         "ok": result.rows[0]["ok"] == 1,
         "database": "turso",
     }
+
+
+@app.post("/chat")
+async def post_chat(chat_request: ChatRequest, request: Request) -> StreamingResponse:
+    oidc_token = request.headers.get("x-vercel-oidc-token")
+
+    try:
+        token = resolve_token(oidc_token)
+    except GatewayConfigError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+
+    if not (settings.turso_database_url and settings.turso_auth_token):
+        raise HTTPException(status_code=503, detail="Turso is not configured")
+
+    return StreamingResponse(
+        stream_answer(chat_request, token=token),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.get("/notes")
