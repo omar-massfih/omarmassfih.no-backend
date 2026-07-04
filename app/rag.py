@@ -215,6 +215,17 @@ class RetrievedChunk:
     distance: float
 
 
+def _row_to_chunk(row: dict[str, Any]) -> RetrievedChunk:
+    return RetrievedChunk(
+        slug=row["slug"],
+        heading=row["heading"],
+        text=row["text"],
+        title=row["title"],
+        url=row["url"],
+        distance=row["distance"],
+    )
+
+
 async def search_chunks(
     client: Any, query_embedding: list[float], k: int
 ) -> list[RetrievedChunk]:
@@ -230,14 +241,69 @@ async def search_chunks(
         [json.dumps(query_embedding), k],
     )
 
-    return [
-        RetrievedChunk(
-            slug=row["slug"],
-            heading=row["heading"],
-            text=row["text"],
-            title=row["title"],
-            url=row["url"],
-            distance=row["distance"],
-        )
-        for row in result.rows
-    ]
+    return [_row_to_chunk(row) for row in result.rows]
+
+
+@dataclass(frozen=True)
+class RelatedChunk:
+    chunk: RetrievedChunk
+    shared_tags: tuple[str, ...]
+
+
+async def get_published_tags(client: Any) -> dict[str, tuple[str, ...]]:
+    result = await client.execute("select slug, tags from notes where published = 1")
+    return {row["slug"]: tuple(json.loads(row["tags"] or "[]")) for row in result.rows}
+
+
+def tag_neighbors(
+    hit_slugs: set[str], tags_by_slug: dict[str, tuple[str, ...]]
+) -> dict[str, tuple[str, ...]]:
+    hit_tags = {tag for slug in hit_slugs for tag in tags_by_slug.get(slug, ())}
+
+    neighbors: dict[str, tuple[str, ...]] = {}
+    for slug, tags in tags_by_slug.items():
+        if slug in hit_slugs:
+            continue
+        shared = tuple(tag for tag in tags if tag in hit_tags)
+        if shared:
+            neighbors[slug] = shared
+
+    return neighbors
+
+
+async def search_chunks_in_slugs(
+    client: Any, query_embedding: list[float], slugs: list[str], k: int
+) -> list[RetrievedChunk]:
+    if not slugs or k <= 0:
+        return []
+
+    placeholders = ", ".join("?" for _ in slugs)
+    result = await client.execute(
+        f"""
+        select c.slug, c.heading, c.text, n.title, n.url,
+               vector_distance_cos(c.embedding, vector32(?)) as distance
+        from note_chunks c
+        join notes n on n.slug = c.slug and n.published = 1
+        where c.slug in ({placeholders})
+        order by distance
+        limit ?
+        """,
+        [json.dumps(query_embedding), *slugs, k],
+    )
+
+    return [_row_to_chunk(row) for row in result.rows]
+
+
+async def expand_neighbors(
+    client: Any, query_embedding: list[float], hits: list[RetrievedChunk], k: int
+) -> list[RelatedChunk]:
+    if k <= 0 or not hits:
+        return []
+
+    tags_by_slug = await get_published_tags(client)
+    neighbors = tag_neighbors({hit.slug for hit in hits}, tags_by_slug)
+    if not neighbors:
+        return []
+
+    chunks = await search_chunks_in_slugs(client, query_embedding, sorted(neighbors), k)
+    return [RelatedChunk(chunk=chunk, shared_tags=neighbors[chunk.slug]) for chunk in chunks]

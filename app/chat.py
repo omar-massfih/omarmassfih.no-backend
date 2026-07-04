@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.config import settings
 from app.database import turso_client
 from app.gateway import embed_texts, stream_chat
-from app.rag import RetrievedChunk, search_chunks
+from app.rag import RelatedChunk, RetrievedChunk, expand_neighbors, search_chunks
 
 SITE_URL = "https://omarmassfih.no"
 HISTORY_LIMIT = 8
@@ -57,12 +57,25 @@ def _sources_payload(chunks: list[RetrievedChunk]) -> str:
     return json.dumps({"sources": sources})
 
 
-def _gateway_messages(request: ChatRequest, chunks: list[RetrievedChunk]) -> list[dict[str, Any]]:
+def _gateway_messages(
+    request: ChatRequest, chunks: list[RetrievedChunk], related: list[RelatedChunk]
+) -> list[dict[str, Any]]:
     excerpts = "\n\n".join(
         f"{chunk.title} ({SITE_URL}{chunk.url}) — {chunk.heading}:\n{chunk.text}"
         for chunk in chunks
     )
     system = f"{SYSTEM_PROMPT}\n\nNote excerpts:\n\n{excerpts}" if chunks else SYSTEM_PROMPT
+
+    if related:
+        related_excerpts = "\n\n".join(
+            f"{item.chunk.title} ({SITE_URL}{item.chunk.url}) — {item.chunk.heading} "
+            f"(shares tags: {', '.join(item.shared_tags)}):\n{item.chunk.text}"
+            for item in related
+        )
+        system = (
+            f"{system}\n\nRelated note excerpts (from notes sharing tags with the "
+            f"ones above; use only if relevant):\n\n{related_excerpts}"
+        )
 
     history = [
         {"role": message.role, "content": message.content}
@@ -78,11 +91,17 @@ async def stream_answer(request: ChatRequest, token: str | None = None) -> Async
         query_embedding = (await embed_texts([query], token=token))[0]
         async with turso_client() as client:
             chunks = await search_chunks(client, query_embedding, settings.chat_top_k)
+            try:
+                related = await expand_neighbors(
+                    client, query_embedding, chunks, settings.chat_graph_top_k
+                )
+            except Exception:
+                related = []
 
-        yield _sse(_sources_payload(chunks), event="sources")
+        yield _sse(_sources_payload(chunks + [item.chunk for item in related]), event="sources")
 
         async for delta in stream_chat(
-            _gateway_messages(request, chunks),
+            _gateway_messages(request, chunks, related),
             max_tokens=settings.chat_max_tokens,
             token=token,
         ):

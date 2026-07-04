@@ -6,12 +6,17 @@ from app.config import settings
 from app.notes import ParsedNote
 from app.rag import (
     MAX_CHUNK_CHARS,
+    RetrievedChunk,
     chunk_hash,
     chunk_note,
     delete_stale_slugs,
+    expand_neighbors,
+    get_published_tags,
     init_chunks_schema,
     search_chunks,
+    search_chunks_in_slugs,
     strip_html_sections,
+    tag_neighbors,
     upsert_chunk,
 )
 
@@ -37,6 +42,8 @@ class FakeChunksClient:
         self.executed: list[tuple[str, list[object] | None]] = []
         self.table_sql = table_sql
         self.search_rows: list[dict[str, object]] = []
+        self.tags_rows: list[dict[str, object]] = []
+        self.neighbor_rows: list[dict[str, object]] = []
 
     async def execute(self, query: str, args: list[object] | None = None):
         self.executed.append((query, args))
@@ -45,6 +52,12 @@ class FakeChunksClient:
         if "from sqlite_master" in normalized:
             rows = [{"sql": self.table_sql}] if self.table_sql else []
             return SimpleNamespace(rows=rows)
+
+        if "select slug, tags" in normalized:
+            return SimpleNamespace(rows=self.tags_rows)
+
+        if "where c.slug in" in normalized:
+            return SimpleNamespace(rows=self.neighbor_rows)
 
         if "vector_distance_cos" in normalized:
             return SimpleNamespace(rows=self.search_rows)
@@ -155,6 +168,17 @@ def test_delete_stale_slugs_handles_empty_keep_list() -> None:
     assert fake_client.executed[0][0] == "delete from note_chunks"
 
 
+def make_retrieved_chunk(slug: str = "distributed-systems/failure-detection") -> RetrievedChunk:
+    return RetrievedChunk(
+        slug=slug,
+        heading="Heartbeats",
+        text="chunk text",
+        title="Failure Detection",
+        url=f"/notes/{slug}.html",
+        distance=0.12,
+    )
+
+
 def test_search_chunks_maps_rows() -> None:
     fake_client = FakeChunksClient()
     fake_client.search_rows = [
@@ -177,3 +201,88 @@ def test_search_chunks_maps_rows() -> None:
     query, args = fake_client.executed[0]
     assert "join notes" in query
     assert args is not None and args[-1] == 3
+
+
+def test_tag_neighbors_shares_tags_and_excludes_hits() -> None:
+    tags_by_slug = {"a": ("x", "y"), "b": ("y",), "c": ("z",)}
+
+    assert tag_neighbors({"a"}, tags_by_slug) == {"b": ("y",)}
+
+
+def test_tag_neighbors_empty_without_overlap() -> None:
+    tags_by_slug = {"a": ("x",), "b": ("y",)}
+
+    assert tag_neighbors({"a"}, tags_by_slug) == {}
+
+
+def test_get_published_tags_parses_json_arrays() -> None:
+    fake_client = FakeChunksClient()
+    fake_client.tags_rows = [
+        {"slug": "a", "tags": '["x", "y"]'},
+        {"slug": "b", "tags": None},
+    ]
+
+    tags_by_slug = asyncio.run(get_published_tags(fake_client))
+
+    assert tags_by_slug == {"a": ("x", "y"), "b": ()}
+    assert "published = 1" in fake_client.executed[0][0]
+
+
+def test_search_chunks_in_slugs_binds_slugs_and_limit() -> None:
+    fake_client = FakeChunksClient()
+
+    asyncio.run(search_chunks_in_slugs(fake_client, [0.1, 0.2], ["a", "b"], k=3))
+
+    query, args = fake_client.executed[0]
+    assert "where c.slug in (?, ?)" in query
+    assert args is not None
+    assert json.loads(str(args[0])) == [0.1, 0.2]
+    assert args[1:] == ["a", "b", 3]
+
+
+def test_search_chunks_in_slugs_skips_query_for_empty_slugs() -> None:
+    fake_client = FakeChunksClient()
+
+    results = asyncio.run(search_chunks_in_slugs(fake_client, [0.1, 0.2], [], k=3))
+
+    assert results == []
+    assert fake_client.executed == []
+
+
+def test_expand_neighbors_returns_related_chunks_with_shared_tags() -> None:
+    fake_client = FakeChunksClient()
+    fake_client.tags_rows = [
+        {"slug": "distributed-systems/failure-detection", "tags": '["distributed-systems"]'},
+        {"slug": "distributed-systems/consensus", "tags": '["distributed-systems", "raft"]'},
+    ]
+    fake_client.neighbor_rows = [
+        {
+            "slug": "distributed-systems/consensus",
+            "heading": "Raft",
+            "text": "neighbor chunk",
+            "title": "Consensus",
+            "url": "/notes/distributed-systems/consensus.html",
+            "distance": 0.3,
+        }
+    ]
+    hits = [make_retrieved_chunk()]
+
+    related = asyncio.run(expand_neighbors(fake_client, [0.1, 0.2], hits, k=2))
+
+    assert len(related) == 1
+    assert related[0].chunk.slug == "distributed-systems/consensus"
+    assert related[0].shared_tags == ("distributed-systems",)
+
+    neighbor_query, neighbor_args = fake_client.executed[1]
+    assert "where c.slug in (?)" in neighbor_query
+    assert neighbor_args is not None
+    assert neighbor_args[1:] == ["distributed-systems/consensus", 2]
+
+
+def test_expand_neighbors_zero_k_skips_queries() -> None:
+    fake_client = FakeChunksClient()
+
+    related = asyncio.run(expand_neighbors(fake_client, [0.1, 0.2], [make_retrieved_chunk()], k=0))
+
+    assert related == []
+    assert fake_client.executed == []
