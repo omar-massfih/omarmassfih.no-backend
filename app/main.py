@@ -21,7 +21,11 @@ app = FastAPI(title=SERVICE_NAME, version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://omarmassfih.no", "http://localhost:8080"],
+    allow_origins=[
+        "https://omarmassfih.no",
+        "http://omarmassfih.no",
+        "http://localhost:8080",
+    ],
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )

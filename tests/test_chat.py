@@ -138,15 +138,32 @@ def test_chat_deduplicates_sources_by_slug(monkeypatch) -> None:
     assert response.text.count('"slug": "distributed-systems/failure-detection"') == 1
 
 
-def test_chat_cors_preflight_allows_site_origin() -> None:
+def test_chat_cors_preflight_allows_site_origins() -> None:
+    origins = ["https://omarmassfih.no", "http://omarmassfih.no"]
+
+    for origin in origins:
+        response = client.options(
+            "/chat",
+            headers={
+                "Origin": origin,
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "Content-Type",
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.headers["access-control-allow-origin"] == origin
+
+
+def test_chat_cors_preflight_allows_local_dev_origin() -> None:
     response = client.options(
         "/chat",
         headers={
-            "Origin": "https://omarmassfih.no",
+            "Origin": "http://localhost:8080",
             "Access-Control-Request-Method": "POST",
             "Access-Control-Request-Headers": "Content-Type",
         },
     )
 
     assert response.status_code == 200
-    assert response.headers["access-control-allow-origin"] == "https://omarmassfih.no"
+    assert response.headers["access-control-allow-origin"] == "http://localhost:8080"
