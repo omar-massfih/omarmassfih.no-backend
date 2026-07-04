@@ -62,21 +62,35 @@ class FakeNotesClient:
             return SimpleNamespace(rows=rows[:1])
 
         if "from notes where published = 1" in normalized:
+            if "content_html" in normalized:
+                columns = [
+                    "slug",
+                    "url",
+                    "title",
+                    "heading",
+                    "list_title",
+                    "description",
+                    "lang",
+                    "category",
+                    "date",
+                    "date_text",
+                    "content_html",
+                ]
+            else:
+                columns = [
+                    "slug",
+                    "url",
+                    "title",
+                    "list_title",
+                    "description",
+                    "lang",
+                    "category",
+                    "date",
+                    "date_text",
+                ]
+
             rows = [
-                {
-                    key: note[key]
-                    for key in [
-                        "slug",
-                        "url",
-                        "title",
-                        "list_title",
-                        "description",
-                        "lang",
-                        "category",
-                        "date",
-                        "date_text",
-                    ]
-                }
+                {key: note[key] for key in columns}
                 for note in self.notes
                 if note["published"] == 1
             ]
@@ -130,6 +144,25 @@ def test_list_published_notes_filters_drafts() -> None:
 
     assert len(notes) == 1
     assert notes[0].slug == "software-architecture/three-laws"
+    assert not hasattr(notes[0], "content_html")
+
+
+def test_list_published_notes_includes_content_when_requested() -> None:
+    notes = asyncio.run(list_published_notes(FakeNotesClient(), include_content=True))
+
+    assert len(notes) == 1
+    assert notes[0].content_html == "<p>Hello</p>"
+    assert notes[0].heading == "Three Laws"
+
+
+def test_list_published_notes_does_not_run_schema_ddl() -> None:
+    fake_client = FakeNotesClient()
+
+    asyncio.run(list_published_notes(fake_client))
+
+    assert all(
+        not query.strip().lower().startswith("create") for query, _ in fake_client.executed
+    )
 
 
 def test_get_published_note_returns_note_or_none() -> None:
@@ -152,6 +185,37 @@ def test_notes_endpoint_returns_published_notes(monkeypatch) -> None:
 
     assert response.status_code == 200
     assert response.json()[0]["slug"] == "software-architecture/three-laws"
+
+
+def test_notes_endpoint_includes_content_when_requested(monkeypatch) -> None:
+    @asynccontextmanager
+    async def fake_turso_client():
+        yield FakeNotesClient()
+
+    monkeypatch.setattr(main, "turso_client", fake_turso_client)
+
+    response = client.get("/notes?include=content")
+
+    assert response.status_code == 200
+    assert response.json()[0]["content_html"] == "<p>Hello</p>"
+
+
+def test_notes_endpoint_sends_cache_headers_and_304(monkeypatch) -> None:
+    @asynccontextmanager
+    async def fake_turso_client():
+        yield FakeNotesClient()
+
+    monkeypatch.setattr(main, "turso_client", fake_turso_client)
+
+    response = client.get("/notes")
+
+    assert response.headers["cache-control"] == main.CACHE_CONTROL
+    etag = response.headers["etag"]
+
+    revalidated = client.get("/notes", headers={"If-None-Match": etag})
+
+    assert revalidated.status_code == 304
+    assert revalidated.content == b""
 
 
 def test_note_endpoint_returns_detail_or_404(monkeypatch) -> None:

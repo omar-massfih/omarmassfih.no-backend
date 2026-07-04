@@ -1,15 +1,29 @@
+import hashlib
+import json
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 
 from app.database import DatabaseConfigError, turso_client
 from app.notes import get_published_note, list_published_notes
 
 SERVICE_NAME = "omarmassfih.no-backend"
 STARTED_AT = datetime.now(UTC)
+CACHE_CONTROL = "public, max-age=0, s-maxage=300, stale-while-revalidate=86400"
 
 app = FastAPI(title=SERVICE_NAME, version="0.1.0")
+
+
+def cached_json(payload: Any, request: Request) -> Response:
+    body = json.dumps(payload).encode()
+    etag = f'"{hashlib.md5(body).hexdigest()}"'
+    headers = {"Cache-Control": CACHE_CONTROL, "ETag": etag}
+
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers=headers)
+
+    return Response(body, media_type="application/json", headers=headers)
 
 
 @app.get("/")
@@ -51,20 +65,20 @@ async def read_db_health() -> dict[str, Any]:
 
 
 @app.get("/notes")
-async def read_notes() -> list[dict[str, Any]]:
+async def read_notes(request: Request, include: str | None = None) -> Response:
     try:
         async with turso_client() as client:
-            notes = await list_published_notes(client)
+            notes = await list_published_notes(client, include_content=include == "content")
     except DatabaseConfigError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
         raise HTTPException(status_code=503, detail="Turso notes query failed") from error
 
-    return [note.model_dump() for note in notes]
+    return cached_json([note.model_dump() for note in notes], request)
 
 
 @app.get("/notes/{slug:path}")
-async def read_note(slug: str) -> dict[str, Any]:
+async def read_note(slug: str, request: Request) -> Response:
     slug = slug.removesuffix(".html")
 
     try:
@@ -78,4 +92,4 @@ async def read_note(slug: str) -> dict[str, Any]:
     if note is None:
         raise HTTPException(status_code=404, detail="Note not found")
 
-    return note.model_dump()
+    return cached_json(note.model_dump(), request)

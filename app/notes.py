@@ -161,8 +161,20 @@ async def upsert_note(client: Any, note: ParsedNote) -> None:
     )
 
 
-async def list_published_notes(client: Any) -> list[NoteSummary]:
-    await init_notes_schema(client)
+async def list_published_notes(client: Any, include_content: bool = False) -> list[NoteSummary]:
+    if include_content:
+        result = await client.execute(
+            """
+            select slug, url, title, heading, list_title, description, lang, category,
+                   date, date_text, content_html
+            from notes
+            where published = 1
+            order by category asc, date desc, title asc
+            """
+        )
+
+        return [Note.model_validate(row_to_dict(row)) for row in result.rows]
+
     result = await client.execute(
         """
         select slug, url, title, list_title, description, lang, category, date, date_text
@@ -176,7 +188,6 @@ async def list_published_notes(client: Any) -> list[NoteSummary]:
 
 
 async def get_published_note(client: Any, slug: str) -> Note | None:
-    await init_notes_schema(client)
     result = await client.execute(
         """
         select slug, url, title, heading, list_title, description, lang, category,
