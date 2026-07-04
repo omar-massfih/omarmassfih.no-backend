@@ -1,0 +1,95 @@
+---
+title: Failure Detection in Distributed Systems
+heading: Failure Detection in Distributed Systems
+listTitle: Failure Detection in Distributed Systems
+description: A short note on why distributed systems infer failure rather than observe it directly, and how timeouts, pings, and heartbeats trade speed for false suspicion.
+lang: en
+category: Distributed Systems
+date: 2026-07-04
+dateText: Jul 4
+---
+  <p>
+    In a single process, failure can feel direct. A function throws, a thread
+    stops, or a local dependency returns an error. In a distributed system,
+    failure is stranger: one process rarely observes another process failing.
+    It observes silence.
+  </p>
+
+  <p>
+    Silence is ambiguous. The remote process might have crashed. It might be
+    slow. The network might be dropping packets. A firewall, queue, pause, DNS
+    issue, overloaded node, or delayed scheduler might be hiding a healthy
+    process from you. This is why perfect failure detection is impossible in a
+    real distributed system. A missing response is evidence, not proof.
+  </p>
+
+  <h2>Failure detection is a guess</h2>
+  <p>
+    Failure detectors turn missing communication into an operational decision:
+    after waiting long enough, the system treats a peer as unavailable and
+    starts doing something else.
+  </p>
+
+  <p>
+    That decision is always a trade-off. A short timeout detects real failures
+    quickly, which can reduce user-visible downtime. But it also increases
+    false suspicions: a slow process can be mistaken for a dead one. A long
+    timeout avoids some false alarms, but it delays recovery when the failure
+    is real.
+  </p>
+
+  <p>
+    Waiting forever is usually worse than being imperfect. If a caller never
+    gives up, it cannot retry, fail over, shed load, show an error, or trigger
+    repair. Distributed systems need timeouts because uncertainty must
+    eventually become action.
+  </p>
+
+  <h2>Request-time checks</h2>
+  <p>
+    The simplest failure detector is the normal request path. A service sends
+    work to another service, waits for a response, and treats timeout or
+    connection failure as a sign that the dependency is unavailable.
+  </p>
+
+  <p>
+    This is often enough when calls are infrequent or when the system does not
+    need to react before the next real request arrives. It keeps the design
+    simple because the system learns about failure only when it actually needs
+    the dependency.
+  </p>
+
+  <h2>Pings and heartbeats</h2>
+  <p>
+    Some systems need to notice failure before useful work is sent. They use
+    proactive checks.
+  </p>
+
+  <p>
+    A ping asks another process, "are you reachable right now?" A heartbeat is
+    the inverse rhythm: a process sends regular liveness signals, and peers
+    become suspicious when those signals stop.
+  </p>
+
+  <p>
+    Proactive checks are useful when processes interact frequently, when
+    leadership or membership matters, or when quick failover is worth the extra
+    traffic and complexity. They are less useful when interactions are rare and
+    request-time detection gives the same practical result with fewer moving
+    parts.
+  </p>
+
+  <h2>The practical rule</h2>
+  <p>
+    Do not ask for a perfect answer to "is this process dead?" A distributed
+    system cannot give you that. Ask a better question: "how long should we
+    wait before acting as if this process is unavailable?"
+  </p>
+
+  <p>
+    The answer depends on the cost of each mistake. If false suspicion is
+    expensive, wait longer or require more evidence. If delayed recovery is
+    expensive, use shorter timeouts and accept more false alarms. Failure
+    detection is not about certainty. It is about choosing the least harmful
+    moment to stop waiting.
+  </p>
