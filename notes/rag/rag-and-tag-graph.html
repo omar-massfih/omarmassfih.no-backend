@@ -1,0 +1,127 @@
+---
+title: RAG over my notes, with tags as links
+heading: RAG over my notes, with tags as links
+listTitle: RAG over my notes
+description: How the notes chatbot on this site finds relevant notes and uses tags to bring in related material.
+lang: en
+category: RAG
+date: 2026-07-04
+dateText: Jul 4
+tags: rag, embeddings, knowledge-graph, turso, chunking
+---
+  <p>
+    The chat bubble on this site answers questions about my notes. It uses a
+    small setup: a FastAPI service on Vercel, one Turso database for notes and
+    search vectors, and one gateway for the models. This note explains how it
+    finds relevant notes and builds an answer.
+  </p>
+
+  <h2>One database for notes and search</h2>
+  <p>
+    Notes are plain HTML files with front matter, stored in the backend
+    repository. A workflow adds them to a Turso database when they change, and
+    the site fetches published notes from the backend at build time.
+  </p>
+
+  <p>
+    The same database also stores the note chunks used for search. Each chunk
+    has a vector column, so retrieval is a single SQL query.
+  </p>
+
+  <pre><code class="language-sql">select c.slug, c.heading, c.text, n.title, n.url,
+       vector_distance_cos(c.embedding, vector32(?)) as distance
+from note_chunks c
+join notes n on n.slug = c.slug and n.published = 1
+order by distance
+limit ?</code></pre>
+
+  <p>
+    I chose this to avoid running a separate vector database. For a small notes
+    site, one database is simpler. It also keeps published status close to the
+    search query, so unpublished notes stay out of answers.
+  </p>
+
+  <h2>Chunking follows the headings</h2>
+  <p>
+    The notes already have section headings, so the chunker follows that
+    structure. It splits each note at <code>h2</code> and <code>h3</code>
+    headings, merges very short sections into the previous one, and splits long
+    sections at paragraph boundaries.
+  </p>
+
+  <p>
+    Each chunk starts with the note title and section heading. This keeps the
+    chunk understandable when it is added to the prompt.
+  </p>
+
+  <p>
+    This works well for personal notes because the structure is already part of
+    the writing. The chunks follow meaning instead of a fixed size.
+  </p>
+
+  <h2>Only changed chunks are embedded again</h2>
+  <p>
+    The embedding script hashes each chunk together with the embedding model
+    name. It compares the hash with what is already stored and only updates
+    changed chunks.
+  </p>
+
+  <p>
+    Removed chunks and deleted notes are cleaned up. Changing the embedding
+    model updates all hashes, so every chunk gets embedded again. The script is
+    safe to run on every change.
+  </p>
+
+  <h2>Tags connect related notes</h2>
+  <p>
+    Retrieval starts with the question. The question is embedded, and the six
+    closest chunks are fetched from the database.
+  </p>
+
+  <p>
+    After that, tags are used to find related notes. Each note has hand-picked
+    tags. Notes that share tags with the retrieved notes are treated as related,
+    and the two best chunks from those notes are added to the prompt.
+  </p>
+
+  <p>
+    This is the whole graph. There is no separate graph database or automatic
+    entity extraction. The tags are added while writing, when I already know
+    what the note is about.
+  </p>
+
+  <p>
+    This helps catch related material that plain vector search might miss. For
+    example, two notes can discuss the same idea with different wording.
+  </p>
+
+  <p>
+    The same tag graph is shown at the bottom of each note page. The site build
+    exports the note-and-tag graph as JSON, and a small JavaScript script draws
+    the local neighborhood for the current note.
+  </p>
+
+  <h2>Models are easy to swap</h2>
+  <p>
+    Both embeddings and chat go through the Vercel AI Gateway. The model names
+    are environment variables: one model for embeddings and one model for chat.
+    Changing a model means changing a variable.
+  </p>
+
+  <p>
+    The chat model gets the retrieved excerpts in the system message. It is
+    told to answer only from those excerpts and to say when the answer is not
+    found there.
+  </p>
+
+  <p>
+    Answers stream back to the browser. Source links are sent before the first
+    part of the answer, so attribution appears immediately.
+  </p>
+
+  <p>
+    The main lesson is simple: for a personal notes site, the RAG setup does
+    not need many moving parts. A database with vector search, chunks based on
+    document structure, and tags for related notes are enough to get useful
+    answers.
+  </p>
