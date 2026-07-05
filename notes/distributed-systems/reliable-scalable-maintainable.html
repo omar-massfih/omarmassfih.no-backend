@@ -1,0 +1,124 @@
+---
+title: Reliable, scalable, and maintainable applications
+heading: Reliable, scalable, and maintainable applications
+listTitle: Reliable, scalable, and maintainable
+description: An overview of the three concerns every system that stores, moves, or processes lots of data has to balance: reliability, scalability, and maintainability, and why they are worth naming before going deeper into any one of them.
+lang: en
+category: Distributed Systems
+date: 2026-07-05
+dateText: Jul 5
+tags: distributed-systems, reliability, scalability, maintainability, ddia, system-design
+---
+  <p>
+    Most systems that are hard to build are not hard because of one clever
+    algorithm. They are hard because they have to keep working correctly when
+    something breaks, keep performing as load grows, and keep changing after new
+    people take over the code. These three pressures have names: reliability,
+    scalability, and maintainability.
+  </p>
+
+  <p>
+    None of the three is something you finish once. They are ongoing concerns,
+    and improving one often adds pressure to another. Making a system more
+    reliable might add extra work and slow it down. Spreading work across more
+    machines might make it harder to understand. The point of naming these
+    concerns is not to give a system a score on each one. The point is to be
+    clear about which cost you are choosing to pay.
+  </p>
+
+  <h2>Reliability: working correctly when things go wrong</h2>
+  <p>
+    Reliability means the system keeps doing the right thing at the required
+    performance level, even when things go wrong. A reliable system is not one
+    where nothing ever breaks. It is one where small problems do not turn into
+    visible problems for users.
+  </p>
+
+  <p>
+    A fault is one part of the system behaving differently from what it
+    promises. A failure is the whole system no longer providing the service it
+    promised. Fault tolerance, also called resilience, is the set of mechanisms
+    that stop a fault from becoming a failure. Redundant hardware lets a spare
+    part take over when another part breaks. Process isolation and restart
+    strategies keep software problems contained. The ability to lose one
+    machine without downtime also lets you patch and upgrade the system one
+    machine at a time.
+  </p>
+
+  <p>
+    Software faults are dangerous because they often happen across many machines
+    at the same time. A bad input, a resource leak, another service getting
+    slow, or one problem triggering another might hit every machine at once, so
+    extra machines alone do not save you. These bugs often stay hidden until an
+    unusual condition breaks an assumption in the code. People are part of the
+    system too. Good interfaces make safe actions easy and risky actions hard.
+    Gradual rollouts and fast config rollback shorten recovery. Monitoring
+    gives early warning and helps turn a long outage into a short one.
+  </p>
+
+  <h2>Scalability: coping with growth</h2>
+  <p>
+    Scalability is not a yes-or-no property. The useful question is: if the
+    system grows in a specific way, what are the reasonable ways to handle that
+    growth? To answer that, you first need numbers that describe the load:
+    requests per second, the read/write ratio, active users, cache hit rate, or
+    similar measures. Which numbers matter depends on the system, and choosing
+    the right ones is half the work.
+  </p>
+
+  <p>
+    Once load is clear, you describe performance. In batch systems, that usually
+    means throughput: records processed per second, or the time needed to finish
+    a job. In online systems, it means response time: the time users wait from
+    request to reply. Response time is better viewed as a range of values rather
+    than as a single average, because users notice the slow requests. Percentiles
+    like p95, p99, and p999 describe the slowest 5%, 1%, and 0.1% of requests.
+    These slow requests matter more than their small numbers suggest. When one
+    request depends on many backend services, it is only as fast as the slowest
+    part. A few slow requests might also block the queue behind them.
+  </p>
+
+  <p>
+    Handling more load usually means scaling up or scaling out. Scaling up means
+    using a bigger machine. Scaling out means spreading work across more
+    machines. Scaling out services that do not store state locally is usually
+    easier: you add more replicas behind a load balancer. Scaling systems that
+    store data is harder, because spreading data across machines forces choices
+    about consistency and coordination. There is no universal scaling recipe.
+    The right architecture depends on which part of the load is growing.
+  </p>
+
+  <h2>Maintainability: keeping it workable over time</h2>
+  <p>
+    Most of the cost of software comes after the first version ships: fixing
+    bugs, keeping the system running, and adapting it to new requirements.
+    Maintainability is about keeping that ongoing work productive, and it has
+    three main parts.
+  </p>
+
+  <p>
+    Operability means making the system easy to run: monitoring, deployment,
+    diagnosis, and routine maintenance. Simplicity means reducing accidental
+    complexity, which is complexity created by implementation choices rather
+    than by the problem itself. The goal is for an engineer to hold enough of the
+    system in their head to work on it safely. Abstraction is the main tool
+    here. A clean interface hides detail and lets one good implementation be
+    reused in many places. Evolvability means making the system easy to change
+    as requirements shift, which is simplicity paying off over time.
+  </p>
+
+  <h2>Why name them at all</h2>
+  <p>
+    These three concerns are not a checklist to pass. They are a vocabulary for
+    the trade-offs a system is already making, whether or not anyone names them.
+    Naming them turns vague worries, like "will this hold up?", into clearer
+    questions: which faults must not become failures, which part of the load is
+    growing, and which complexity comes from our own design choices?
+  </p>
+
+  <p>
+    Each concern deserves its own note. Reliability leads to faults, failures,
+    and fault tolerance. Scalability leads to load measures, slow requests, and
+    scaling strategies. Maintainability leads to operability, simplicity, and
+    evolvability. This note is the shared map they all hang from.
+  </p>
