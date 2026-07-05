@@ -1,0 +1,108 @@
+---
+title: Knowledge graphs in RAG: retrieving relationships, not just chunks
+heading: Knowledge graphs in RAG: retrieving relationships, not just chunks
+listTitle: Knowledge graphs in RAG
+description: A closer look at knowledge graphs in RAG: why plain chunk retrieval can miss relationships, how entities and edges add structure, and when graph-based retrieval helps.
+lang: en
+category: RAG
+date: 2026-07-15
+dateText: Jul 15
+tags: rag, knowledge-graphs, graphrag, retrieval, embeddings, system-design
+---
+  <p>
+    Standard RAG retrieves chunks. That works well when the answer sits inside
+    one clear passage. But some questions depend on relationships spread across
+    many passages: which systems depend on this service, which people own which
+    projects, which policy changed which process, or how one event caused
+    another. In those cases, similar text is not enough. The system also needs
+    structure.
+  </p>
+
+  <p>
+    A knowledge graph adds that structure. It represents important things as
+    nodes, such as people, services, teams, documents, products, or concepts. It
+    represents relationships as edges between those nodes, such as owns,
+    depends on, belongs to, replaced by, or mentioned in. Instead of seeing the
+    corpus as a flat pile of chunks, the system sees connected facts.
+  </p>
+
+  <h2>What a graph adds</h2>
+  <p>
+    Vector search finds text with similar meaning. A knowledge graph helps find
+    related information even when the wording is different. If a question asks
+    about a service, the graph can follow edges to its owner, dependencies,
+    incidents, runbooks, and related documents. The retrieved context is no
+    longer only the nearest chunks. It is the neighborhood around the thing the
+    question is about.
+  </p>
+
+  <p>
+    This matters for questions that require more than one hop. A user might ask
+    which customers are affected by a failing dependency. The answer might need
+    one document about the dependency, another about services that use it, and a
+    third about customers using those services. Plain similarity search might
+    retrieve one of those passages. A graph gives the system a way to connect
+    them.
+  </p>
+
+  <h2>Building the graph</h2>
+  <p>
+    A graph-based RAG system usually starts with the same documents as ordinary
+    RAG. The documents are split into chunks, embedded, and stored. Then another
+    step extracts entities and relationships from the text. For example, a chunk
+    might say that Service A writes to Database B and is owned by Team C. The
+    graph stores Service A, Database B, and Team C as nodes, with edges between
+    them.
+  </p>
+
+  <p>
+    The graph should stay connected to the source text. Each node and edge needs
+    to point back to the chunk or document it came from. Without that link, the
+    graph becomes another place where unsupported claims can hide. With the link,
+    retrieval can use the graph to find relevant context, then still give the
+    model the original text to answer from.
+  </p>
+
+  <h2>Retrieving with a graph</h2>
+  <p>
+    Graph retrieval often starts with a normal vector search. The nearest chunks
+    act as seeds. From those seeds, the system finds mentioned entities and
+    follows graph edges to nearby entities, related chunks, or summaries. This
+    lets the system expand from "text that sounds similar" to "things connected
+    to the thing being asked about".
+  </p>
+
+  <p>
+    Retrieval can also start from the graph. If the question names a known
+    entity, the system can look up that node directly, follow selected edges, and
+    collect the source chunks attached to the result. In practice, strong systems
+    often combine both approaches: vector search for semantic matching, and graph
+    traversal for relationships.
+  </p>
+
+  <h2>When it helps</h2>
+  <p>
+    Knowledge graphs help most when relationships matter. They are useful for
+    dependency questions, ownership questions, impact analysis, policy mapping,
+    entity-heavy domains, and questions that require connecting facts from
+    several documents. They are less useful when each question is answered by one
+    self-contained passage. In that case, ordinary chunk retrieval is simpler
+    and often enough.
+  </p>
+
+  <h2>The cost of structure</h2>
+  <p>
+    A knowledge graph is not free. Entities have to be extracted, names have to
+    be merged, relationships have to be checked, and stale edges have to be
+    updated when documents change. A bad graph can hurt retrieval by adding
+    wrong connections or pulling in irrelevant context. Graph-based RAG improves
+    retrieval only when the graph is accurate enough to trust.
+  </p>
+
+  <p>
+    The useful way to think about a knowledge graph is as another retrieval
+    tool. Embeddings answer "what text is similar to this question?" A graph
+    answers "what else is connected to the thing this question is about?" RAG
+    often needs both: similarity to find the starting point, and structure to
+    follow the relationships around it.
+  </p>
