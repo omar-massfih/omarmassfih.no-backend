@@ -8,7 +8,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.database import turso_client
-from app.notes import init_notes_schema, parse_notes_tree, upsert_note
+from app.notes import (
+    delete_stale_notes,
+    init_notes_schema,
+    parse_notes_tree,
+    upsert_note,
+)
 
 
 async def seed_notes(notes_root: Path) -> int:
@@ -18,6 +23,8 @@ async def seed_notes(notes_root: Path) -> int:
         await init_notes_schema(client)
         for note in notes:
             await upsert_note(client, note)
+
+        await delete_stale_notes(client, [note.slug for note in notes])
 
     return len(notes)
 

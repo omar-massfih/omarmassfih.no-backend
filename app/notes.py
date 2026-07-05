@@ -200,6 +200,18 @@ async def upsert_note(client: Any, note: ParsedNote) -> None:
     )
 
 
+async def delete_stale_notes(client: Any, keep_slugs: list[str]) -> None:
+    if not keep_slugs:
+        await client.execute("delete from notes")
+        return
+
+    placeholders = ", ".join("?" for _ in keep_slugs)
+    await client.execute(
+        f"delete from notes where slug not in ({placeholders})",
+        keep_slugs,
+    )
+
+
 async def list_published_notes(client: Any, include_content: bool = False) -> list[NoteSummary]:
     if include_content:
         result = await client.execute(

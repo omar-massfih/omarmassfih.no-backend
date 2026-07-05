@@ -7,7 +7,13 @@ from fastapi.testclient import TestClient
 
 from app import main
 from app.main import app
-from app.notes import get_published_note, init_notes_schema, list_published_notes, parse_note_file
+from app.notes import (
+    delete_stale_notes,
+    get_published_note,
+    init_notes_schema,
+    list_published_notes,
+    parse_note_file,
+)
 
 client = TestClient(app)
 
@@ -223,6 +229,35 @@ def test_list_published_notes_does_not_run_schema_ddl() -> None:
     assert all(
         not query.strip().lower().startswith("create") for query, _ in fake_client.executed
     )
+
+
+class RecordingClient:
+    def __init__(self) -> None:
+        self.executed: list[tuple[str, list[str] | None]] = []
+
+    async def execute(self, query: str, args: list[str] | None = None):
+        self.executed.append((query, args))
+        return SimpleNamespace(rows=[])
+
+
+def test_delete_stale_notes_keeps_current_slugs() -> None:
+    client = RecordingClient()
+
+    asyncio.run(delete_stale_notes(client, ["a", "b"]))
+
+    query, args = client.executed[0]
+    assert "delete from notes where slug not in (?, ?)" in " ".join(query.split()).lower()
+    assert args == ["a", "b"]
+
+
+def test_delete_stale_notes_clears_table_when_empty() -> None:
+    client = RecordingClient()
+
+    asyncio.run(delete_stale_notes(client, []))
+
+    query, args = client.executed[0]
+    assert " ".join(query.split()).lower() == "delete from notes"
+    assert args is None
 
 
 def test_get_published_note_returns_note_or_none() -> None:
