@@ -1,0 +1,104 @@
+---
+title: Using agentic AI to triage data platform failures
+heading: Using agentic AI to triage data platform failures
+listTitle: Agentic AI for platform triage
+description: How I use a small LangGraph agent to help monitor and debug a data platform: a deterministic scan for failures, an LLM loop that gathers cross-domain evidence, and a structured summary posted to Slack.
+lang: en
+category: Agentic AI
+date: 2026-06-27
+dateText: Jun 27
+tags: agentic-ai, langgraph, llm, monitoring, observability, data-platform, debugging
+---
+  <p>
+    A data platform fails in more than one place. An orchestration pipeline
+    errors out, a downstream transformation model fails because of it, and an
+    ingestion job quietly stops delivering data. Each of these lives in its own
+    tool with its own dashboard. When something breaks, the slow part is not
+    noticing the red status. It is gathering the context from three or four
+    systems to understand what actually happened and what caused it.
+  </p>
+
+  <p>
+    To help with that first pass, I built a small agent that triages failures
+    across the platform and posts a summary to Slack. It does not fix anything
+    on its own. It does the tedious gathering and correlation that a human would
+    otherwise do by hand, and it hands back something readable. I use LangGraph
+    to structure it, because the work is a graph of steps with a decision point
+    in the middle, not a single prompt.
+  </p>
+
+  <h2>Deterministic first, agentic second</h2>
+  <p>
+    The first step uses no model at all. It reads recent failures from each
+    domain in one pass: the orchestration runs, the transformation runs, and the
+    ingestion jobs. If nothing failed, the run stops and posts a short all-clear.
+    There is no reason to spend model calls deciding whether to look closer when
+    a plain query already answers that.
+  </p>
+
+  <p>
+    The model only comes in once there is something to explain. This split
+    matters. The parts that are simple lookups stay deterministic, cheap, and
+    predictable. The model is reserved for the part that actually needs
+    judgment, which is deciding what to investigate next.
+  </p>
+
+  <h2>The evidence loop</h2>
+  <p>
+    When there are failures, the agent enters a loop. At each turn the model
+    looks at what it knows so far and picks the next piece of evidence to
+    gather. It might pull the detailed logs for a failed run, read the error
+    from a specific transformation job, or look at the orchestration failure that
+    a downstream error probably came from. Each read is a tool the agent can
+    call. After each one, control comes back to the model to decide whether it
+    has enough to explain the failure or whether it needs one more look.
+  </p>
+
+  <p>
+    This is the part that benefits from being agentic rather than scripted. The
+    evidence you need depends on the failure. A dependency error wants the logs
+    of the thing it depends on. A data quality failure wants the run that
+    produced the bad data. Writing fixed rules for every combination is brittle.
+    Letting the model choose the next read, from a fixed set of safe tools, keeps
+    the flow flexible without giving it free rein.
+  </p>
+
+  <h2>Keeping the loop bounded</h2>
+  <p>
+    An agent that decides its own next step can loop longer than you want, so the
+    loop has a hard limit on how many evidence reads it can make. When it reaches
+    that limit, or decides it has enough, it moves on to writing the summary.
+    The tools are all read-only. The agent can look at anything relevant, but it
+    cannot change the platform. That boundary is what makes it safe to run
+    unattended.
+  </p>
+
+  <h2>A summary a human can act on</h2>
+  <p>
+    The last model step turns everything gathered into a structured summary:
+    what failed, when, the likely cause, and a short section per domain with the
+    next actions. That structure is then rendered into a Slack message, with a
+    thread for the per-domain detail and deep links straight to the failed runs.
+    The goal is that whoever is on call reads one message and knows where to go,
+    instead of opening four tabs to reconstruct the story.
+  </p>
+
+  <p>
+    The important design choice is that the agent stops at explaining. It does
+    not decide the fix and it does not touch anything. It compresses scattered
+    signals into one clear picture and links back to the source so a person can
+    verify it. Monitoring tells you something is wrong. This fills the gap
+    between that alert and understanding it, which is usually where the time
+    goes.
+  </p>
+
+  <h2>What I took from building it</h2>
+  <p>
+    The most useful lesson was to use the model as little as possible. Most of a
+    triage job is plain reads that do not need intelligence, and keeping those
+    deterministic makes the whole thing cheaper and easier to trust. The model
+    earns its place in exactly two spots: choosing what to investigate, and
+    writing the explanation. Everything else is ordinary code. An agent is at its
+    best when it is a small, bounded decision-maker wrapped in a lot of boring,
+    reliable plumbing.
+  </p>
