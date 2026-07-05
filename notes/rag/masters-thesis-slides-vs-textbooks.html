@@ -1,0 +1,92 @@
+---
+title: My master's thesis: are slides or textbooks better context for RAG?
+heading: My master's thesis: are slides or textbooks better context for RAG?
+listTitle: My master's thesis on RAG
+description: A summary of my master's thesis, which compared lecture slides and textbooks as retrieval context when an LLM answers student questions, across three university courses.
+lang: en
+category: RAG
+date: 2026-07-05
+dateText: Jul 5
+tags: rag, dense-retrieval, chunking, evaluation, llm, education, masters-thesis
+---
+  <p>
+    For my master's thesis at the University of Oslo I looked at a practical
+    question about retrieval-augmented generation (RAG). Students increasingly
+    ask large language models questions about their courses, and a useful answer
+    needs course context that is both correct and relevant. The full course
+    material is usually too large to put in the model's context window, so a RAG
+    system retrieves smaller pieces, or chunks, and adds only those to the
+    prompt. If the retrieved chunks miss the answer, the model is left to guess.
+  </p>
+
+  <p>
+    Course material tends to come in two very different forms: lecture slides
+    and textbooks. Slides are short and fragmented. Textbooks are long and
+    written in full prose. My thesis asked whether a dense retriever finds the
+    relevant chunks more effectively in one form than the other, and whether any
+    difference actually holds up or just depends on how the comparison is set up.
+  </p>
+
+  <h2>How I set it up</h2>
+  <p>
+    I collected slides and textbooks from three university courses: algorithms,
+    software testing, and medical physiology. For each course I built a
+    ground-truth dataset of 70 questions, where every question could be answered
+    from both the slides and the textbook. Then I manually labeled the chunks for
+    each question by whether they contained the answer, on a scale of 0 for no,
+    1 for somewhat, and 2 for yes.
+  </p>
+
+  <p>
+    Retrieval was scored with mean reciprocal rank at ten (MRR@10), which
+    measures how early the first relevant chunk shows up in the top ten results.
+    I compared uniform chunking, where both sources are split the same way,
+    against source-specific chunking, where each source is split according to its
+    own structure. I also added a rewriting condition, rewriting one source into
+    the shape of the other, and a manual retrieval condition, where I handed the
+    correct chunks straight to the model to see how good the answers could get.
+  </p>
+
+  <h2>What I found</h2>
+  <p>
+    With source-specific chunking, textbooks came out slightly ahead across the
+    courses (mean MRR@10 of 0.984 for textbooks against 0.975 for slides). With
+    uniform chunking the picture was mixed: algorithms favored slides, while
+    software testing and medical physiology favored textbooks (0.952 for
+    textbooks against 0.933 for slides). So the "winner" changed depending on the
+    chunking strategy.
+  </p>
+
+  <p>
+    Rewriting one source into the form of the other did not help. It lowered
+    retrieval for both sources, and the effect varied by course (slides went from
+    0.933 to 0.908, textbooks from 0.952 to 0.946). That suggests the difference
+    between slides and textbooks is not just about surface structure.
+  </p>
+
+  <p>
+    The most interesting result came from the manual retrieval condition. When I
+    gave the model the correct chunks directly, slides produced more correct
+    answers than textbooks in all three courses (mean answer correctness of 0.766
+    for slides against 0.649 for textbooks). In other words, the source that was
+    slightly easier to retrieve from was not the source that produced the best
+    answers once retrieval was taken out of the equation.
+  </p>
+
+  <h2>What it means</h2>
+  <p>
+    The main takeaway is that comparing source types in RAG is sensitive to how
+    you set up the comparison. Slides and textbooks are not inherently better or
+    worse retrieval sources on their own. The result depends on the chunking
+    strategy and the evaluation setup, so a RAG system for course material should
+    be evaluated on the specific material and setup it is meant to support.
+  </p>
+
+  <p>
+    The gap between retrieval effectiveness and answer correctness is the part I
+    keep coming back to. It is easy to optimize a RAG system for retrieval
+    scores and assume better retrieval means better answers. My results show that
+    is not guaranteed. Getting the right chunk in front of the model is only half
+    the problem. What the model does with that chunk is the other half, and the
+    two do not always agree.
+  </p>
