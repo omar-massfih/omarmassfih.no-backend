@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,11 @@ class ParsedNote:
     content_html: str
     published: bool = True
     tags: tuple[str, ...] = ()
+
+
+def today_iso() -> str:
+    """Current UTC date as an ISO string, for filtering out future-dated notes."""
+    return datetime.now(UTC).date().isoformat()
 
 
 def row_to_dict(row: Any) -> dict[str, Any]:
@@ -201,9 +207,10 @@ async def list_published_notes(client: Any, include_content: bool = False) -> li
             select slug, url, title, heading, list_title, description, lang, category,
                    date, date_text, content_html, tags
             from notes
-            where published = 1
+            where published = 1 and date <= ?
             order by category asc, date desc, title asc
-            """
+            """,
+            [today_iso()],
         )
 
         return [Note.model_validate(row_to_dict(row)) for row in result.rows]
@@ -212,9 +219,10 @@ async def list_published_notes(client: Any, include_content: bool = False) -> li
         """
         select slug, url, title, list_title, description, lang, category, date, date_text, tags
         from notes
-        where published = 1
+        where published = 1 and date <= ?
         order by category asc, date desc, title asc
-        """
+        """,
+        [today_iso()],
     )
 
     return [NoteSummary.model_validate(row_to_dict(row)) for row in result.rows]
@@ -226,10 +234,10 @@ async def get_published_note(client: Any, slug: str) -> Note | None:
         select slug, url, title, heading, list_title, description, lang, category,
                date, date_text, content_html, tags
         from notes
-        where published = 1 and slug = ?
+        where published = 1 and slug = ? and date <= ?
         limit 1
         """,
-        [slug],
+        [slug, today_iso()],
     )
 
     if not result.rows:

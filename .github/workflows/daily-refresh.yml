@@ -1,0 +1,29 @@
+name: Daily refresh
+
+# Notes can be dated in the future. They are seeded to the database on push, but
+# the API hides them until their date arrives (see app/notes.py). This workflow
+# rebuilds the static site once a day so a note goes live the day it is dated,
+# without needing another push.
+
+on:
+  schedule:
+    # 00:05 UTC daily, just after the API's UTC date boundary rolls over.
+    - cron: "5 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger frontend deploy
+        env:
+          GH_TOKEN: ${{ secrets.FRONTEND_REDEPLOY_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "FRONTEND_REDEPLOY_TOKEN is not set; skipping frontend deploy"
+            exit 0
+          fi
+
+          gh api repos/omar-massfih/omarmassfih.no/dispatches \
+            -f event_type=notes_updated \
+            -F client_payload[reason]=daily-refresh

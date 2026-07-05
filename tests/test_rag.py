@@ -237,7 +237,7 @@ def test_search_chunks_in_slugs_binds_slugs_and_limit() -> None:
     assert "where c.slug in (?, ?)" in query
     assert args is not None
     assert json.loads(str(args[0])) == [0.1, 0.2]
-    assert args[1:] == ["a", "b", 3]
+    assert args[2:] == ["a", "b", 3]
 
 
 def test_search_chunks_in_slugs_skips_query_for_empty_slugs() -> None:
@@ -276,7 +276,7 @@ def test_expand_neighbors_returns_related_chunks_with_shared_tags() -> None:
     neighbor_query, neighbor_args = fake_client.executed[1]
     assert "where c.slug in (?)" in neighbor_query
     assert neighbor_args is not None
-    assert neighbor_args[1:] == ["distributed-systems/consensus", 2]
+    assert neighbor_args[2:] == ["distributed-systems/consensus", 2]
 
 
 def test_expand_neighbors_zero_k_skips_queries() -> None:

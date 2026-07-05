@@ -8,7 +8,7 @@ from html.parser import HTMLParser
 from typing import Any
 
 from app.config import settings
-from app.notes import ParsedNote
+from app.notes import ParsedNote, today_iso
 
 SECTION_TAGS = {"h2", "h3"}
 BLOCK_TAGS = {"p", "li", "ul", "ol", "pre", "blockquote", "figure", "figcaption", "table", "tr"}
@@ -234,11 +234,11 @@ async def search_chunks(
         select c.slug, c.heading, c.text, n.title, n.url,
                vector_distance_cos(c.embedding, vector32(?)) as distance
         from note_chunks c
-        join notes n on n.slug = c.slug and n.published = 1
+        join notes n on n.slug = c.slug and n.published = 1 and n.date <= ?
         order by distance
         limit ?
         """,
-        [json.dumps(query_embedding), k],
+        [json.dumps(query_embedding), today_iso(), k],
     )
 
     return [_row_to_chunk(row) for row in result.rows]
@@ -251,7 +251,10 @@ class RelatedChunk:
 
 
 async def get_published_tags(client: Any) -> dict[str, tuple[str, ...]]:
-    result = await client.execute("select slug, tags from notes where published = 1")
+    result = await client.execute(
+        "select slug, tags from notes where published = 1 and date <= ?",
+        [today_iso()],
+    )
     return {row["slug"]: tuple(json.loads(row["tags"] or "[]")) for row in result.rows}
 
 
@@ -283,12 +286,12 @@ async def search_chunks_in_slugs(
         select c.slug, c.heading, c.text, n.title, n.url,
                vector_distance_cos(c.embedding, vector32(?)) as distance
         from note_chunks c
-        join notes n on n.slug = c.slug and n.published = 1
+        join notes n on n.slug = c.slug and n.published = 1 and n.date <= ?
         where c.slug in ({placeholders})
         order by distance
         limit ?
         """,
-        [json.dumps(query_embedding), *slugs, k],
+        [json.dumps(query_embedding), today_iso(), *slugs, k],
     )
 
     return [_row_to_chunk(row) for row in result.rows]

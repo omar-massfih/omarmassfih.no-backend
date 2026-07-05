@@ -46,6 +46,21 @@ class FakeNotesClient:
                 "published": 0,
                 "tags": "[]",
             },
+            {
+                "slug": "distributed-systems/scheduled",
+                "url": "/notes/distributed-systems/scheduled.html",
+                "title": "Scheduled",
+                "heading": "Scheduled",
+                "list_title": "Scheduled",
+                "description": None,
+                "lang": "en",
+                "category": "Distributed Systems",
+                "date": "2999-12-31",
+                "date_text": "Dec 31",
+                "content_html": "<p>Future</p>",
+                "published": 1,
+                "tags": "[]",
+            },
         ]
 
     async def execute(self, query: str, args: list[str] | None = None):
@@ -59,10 +74,14 @@ class FakeNotesClient:
             raise RuntimeError("duplicate column name: tags")
 
         if "where published = 1 and slug = ?" in normalized:
+            today = args[1] if args and len(args) > 1 else "9999-12-31"
             rows = [
                 note
                 for note in self.notes
-                if note["published"] == 1 and args and note["slug"] == args[0]
+                if note["published"] == 1
+                and args
+                and note["slug"] == args[0]
+                and note["date"] <= today
             ]
             return SimpleNamespace(rows=rows[:1])
 
@@ -96,10 +115,11 @@ class FakeNotesClient:
                     "tags",
                 ]
 
+            today = args[0] if args else "9999-12-31"
             rows = [
                 {key: note[key] for key in columns}
                 for note in self.notes
-                if note["published"] == 1
+                if note["published"] == 1 and note["date"] <= today
             ]
             return SimpleNamespace(rows=rows)
 
@@ -172,6 +192,19 @@ def test_list_published_notes_filters_drafts() -> None:
     assert notes[0].slug == "software-architecture/three-laws"
     assert notes[0].tags == ["software-architecture", "trade-offs"]
     assert not hasattr(notes[0], "content_html")
+
+
+def test_list_published_notes_excludes_future_dated_notes() -> None:
+    notes = asyncio.run(list_published_notes(FakeNotesClient()))
+
+    slugs = [note.slug for note in notes]
+    assert "distributed-systems/scheduled" not in slugs
+
+
+def test_get_published_note_hides_future_dated_note() -> None:
+    note = asyncio.run(get_published_note(FakeNotesClient(), "distributed-systems/scheduled"))
+
+    assert note is None
 
 
 def test_list_published_notes_includes_content_when_requested() -> None:
