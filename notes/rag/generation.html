@@ -2,7 +2,7 @@
 title: Generation: answering from the retrieved text
 heading: Generation: answering from the retrieved text
 listTitle: Generation
-description: A closer look at the generation step in RAG: assembling retrieved chunks into a prompt, instructing the model to answer only from them, citing sources, and admitting when the answer is not there.
+description: A closer look at the generation step in RAG: assembling retrieved chunks into a prompt, instructing the model to answer only from them, citing sources, and admitting when the answer is missing.
 lang: en
 category: RAG
 date: 2026-07-12
@@ -10,51 +10,53 @@ dateText: Jul 12
 tags: rag, generation, prompting, citations, llm, system-design
 ---
   <p>
-    Retrieval has done its job: a handful of relevant chunks are in hand. The
-    last step is generation, where the model reads those chunks and writes the
-    answer. The shift here is important. The model is not being asked what it
-    knows. It is being asked to answer from the text in front of it, which is
-    the whole point of grounding.
+    Retrieval has done its job: a few relevant chunks are ready. The last step is
+    generation, where the model reads those chunks and writes the answer. The
+    shift matters. The model is not being asked what it knows. It is being asked
+    to answer from the text in front of it. That is the point of grounding.
   </p>
 
   <h2>Assembling the prompt</h2>
   <p>
-    The retrieved chunks are placed into the prompt, usually in a system message,
-    each marked with where it came from. The user's question follows. Order and
-    labelling matter: the model needs to tell the passages apart and know which
-    source each one belongs to, so it can attribute claims correctly. This
-    assembly step is plumbing, but sloppy formatting here shows up as vague or
-    mis-cited answers later.
+    The retrieved chunks are placed into the prompt, each marked with its source.
+    The user's question follows. Order and labels matter. The model needs to
+    tell the passages apart and know which source each one belongs to, so it
+    attributes claims correctly. This step is plumbing, but poor formatting here
+    leads to vague answers and weak citations later.
   </p>
 
   <h2>Answer only from the context</h2>
   <p>
     The core instruction is a constraint: answer using only the supplied
-    excerpts, and do not fall back on general knowledge. Without it, the model
-    blends retrieved facts with half-remembered training data, and you lose the
-    guarantee that made RAG worth building. With it, the answer stays tied to
-    sources you control and can check. This is also what keeps the system honest
-    when the store is updated: the model reflects the current text, not a stale
-    memory.
+    excerpts, and do not fall back on general knowledge. Without that constraint,
+    the model blends retrieved facts with training data, and the answer is no
+    longer grounded in the sources you provided. With the constraint, the answer
+    stays tied to text you control and check. It also keeps the system aligned
+    with updates: the model reflects the current source text, not stale training
+    data.
   </p>
 
   <h2>Citations and "I don't know"</h2>
   <p>
-    Two behaviours separate a trustworthy RAG answer from a plausible one.
-    First, citations: because each chunk carries its source, the model can point
-    at exactly which passage backs each claim, and the reader can verify it.
-    Second, the ability to decline. If the retrieved text does not contain the
-    answer, the right response is to say so, not to invent one. A model told to
-    only use the context and to admit when the answer is not there fails
-    loudly instead of confidently, which is the safer failure.
+    Two behaviours separate a trustworthy RAG answer from a plausible one. The
+    first is citations. Each chunk carries a source, so the answer should point
+    to the passage behind each important claim. That lets the reader verify the
+    answer instead of trusting the model.
+  </p>
+
+  <p>
+    The second is the ability to decline. If the retrieved text does not contain
+    the answer, the right response is to say so. A system that admits the answer
+    is missing is easier to trust than one that fills the gap with a confident
+    guess. In RAG, a safe failure is better than a polished wrong answer.
   </p>
 
   <h2>The model is the last mile</h2>
   <p>
-    It is tempting to think a better model fixes a weak RAG system. It does not.
-    If retrieval hands over the wrong chunks, a smarter model just writes a more
-    convincing wrong answer. Generation can only work with what it is given, so
-    the leverage stays upstream in chunking, embeddings, and retrieval. A good
-    generation step is mostly about discipline: use the context, cite it, and
-    know when to stop.
+    It is tempting to think a stronger model fixes a weak RAG system. It does
+    not. If retrieval hands over the wrong chunks, a stronger model writes a more
+    convincing wrong answer. Generation only works with the context it receives,
+    so the main leverage stays upstream in chunking, embeddings, and retrieval.
+    A good generation step is mostly about discipline: use the context, cite it,
+    and stop when the answer is not there.
   </p>

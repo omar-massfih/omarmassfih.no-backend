@@ -2,7 +2,7 @@
 title: Retrieval: finding the right chunks at question time
 heading: Retrieval: finding the right chunks at question time
 listTitle: Retrieval
-description: A closer look at retrieval in RAG: embedding the query, nearest-neighbour search, choosing top-k, and the recall-versus-precision trade-off that decides what the model sees.
+description: A closer look at retrieval in RAG: embedding the query, finding nearby chunks, choosing top-k, and balancing recall with precision so the model sees enough useful context without extra noise.
 lang: en
 category: RAG
 date: 2026-07-11
@@ -10,50 +10,62 @@ dateText: Jul 11
 tags: rag, retrieval, embeddings, reranking, system-design
 ---
   <p>
-    Retrieval is the step that runs every time someone asks a question. The
-    chunks are already embedded and stored. Now the system has to take the
-    question, find the passages most likely to answer it, and pass them on. This
-    is where a RAG system mostly succeeds or fails, because the model can only
-    be as good as the text it is handed.
+    Retrieval runs every time someone asks a question. The chunks are already
+    embedded and stored. Now the system has to take the question, find the
+    passages most likely to answer it, and pass those passages to the model.
+    This is where a RAG system often succeeds or fails, because the model only
+    has the text it receives.
   </p>
 
   <h2>Embed the query, find the neighbours</h2>
   <p>
-    The question is embedded with the same model used for the chunks, producing
-    a query vector in the same space. Retrieval then finds the stored vectors
-    closest to it, ranked by distance. On a small store this is a single ordered
-    scan. On a large one it uses an approximate nearest-neighbour index that
-    trades a little accuracy for a lot of speed. Either way, the output is the
-    same: the chunks whose meaning sits nearest the question.
+    The question is embedded with the same model used for the chunks. This
+    produces a query vector in the same space as the stored chunk vectors.
+    Retrieval then finds the stored vectors closest to the query vector and
+    ranks them by distance. In a small store, this might be a full scan over all
+    chunks. In a large store, it usually uses an approximate nearest-neighbour
+    index, which trades a little accuracy for much faster search. Either way,
+    the result is the same: the chunks whose meaning is closest to the question.
   </p>
 
   <h2>Choosing top-k</h2>
   <p>
-    You do not send everything, only the top k closest chunks. Picking k is a
-    trade-off. Too few, and you risk missing the passage that holds the answer,
-    because the one chunk you needed ranked just outside the cut. Too many, and
-    you flood the prompt with loosely related text that buries the useful part
-    and costs tokens. A handful of strong chunks usually beats a long list of
-    weak ones.
+    You do not send every matching chunk to the model. You send the top k
+    closest chunks. Choosing k is a trade-off. Too few chunks, and you risk
+    missing the passage with the answer because it ranked just below the cutoff.
+    Too many chunks, and you fill the prompt with loosely related text. That
+    makes the useful part harder to find and increases token cost. A few strong
+    chunks usually beat a long list of weak ones.
   </p>
 
   <h2>Recall versus precision</h2>
   <p>
-    Behind top-k is the classic tension. Recall is whether the answer is
-    somewhere in what you retrieved; precision is how much of what you retrieved
-    is actually relevant. Raising k improves recall but hurts precision, and the
-    reverse. RAG leans toward recall first, since a chunk the model never sees
-    cannot help, then tries to sharpen precision without dropping the answer.
+    The top-k choice is really a balance between recall and precision. Recall
+    means the answer appears somewhere in the retrieved chunks. Precision means
+    the retrieved chunks are mostly relevant. Raising k usually improves recall,
+    because the model sees more candidates. It also lowers precision, because
+    more unrelated text enters the prompt.
+  </p>
+
+  <p>
+    RAG usually favors recall first. A useful chunk does nothing if the model
+    never sees it. After retrieval gets the likely answer into the candidate set,
+    the next goal is to improve precision without losing the answer.
   </p>
 
   <h2>When plain similarity is not enough</h2>
   <p>
-    Nearest-neighbour search returns what looks similar, which is not always what
-    answers the question. Two common repairs sit on top of it. Reranking runs a
-    stronger model over the top candidates to reorder them by real relevance,
-    fixing cases where the closest vector was not the best answer. Bringing in
-    related material, for example following tags or links between documents,
-    catches passages that use different words for the same idea and would
-    otherwise be missed. Both start from the same nearest-neighbour result and
-    improve what actually reaches the model.
+    Nearest-neighbour search finds text with similar meaning, but similar text
+    is not always the best answer. Two common fixes improve the first result.
+    Reranking takes the top candidates and uses a stronger model to sort them by
+    relevance to the question. This helps when the closest vector is related but
+    not useful enough.
+  </p>
+
+  <p>
+    Another fix is to bring in connected material. The system might follow tags,
+    links, sections, or document structure to include nearby context. This helps
+    when the answer uses different words from the question, or when one chunk
+    only makes sense together with another. Both approaches start from the same
+    nearest-neighbour result and improve what reaches the model.
   </p>

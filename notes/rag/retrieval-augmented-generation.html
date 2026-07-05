@@ -2,7 +2,7 @@
 title: Retrieval-augmented generation: grounding a model in your own data
 heading: Retrieval-augmented generation: grounding a model in your own data
 listTitle: Retrieval-augmented generation
-description: A closer look at RAG: why models need outside knowledge, the retrieve-then-generate pipeline, and how chunking, embeddings, retrieval, and generation fit together.
+description: A closer look at RAG: why models need outside knowledge, how the retrieve-then-generate pipeline works, and how chunking, embeddings, retrieval, and generation fit together.
 lang: en
 category: RAG
 date: 2026-07-13
@@ -11,71 +11,81 @@ tags: rag, retrieval, embeddings, chunking, generation, llm, system-design
 ---
   <p>
     A language model only knows what was in its training data and what you put
-    in the prompt. That leaves two gaps. It does not know your private
-    documents, and it does not know anything that happened after training. When
-    you ask about either, the model either refuses or, worse, invents a
-    confident answer. Retrieval-augmented generation, or RAG, closes both gaps
-    by fetching relevant text at question time and putting it in the prompt
-    before the model answers.
+    in the prompt. That leaves two gaps. The model does not know your private
+    documents, and the model does not know new information from after training.
+    When you ask about either one, the model might refuse, or worse, invent a
+    confident answer. Retrieval-augmented generation, or RAG, closes those gaps
+    by fetching relevant text at question time and adding that text to the
+    prompt before the model answers.
   </p>
 
   <p>
-    The idea is simple: instead of hoping the answer is baked into the model's
-    weights, you look it up in a source you control and hand it to the model as
-    context. The model's job shifts from remembering facts to reading the
-    supplied text and writing a good answer from it.
+    The idea is simple: instead of hoping the answer is stored inside the model,
+    you look up relevant information in a source you control and give that
+    information to the model as context. The model's job shifts from remembering
+    facts to reading the supplied text and writing a useful answer from it.
   </p>
 
-  <h2>Why not just fine-tune?</h2>
+  <h2>Why not fine-tune?</h2>
   <p>
-    Fine-tuning bakes knowledge into the weights. It is expensive to repeat,
-    slow to update, and hard to audit: you cannot easily point at where an
-    answer came from. RAG keeps knowledge outside the model, in a store you can
-    edit. Adding a document is a write, not a training run, and every answer can
-    cite the exact text it used. For knowledge that changes often or needs
-    attribution, retrieval usually beats fine-tuning.
+    Fine-tuning teaches the model a new pattern by changing its internal
+    parameters. That is useful for changing style or behavior, but it is a poor
+    fit for knowledge that changes often. Fine-tuning is expensive to repeat,
+    slow to update, and hard to audit. When the model gives an answer, you do
+    not have an easy way to point at the exact source behind it.
+  </p>
+
+  <p>
+    RAG keeps knowledge outside the model, in a store you control and update.
+    Adding a document becomes a write, not a training run. Removing or replacing
+    stale information is also simpler. For knowledge that changes often, belongs
+    to your organization, or needs citations, retrieval is usually a better fit
+    than fine-tuning.
   </p>
 
   <h2>The pipeline</h2>
   <p>
-    RAG splits into two phases. The first happens ahead of time, once per
-    document: split the source into chunks, turn each chunk into an embedding,
-    and store the vectors. The second happens at question time: embed the
-    question, retrieve the closest chunks, and pass them to the model to
-    generate an answer.
+    RAG has two phases. The first phase happens ahead of time, once per
+    document. You split the source into chunks, turn each chunk into an
+    embedding, and store those embeddings for search. The second phase happens
+    at question time. You embed the question, retrieve the closest chunks, and
+    pass those chunks to the model so it answers from the retrieved text.
   </p>
 
   <p>
-    Each stage has its own note, because each has its own decisions and failure
-    modes:
+    Each stage has its own decisions and failure modes:
   </p>
 
   <ul>
     <li>
-      <strong>Chunking</strong> decides how the source is cut into pieces small
-      enough to retrieve but large enough to make sense on their own.
+      <strong>Chunking</strong> decides how to cut the source into pieces small
+      enough to search, but large enough to make sense on their own.
     </li>
     <li>
-      <strong>Embeddings</strong> turn text into vectors so that similar meaning
-      lands in nearby points, which is what makes search by meaning possible.
+      <strong>Embeddings</strong> turn text into vectors, so text with similar
+      meaning ends up close together. This makes search by meaning possible.
     </li>
     <li>
-      <strong>Retrieval</strong> takes the question, finds the closest chunks,
-      and decides how many and which ones to keep.
+      <strong>Retrieval</strong> takes the question, finds the most relevant
+      chunks, and decides how many to keep.
     </li>
     <li>
-      <strong>Generation</strong> assembles the retrieved text into a prompt and
-      asks the model to answer from it, ideally with citations.
+      <strong>Generation</strong> puts the retrieved text into a prompt and asks
+      the model to answer from that text, ideally with citations.
     </li>
   </ul>
 
   <h2>Garbage in, garbage out</h2>
   <p>
-    RAG does not make a model smarter. It changes what the model has in front of
-    it. If retrieval returns the wrong chunks, the model answers from the wrong
-    text and sounds just as confident doing it. This is why most of the work in
-    a RAG system is not the model at all. It is the retrieval quality: how the
-    text is chunked, how well the embeddings capture meaning, and how the
-    closest chunks are chosen. Get those right and a small model gives grounded
-    answers. Get them wrong and the best model still misleads.
+    RAG does not make a model smarter. RAG changes what the model has in front
+    of it. If retrieval returns the wrong chunks, the model answers from the
+    wrong text and still sounds confident. That is why most of the work in a RAG
+    system is retrieval quality, not the model itself.
+  </p>
+
+  <p>
+    Good answers depend on good inputs: clear source documents, sensible
+    chunking, embeddings that capture meaning well, and retrieval that brings
+    back the right context. When those parts work, even a smaller model gives
+    grounded answers. When they fail, a stronger model still misleads.
   </p>
