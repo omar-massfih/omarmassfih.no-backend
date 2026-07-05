@@ -1,0 +1,64 @@
+---
+title: Embeddings: turning text into searchable meaning
+heading: Embeddings: turning text into searchable meaning
+listTitle: Embeddings
+description: A closer look at embeddings in RAG: how text becomes a vector, why nearby vectors mean similar meaning, cosine distance, and why the same model must embed both chunks and queries.
+lang: en
+category: RAG
+date: 2026-07-10
+dateText: Jul 10
+tags: rag, embeddings, retrieval, vectors, system-design
+---
+  <p>
+    Keyword search matches words. It misses that "car" and "automobile" mean the
+    same thing, and that "bank" means two different things. RAG needs search by
+    meaning, and embeddings are what make that possible. An embedding is a list
+    of numbers, a vector, produced by a model that has learned to place text
+    with similar meaning at nearby points in space.
+  </p>
+
+  <h2>Meaning as geometry</h2>
+  <p>
+    The trick is to turn meaning into distance. The embedding model reads a
+    chunk of text and outputs a fixed-length vector, say a few hundred to a few
+    thousand numbers. Text about the same idea lands close together; unrelated
+    text lands far apart. Once meaning is geometry, "find the most relevant
+    text" becomes "find the nearest vectors," which a computer can do quickly.
+  </p>
+
+  <h2>Measuring closeness</h2>
+  <p>
+    Closeness needs a metric. The common one is cosine similarity: it compares
+    the direction two vectors point, ignoring their length. Two chunks about the
+    same topic point the same way and score as similar, whether one is a
+    sentence and the other a paragraph. Cosine distance is just one minus that
+    similarity, so smaller distance means more alike. That is the value a vector
+    search sorts on.
+  </p>
+
+  <pre><code class="language-sql">select text,
+       vector_distance_cos(embedding, vector32(?)) as distance
+from note_chunks
+order by distance
+limit ?</code></pre>
+
+  <h2>Same model on both sides</h2>
+  <p>
+    A vector only has meaning relative to the model that made it. Comparing
+    vectors from two different embedding models is meaningless, because they
+    place meaning in different spaces. This has a practical consequence: the
+    model that embeds the stored chunks must be the same model that embeds the
+    query at search time. It also means that changing the embedding model
+    invalidates the whole store. Every chunk has to be embedded again with the
+    new model before search works correctly.
+  </p>
+
+  <h2>Embeddings are not understanding</h2>
+  <p>
+    An embedding captures similarity, not truth or logic. It will happily place
+    a plausible-sounding but wrong passage near the question, because it reads as
+    topically related. Embeddings decide what looks relevant; they do not decide
+    what is correct. That is why retrieval quality is measured, not assumed, and
+    why the generation step is still told to answer only from the text it is
+    given.
+  </p>

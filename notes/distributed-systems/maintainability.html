@@ -1,0 +1,66 @@
+---
+title: Maintainability: keeping it workable over time
+heading: Maintainability: keeping it workable over time
+listTitle: Maintainability
+description: A closer look at maintainability and its three parts: operability, simplicity, and evolvability, and why reducing accidental complexity keeps a system easier to change.
+lang: en
+category: Distributed Systems
+date: 2026-07-08
+dateText: Jul 8
+tags: distributed-systems, maintainability, operability, simplicity, evolvability, ddia, system-design
+---
+  <p>
+    Most of the cost of software comes after the first version ships. Teams
+    spend years fixing bugs, keeping the system running, investigating incidents,
+    and adapting it to requirements nobody knew about at the start.
+    Maintainability is about keeping that work productive instead of letting it
+    get slower over time. It has three main parts: operability, simplicity, and
+    evolvability.
+  </p>
+
+  <h2>Operability</h2>
+  <p>
+    Operability means making the system easy to run in production. It covers the
+    everyday work of keeping the system healthy: monitoring performance,
+    deploying changes safely, diagnosing problems, handling upgrades, and
+    planning capacity. A system with good operability gives the people running
+    it clear visibility and useful tools, so the system does not depend on a few
+    people remembering how everything works.
+  </p>
+
+  <h2>Simplicity</h2>
+  <p>
+    Simplicity is about making the system easier to understand. The enemy is
+    accidental complexity: complexity created by implementation choices rather
+    than by the problem itself. Some complexity is essential because the problem
+    is hard. Accidental complexity is different. It is the extra tangle added by
+    unclear interfaces, duplicated logic, hidden dependencies, and design
+    decisions that no longer fit.
+  </p>
+
+  <p>
+    The main tool for reducing accidental complexity is abstraction. A good
+    abstraction hides implementation details behind a clear interface. That lets
+    an engineer reason about one part of the system without holding the whole
+    thing in their head. It also concentrates effort: improve the implementation
+    behind the interface, and everything built on top of it benefits. The goal is
+    a system that engineers understand well enough to change safely.
+  </p>
+
+  <h2>Evolvability</h2>
+  <p>
+    Evolvability means making the system easier to change as requirements shift.
+    New features, new regulations, new scale, and new integrations all arrive
+    after the original design is in place. Evolvability is what simplicity gives
+    you over time. A system that is easy to understand is easier to change. A
+    system tangled with accidental complexity resists every change until people
+    become afraid to touch it.
+  </p>
+
+  <p>
+    Taken together, the three parts describe the same goal from different
+    angles. Operability keeps the running system healthy. Simplicity keeps it
+    understandable. Evolvability keeps it changeable. All three protect the
+    long, expensive part of a system's life that starts after the first version
+    ships.
+  </p>

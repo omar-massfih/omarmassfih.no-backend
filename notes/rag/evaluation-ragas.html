@@ -1,0 +1,90 @@
+---
+title: Evaluating RAG with Ragas
+heading: Evaluating RAG with Ragas
+listTitle: Evaluating RAG with Ragas
+description: A closer look at measuring a RAG system with Ragas: why "looks fine" is not enough, separating retrieval from generation, and the core metrics of faithfulness, relevancy, context precision, and context recall.
+lang: en
+category: RAG
+date: 2026-07-14
+dateText: Jul 14
+tags: rag, evaluation, ragas, retrieval, generation, llm, system-design
+---
+  <p>
+    A RAG system has many dials: chunk size, overlap, embedding model, top-k,
+    reranking, prompt wording. Change one and the answers change, but "the
+    answers look better" is not a measurement. Evaluation turns that hunch into
+    numbers, so you can tell whether a change actually helped and where the
+    system is weak. Ragas is a library built for exactly this: scoring RAG
+    pipelines with metrics that a language model computes for you.
+  </p>
+
+  <h2>Two failures, measured separately</h2>
+  <p>
+    A wrong answer has two possible causes, and they need different fixes.
+    Either retrieval handed the model the wrong chunks, or retrieval was fine and
+    the model wrote a bad answer from good text. A single accuracy score hides
+    which one happened. Ragas splits the pipeline in two: metrics for the
+    retrieval step and metrics for the generation step, so a bad number points
+    at the stage that needs work instead of leaving you guessing.
+  </p>
+
+  <h2>Generation metrics</h2>
+  <p>
+    Two metrics judge the answer, given the retrieved context:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Faithfulness</strong> asks whether every claim in the answer is
+      supported by the retrieved context. It is the direct measure of grounding:
+      a low score means the model is inventing or drawing on outside knowledge,
+      which is the failure RAG exists to prevent.
+    </li>
+    <li>
+      <strong>Answer relevancy</strong> asks whether the answer actually
+      addresses the question. A response can be perfectly faithful to the
+      context and still miss the point, rambling or answering a nearby question
+      instead of the one asked.
+    </li>
+  </ul>
+
+  <h2>Retrieval metrics</h2>
+  <p>
+    Two metrics judge what retrieval brought back, usually against a reference
+    answer or a known ground truth:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Context precision</strong> asks how much of the retrieved context
+      is actually relevant, and whether the relevant chunks rank near the top. A
+      low score means you are padding the prompt with noise.
+    </li>
+    <li>
+      <strong>Context recall</strong> asks whether the context contains
+      everything needed to answer. A low score means the passage with the answer
+      never got retrieved, so no amount of prompting can save the answer.
+    </li>
+  </ul>
+
+  <h2>Reading the scores together</h2>
+  <p>
+    The metrics are most useful as a set, because their pattern localizes the
+    fault. Low context recall points at chunking or retrieval: the answer is not
+    in what you fetched. Good recall but low precision points at top-k or
+    reranking: the answer is there, buried in noise. Good context but low
+    faithfulness points at the generation prompt: the model has what it needs and
+    still strays. Low answer relevancy with everything else healthy points at
+    the question being misread. One number tells you something is wrong; the
+    spread tells you where.
+  </p>
+
+  <h2>What evaluation does not give you</h2>
+  <p>
+    These scores are computed by a language model judging another model's
+    output, so they are estimates, not ground truth. They drift with the judge
+    model and the prompt, and they need a set of representative questions to run
+    against. The point is not an absolute grade. It is a stable measurement you
+    can rerun after every change, so tuning the pipeline becomes an experiment
+    with a result instead of a matter of taste.
+  </p>

@@ -1,0 +1,94 @@
+---
+title: Scalability: coping with growth
+heading: Scalability: coping with growth
+listTitle: Scalability
+description: A closer look at scalability: describing load with numbers, measuring performance as a range of values, why slow requests matter, and the trade-offs between scaling up and scaling out.
+lang: en
+category: Distributed Systems
+date: 2026-07-07
+dateText: Jul 7
+tags: distributed-systems, scalability, latency, throughput, load, ddia, system-design
+---
+  <p>
+    Scalability is not a yes-or-no property a system either has or lacks. The
+    useful question is more specific: if this system grows in a particular way,
+    what are the reasonable ways to handle the growth while keeping performance
+    acceptable? Answering the question takes two things: a way to describe load,
+    and a way to describe performance.
+  </p>
+
+  <h2>Describing load</h2>
+  <p>
+    Load is described with numbers. Which numbers matter depends on the system:
+    requests per second for a web service, the ratio of reads to writes for a
+    database, the number of active users at the same time, or the cache hit
+    rate. Choosing the right numbers is half the work, because the wrong ones
+    hide the bottleneck most likely to hurt you.
+  </p>
+
+  <p>
+    One useful load measure is fan-out: how much extra work one incoming request
+    triggers. A request that writes one row grows differently from a request
+    that writes to the timelines of a million followers. This is also where the
+    choice between doing work on write and doing work on read appears. Doing
+    work on write makes writes more expensive but keeps reads cheap. Doing work
+    on read keeps writes cheap but makes reads more expensive. The right choice
+    depends on your read/write ratio.
+  </p>
+
+  <h2>Describing performance</h2>
+  <p>
+    Once load is clear, you measure performance. The right measure depends on
+    the kind of system. In batch systems, the usual measure is throughput:
+    records processed per second, or the total time needed to finish a job over
+    a dataset. In online systems, the usual measure is response time: the time a
+    client waits from sending a request to getting a reply.
+  </p>
+
+  <p>
+    Response time is better viewed as a range of values than as one average.
+    Requests vary, and an average hides the slow requests users notice.
+    Percentiles describe this range directly. p95, p99, and p999 are the points
+    where 95%, 99%, and 99.9% of requests finish below a given response time.
+    The high percentiles describe the slowest requests. This slow end of the
+    range is called tail latency.
+  </p>
+
+  <h2>Why the tail matters</h2>
+  <p>
+    Slow requests matter more than their small share of traffic suggests. They
+    often affect the users with the most data, who might also be your most
+    valuable users. A slow request might also cause head-of-line blocking. While
+    it keeps a server busy, the requests waiting behind it wait too, so a few
+    slow requests raise the response time of many fast ones.
+  </p>
+
+  <p>
+    Fan-out makes this worse through tail latency amplification. If one user
+    request calls many backend services in parallel, the full response finishes
+    only when the slowest service finishes. The more services a request touches,
+    the more likely one of them is having a slow moment. This means the
+    end-to-end user experience is shaped by slow requests you might miss when
+    looking at each service separately.
+  </p>
+
+  <h2>Scaling up and scaling out</h2>
+  <p>
+    Handling more load usually goes in one of two directions. Scaling up, also
+    called vertical scaling, means moving to a bigger machine. It is simple, but
+    it has a ceiling and gets expensive quickly. Scaling out, also called
+    horizontal scaling, means spreading load across many machines. In a
+    shared-nothing design, each machine has its own CPU, memory, and disk, so
+    there is no single shared part where all work must pass through.
+  </p>
+
+  <p>
+    Scaling out is much easier for services that do not store data locally. You
+    add many identical replicas behind a load balancer and add more replicas as
+    load grows. Scaling out systems that store data is harder, because spreading
+    data across machines forces choices about consistency and coordination.
+    Scaling might be elastic, where resources are added and removed
+    automatically as load changes, or manual, where people plan capacity ahead
+    of time. There is no universal recipe. The right architecture depends on
+    which part of the load is growing.
+  </p>

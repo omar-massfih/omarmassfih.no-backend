@@ -1,0 +1,66 @@
+---
+title: Chunking: cutting documents into retrievable pieces
+heading: Chunking: cutting documents into retrievable pieces
+listTitle: Chunking
+description: A closer look at chunking in RAG: why you split documents at all, the trade-off between chunk size and precision, and why splitting along structure beats a fixed character count.
+lang: en
+category: RAG
+date: 2026-07-09
+dateText: Jul 9
+tags: rag, chunking, retrieval, embeddings, system-design
+---
+  <p>
+    Before anything can be retrieved, the source has to be cut into pieces. This
+    is chunking. You cannot embed a whole document as one vector and expect
+    useful search, and you cannot feed an entire book into the prompt. Chunking
+    decides the unit of retrieval: the smallest thing the system can find and
+    hand to the model.
+  </p>
+
+  <h2>Why not whole documents?</h2>
+  <p>
+    Two limits force the split. First, an embedding is a single fixed-size
+    vector, so the more text you compress into it, the more the meaning blurs. A
+    vector for a whole page mixes every topic on that page into one point, and
+    search becomes vague. Second, the model's context window is finite and
+    expensive, so you want to send only the passages that matter, not entire
+    files.
+  </p>
+
+  <h2>The size trade-off</h2>
+  <p>
+    Chunk size is the main dial, and it cuts both ways. Small chunks are
+    precise: each vector captures one idea, so retrieval can point at the exact
+    passage. But a chunk can be too small to stand on its own, missing the
+    context that makes it meaningful. Large chunks carry more context, but they
+    dilute the embedding and waste prompt space on text that is not relevant to
+    the question.
+  </p>
+
+  <p>
+    There is no single right size. It depends on the material and the questions.
+    Dense reference text tolerates smaller chunks; narrative or argument often
+    needs larger ones so a passage keeps its thread.
+  </p>
+
+  <h2>Overlap</h2>
+  <p>
+    A hard cut can land in the middle of a thought, splitting a sentence or
+    separating a claim from its support. Overlap softens this: consecutive
+    chunks share a little text at their edges, so an idea that straddles a
+    boundary still appears whole in at least one chunk. The cost is some
+    duplication in the store, which is usually a fair price for not losing
+    meaning at the seams.
+  </p>
+
+  <h2>Split along structure</h2>
+  <p>
+    The blunt approach is to cut every N characters. It is simple, but it
+    ignores what the document is telling you. A better default is to split along
+    the structure the author already provided: headings, sections, paragraphs.
+    A section is a unit the writer decided belongs together, which makes it a
+    natural retrieval unit too. Splitting on structure keeps related sentences
+    in the same chunk and keeps unrelated ones apart, which is exactly what good
+    retrieval needs. Fall back to size limits only to break up a section that is
+    too large.
+  </p>

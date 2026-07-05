@@ -1,0 +1,93 @@
+---
+title: Reliability: working correctly when things go wrong
+heading: Reliability: working correctly when things go wrong
+listTitle: Reliability
+description: A closer look at reliability: the difference between faults and failures, why software and human faults are hard, and the practical techniques that keep problems from reaching users.
+lang: en
+category: Distributed Systems
+date: 2026-07-06
+dateText: Jul 6
+tags: distributed-systems, reliability, fault-tolerance, resilience, ddia, system-design
+---
+  <p>
+    Reliability means the system keeps doing the right thing at the required
+    performance level, even when things go wrong. That last part matters. A
+    reliable system is not one where nothing ever breaks. It is one where the
+    things that break do not turn into problems users see.
+  </p>
+
+  <h2>Faults and failures</h2>
+  <p>
+    It helps to separate two words that sound similar. A fault is one part of
+    the system behaving differently from what it promises: a disk stops
+    responding, a function returns the wrong value, or an operator runs the
+    wrong command. A failure is the whole system no longer providing the service
+    it promised.
+  </p>
+
+  <p>
+    The goal is not to eliminate faults. That is impossible. The goal is to stop
+    faults from becoming failures. The mechanisms that do this are called fault
+    tolerance, or resilience. A system is fault tolerant only for the specific
+    faults it was designed to handle, so it is worth being clear about which
+    faults you are trying to absorb.
+  </p>
+
+  <h2>Hardware faults</h2>
+  <p>
+    Individual machines fail. Disks wear out, memory develops errors, and power
+    supplies die. The standard answer is redundancy: a spare part or spare
+    machine takes over while the broken one is replaced. That way, one broken
+    component causes little or no downtime.
+  </p>
+
+  <p>
+    Redundancy also changes how you operate the system. If the service stays up
+    when one machine disappears, you can also take machines out on purpose, one
+    at a time, to patch or upgrade them. Tolerating machine loss and doing
+    rolling upgrades are the same capability seen from two angles.
+  </p>
+
+  <h2>Software faults</h2>
+  <p>
+    Hardware faults are often independent: one disk failing does not tell you
+    much about the next disk. Software faults are more dangerous because the
+    same bug can affect every machine running the same code. A bad input, a
+    resource leak that slowly uses up memory, another service getting slow, or
+    one problem triggering another can hit the whole system at once. Extra
+    machines do not save you when they all share the same bug.
+  </p>
+
+  <p>
+    These bugs often stay hidden for a long time because they only appear under
+    unusual conditions. Some assumption in the code holds for months, then
+    breaks during a rare input, a traffic spike, or a dependency problem. There
+    is no single cure, but several habits reduce the damage: test thoroughly,
+    isolate processes so one crash does not spread, let components crash and
+    restart into a clean state, and measure behavior in production so broken
+    assumptions are caught early.
+  </p>
+
+  <h2>Human faults</h2>
+  <p>
+    People configure, deploy, and operate systems, and people make mistakes.
+    Reliable systems do not depend on operators being perfect. They are designed
+    to make mistakes less likely and less costly.
+  </p>
+
+  <p>
+    Good interfaces help. Safe actions should be easy, and risky actions should
+    be harder to trigger by accident. Clear APIs, admin tools, defaults, and
+    confirmation steps all matter. When something does go wrong, fast recovery
+    matters as much as prevention. Quick config rollback, gradual rollouts, and
+    the ability to recompute data all reduce how long a mistake stays visible.
+  </p>
+
+  <h2>Monitoring</h2>
+  <p>
+    Monitoring supports all of this. Telemetry gives early warning when the
+    system starts drifting toward trouble, helps you check whether the system is
+    still behaving within its assumptions, and speeds up diagnosis during an
+    incident. You cannot keep a system reliable if you cannot see what it is
+    doing.
+  </p>
