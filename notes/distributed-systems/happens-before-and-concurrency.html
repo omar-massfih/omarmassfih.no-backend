@@ -1,0 +1,89 @@
+---
+title: When Are Two Actions Really "at the Same Time"?
+heading: When Are Two Actions Really "at the Same Time"?
+listTitle: Happens-Before and Concurrency
+description: Why "concurrent" in a distributed system is not about the clock, but about whether one action knew of the other, and why that distinction decides which writes can safely be merged.
+lang: en
+category: Distributed Systems
+date: 2026-09-16
+dateText: Sep 16
+tags: distributed-systems, concurrency, happens-before, causality, conflicts, consistency
+---
+  <p>
+    When two people change the same thing in a system at once, the system has to
+    figure out what to do. To answer that, it first needs a clear idea of what
+    "at once" even means. In everyday life we would check the clock. In a
+    distributed system, the clock turns out to be the wrong tool.
+  </p>
+
+  <h2>Clocks disagree, so do not trust them</h2>
+  <p>
+    Different machines have slightly different clocks, and even tiny differences
+    make timestamps unreliable for deciding order. A write stamped one
+    millisecond earlier might have actually happened after another, or the two
+    machines might simply disagree about the time. Ordering events by their
+    timestamps quietly builds on a shaky foundation.
+  </p>
+
+  <p>
+    So distributed systems use a different, sturdier idea. Instead of asking when
+    two actions happened, they ask whether one action could have known about the
+    other.
+  </p>
+
+  <h2>The "knew about it" test</h2>
+  <p>
+    One action happens before another if the second one could have been aware of
+    the first: it read its result, built on it, or reacted to it. If you reply to
+    a message, your reply happens after the message, because your reply depended
+    on having seen it. There is a clear chain of cause and effect.
+  </p>
+
+  <p>
+    Two actions are concurrent when neither one knew about the other. This has
+    nothing to do with the clock. Two writes made an hour apart are still
+    concurrent if the later writer had no way of knowing about the earlier one.
+    And two writes in the very same second are not concurrent if one clearly built
+    on the other. Concurrency is about awareness, not timing.
+  </p>
+
+  <h2>Why this distinction matters</h2>
+  <p>
+    The distinction decides how the system should treat a pair of writes. If one
+    write happened before the other, the later one is simply the newer version,
+    and it can safely replace the older one. There is no conflict, just an
+    update.
+  </p>
+
+  <p>
+    But if two writes are concurrent, neither is "newer" in any meaningful sense.
+    They are two independent opinions about the same data. Silently keeping only
+    one of them, for example by picking whichever has the later timestamp, quietly
+    throws away real work someone did. Both edits were valid; one just vanishes.
+  </p>
+
+  <h2>Keeping both, then merging</h2>
+  <p>
+    A safer approach keeps both concurrent versions instead of discarding one,
+    and hands them to the application to combine sensibly. Think of two people
+    adding items to a shared shopping cart at the same time: the right answer is
+    usually a cart with both items, not one person's cart winning and the other's
+    disappearing. The system cannot know the right merge on its own, so it
+    preserves both and lets the application decide.
+  </p>
+
+  <p>
+    To do this it needs to track which writes knew about which, so it can tell
+    genuine updates from true conflicts. That bookkeeping is what lets it say,
+    with confidence, "these two really were concurrent," rather than guessing from
+    clocks.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    In a distributed system, "at the same time" means "neither knew about the
+    other," not "close together on the clock." Get that right and the system can
+    tell a plain update from a real conflict, replace the old safely, and preserve
+    both when two changes truly collided, instead of losing someone's work to a
+    timestamp.
+  </p>

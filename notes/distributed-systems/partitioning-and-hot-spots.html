@@ -1,0 +1,80 @@
+---
+title: Splitting Data Across Machines Without Creating Hot Spots
+heading: Splitting Data Across Machines Without Creating Hot Spots
+listTitle: Partitioning and Hot Spots
+description: Why holding more data than one machine can means slicing it across many, and why the two ways of deciding which slice a record goes to trade evenly spread load against the ability to scan ranges.
+lang: en
+category: Distributed Systems
+date: 2027-01-22
+dateText: Jan 22
+tags: distributed-systems, partitioning, sharding, hot-spots, scalability
+---
+  <p>
+    A single machine can only hold so much data and handle so much traffic. Past
+    that point, you split the data across many machines, giving each one a slice.
+    The interesting question is how you decide which slice a given record belongs
+    to, because that choice quietly determines whether the load spreads evenly or
+    piles up in one place.
+  </p>
+
+  <h2>The thing to avoid: a hot spot</h2>
+  <p>
+    The goal of splitting is to share the work. The failure mode is a hot spot: one
+    slice getting far more traffic than the others, so one machine is overwhelmed
+    while the rest sit nearly idle. When that happens, you have all the complexity
+    of many machines and little of the benefit, because one of them is the
+    bottleneck. Both ways of splitting data have to be judged by how well they avoid
+    this.
+  </p>
+
+  <h2>Split by ranges</h2>
+  <p>
+    The first way gives each slice a continuous range: names A through F on one
+    machine, G through M on the next, and so on. This keeps related records
+    together, which makes "give me everything between X and Y" cheap, since the
+    answer lives in one slice or a couple of neighbors.
+  </p>
+
+  <p>
+    Its weakness is clustering. If new records tend to fall in the same range, they
+    all land on the same machine. A classic case is stamping records by time: if
+    everything created today sorts into the "today" range, then every new write
+    hammers one machine while yesterday's machine goes quiet. The order that makes
+    range scans nice is exactly what concentrates the load.
+  </p>
+
+  <h2>Split by scrambling the key</h2>
+  <p>
+    The second way runs each key through a scrambling step and assigns the slice
+    based on the scrambled value. Because the scramble mixes things up, keys that
+    were clustered end up spread evenly across all the machines. Load spreads
+    smoothly even when the original keys bunch together, which is exactly what you
+    wanted.
+  </p>
+
+  <p>
+    But scrambling throws away the order. Keys that were neighbors are now flung
+    across different machines, so a range scan can no longer be answered from one
+    place; it has to ask every machine and combine the results. You bought even load
+    at the price of easy range queries.
+  </p>
+
+  <h2>The one thing neither fixes</h2>
+  <p>
+    Neither approach saves you from a single wildly popular key. If one particular
+    record, one celebrity account, one trending item, gets a huge share of the
+    traffic, it still maps to exactly one slice, and that machine gets buried. You
+    can spread such a key by hand, for instance by splitting it into several
+    derived keys, but then reads have to gather from all of them. There is no free
+    fix; only a trade.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    To hold more than one machine can, slice the data across many, and watch out for
+    hot spots. Splitting by ranges keeps order and makes range scans cheap but lets
+    clustered writes pile onto one slice. Scrambling the key spreads load evenly but
+    destroys order, so range scans must touch every slice. And a single
+    super-popular key defeats both. Choosing how to partition is choosing which of
+    these costs you can live with.
+  </p>

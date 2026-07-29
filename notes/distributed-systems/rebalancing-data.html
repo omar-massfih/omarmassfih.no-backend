@@ -1,0 +1,71 @@
+---
+title: Adding a Machine Shouldn't Move All Your Data
+heading: Adding a Machine Shouldn't Move All Your Data
+listTitle: Rebalancing Data
+description: Why the obvious way to spread data across machines forces you to move almost everything whenever the number of machines changes, and the simple ideas that move only a small fraction instead.
+lang: en
+category: Distributed Systems
+date: 2027-01-26
+dateText: Jan 26
+tags: distributed-systems, rebalancing, partitioning, consistent-hashing, scalability
+---
+  <p>
+    Once data is spread across several machines, the set of machines will change:
+    you add some as you grow, and lose some to failures. Each time, some data has to
+    move so the load stays balanced. This moving-around is called rebalancing, and
+    how you set it up decides whether adding a machine is a small adjustment or a
+    massive, disruptive shuffle.
+  </p>
+
+  <h2>The obvious method is a trap</h2>
+  <p>
+    The natural first idea is to decide a record's machine by scrambling its key and
+    dividing by the number of machines, using the remainder to pick one. It spreads
+    data evenly, and it seems fine.
+  </p>
+
+  <p>
+    It falls apart the moment the number of machines changes. Because the machine
+    count is baked into the calculation, changing it from, say, ten to eleven
+    changes the answer for almost every key at once. Nearly all your data suddenly
+    belongs somewhere else and has to be physically moved. Adding one machine
+    triggers a near-total reshuffle, which on a large system can take the whole
+    thing to its knees. The method is fine until you ever want to grow, which is
+    always.
+  </p>
+
+  <h2>Many small slices you can move whole</h2>
+  <p>
+    A better idea is to create many more slices than you have machines, up front,
+    and simply hand out whole slices to machines. Ten machines might share a
+    thousand slices. When you add a machine, you move a handful of slices onto it
+    from the others. Only those slices move; everything else stays put. Growing the
+    cluster becomes a matter of reassigning a few slices, not recomputing where
+    every record lives.
+  </p>
+
+  <p>
+    The catch is that you pick the number of slices in advance, so you want enough
+    to spread across many future machines without so many that managing them becomes
+    a burden. But within that range, adding and removing machines is cheap.
+  </p>
+
+  <h2>Slices that split and merge</h2>
+  <p>
+    A related idea lets the slices themselves adapt. When a slice grows too big, it
+    splits in two; when slices get too small, they merge. This way the number of
+    slices tracks the amount of data, so you neither guess the count up front nor
+    end up with slices that are wildly the wrong size. It does need a nudge when
+    starting from empty, since a brand-new dataset might otherwise begin as a single
+    slice and funnel all early writes to one machine.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Spreading data is easy; the hard part is changing the set of machines without
+    moving everything. Tying a record's location directly to the machine count means
+    any change reshuffles almost all the data. Instead, use many small slices you
+    can reassign whole, or slices that split and merge with the data, so adding a
+    machine moves a small fraction rather than the whole dataset. Design the mapping
+    so growth is cheap, because you will grow.
+  </p>

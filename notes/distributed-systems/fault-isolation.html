@@ -1,0 +1,83 @@
+---
+title: Fault Isolation and the Blast Radius of a Bad Request
+heading: Fault Isolation and the Blast Radius of a Bad Request
+listTitle: Fault Isolation
+description: Why redundancy cannot stop a bad request or a greedy user from hurting everyone, and how splitting a service into isolated compartments limits how far the damage can spread.
+lang: en
+category: Distributed Systems
+date: 2026-08-19
+dateText: Aug 19
+tags: distributed-systems, fault-isolation, bulkhead, blast-radius, shuffle-sharding, failure
+---
+  <p>
+    Redundancy protects you when a copy dies. It does nothing when the problem
+    is the work itself. If every copy runs the same code and takes the same
+    traffic, then one request that crashes the service will crash every copy, no
+    matter how many you have. The same goes for one user sending so much traffic
+    that everyone else slows down. Extra copies cannot help, because the harm
+    spreads to all of them equally.
+  </p>
+
+  <p>
+    Two names come up for this. A request that reliably breaks whatever handles
+    it is a poison pill. A user whose heavy load steals resources from everyone
+    nearby is a noisy neighbor. Both share a trait: they turn one bad input into
+    a whole-system problem.
+  </p>
+
+  <h2>Compartments limit the damage</h2>
+  <p>
+    The idea that helps here is fault isolation: splitting the service into
+    separate groups so that a problem in one group cannot reach the others. If
+    each user is assigned to one group, then a poison pill or a noisy neighbor
+    can only hurt the group it lands in. Everyone else keeps working.
+  </p>
+
+  <p>
+    This is often called the bulkhead pattern, after ships. A ship's hull is
+    divided into sealed compartments so that a leak floods one section instead of
+    sinking the whole vessel. Software compartments do the same job: they contain
+    the flooding. The share of users a single bad workload can hurt is often
+    called the blast radius, and smaller compartments mean a smaller blast
+    radius.
+  </p>
+
+  <h2>Plain grouping is still unfair to some</h2>
+  <p>
+    Simple grouping has a weakness. Whoever happens to share a compartment with
+    the bad workload still suffers. You have protected most users, but not the
+    unlucky few sitting next to the problem.
+  </p>
+
+  <p>
+    A cleverer approach spreads the pain thinner. Instead of putting each user in
+    one fixed compartment, give each user a small random mix of instances, kept
+    stable for that user. Because there are so many possible mixes, two users
+    rarely get exactly the same one. So when one user's workload turns bad, most
+    others overlap with it only partly, and a load balancer plus a retry can
+    route around the affected instances. A partial overlap is far less damaging
+    than a full one.
+  </p>
+
+  <h2>Isolating the whole stack</h2>
+  <p>
+    You can push isolation further by copying not just one service but the entire
+    stack, storage and all, into independent units. A failure inside one unit
+    stays inside it, because the units share nothing. A small routing layer in
+    front sends each user consistently to their unit.
+  </p>
+
+  <p>
+    A nice side effect is predictability. If each unit has a known maximum size,
+    you can test it at full size and know how it behaves at its limit. You then
+    grow by adding more units of the same known design, instead of pushing one
+    giant system into sizes nobody has ever tested.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Redundancy answers "what if a copy dies." Fault isolation answers "what if
+    the work is the problem." Divide the system so that one bad request or one
+    greedy user can only reach a small part of it. You will not stop every fault,
+    but you decide, in advance, how far it is allowed to spread.
+  </p>

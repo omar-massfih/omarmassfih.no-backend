@@ -1,0 +1,72 @@
+---
+title: Make Servers Interchangeable, Then Spread the Load
+heading: Make Servers Interchangeable, Then Spread the Load
+listTitle: Interchangeable Servers
+description: Why keeping servers stateless makes them disposable and easy to add or remove, and why the smartest-looking way to spread requests across them is often worse than a pinch of randomness.
+lang: en
+category: Distributed Systems
+date: 2027-05-30
+dateText: May 30
+tags: distributed-systems, load-balancing, stateless, scalability, power-of-two-choices
+---
+  <p>
+    The cleanest way to handle more traffic is to run many copies of your service and
+    share the work among them. That plan works beautifully under one condition: the
+    servers have to be interchangeable, so any request can go to any of them. Getting
+    that condition is the real trick, and then spreading the load has a surprise in it.
+  </p>
+
+  <h2>Statelessness makes servers disposable</h2>
+  <p>
+    Servers are interchangeable when they are stateless: each one remembers nothing
+    important between requests. Anything that must be remembered lives in a separate,
+    shared store, not inside the server. When that is true, the servers become
+    disposable. You can add more when things are busy, remove them when things are quiet,
+    and if one dies the rest carry on, because none of them held anything unique.
+  </p>
+
+  <p>
+    This is what makes growing by adding servers actually work. If each server hoarded
+    its own important state, you could not freely add or drop them, because each would be
+    special. Pushing the state out to a shared place is what keeps them plain and
+    replaceable.
+  </p>
+
+  <h2>The balancer spreads work and dodges failures</h2>
+  <p>
+    In front of the servers sits a load balancer that hands each incoming request to one
+    of the healthy servers. It does two jobs at once. It shares the load, so no single
+    server is buried. And it routes around failures: when a server stops responding, the
+    balancer simply stops sending to it and keeps using the others. That is why it helps
+    both capacity and availability, not just one.
+  </p>
+
+  <h2>The surprise: don't be too clever</h2>
+  <p>
+    Now the interesting part: how should the balancer choose which server gets the next
+    request? The obvious answer is "always send it to the least busy server." That sounds
+    optimal, and it behaves badly.
+  </p>
+
+  <p>
+    The problem is that load measurements are always a little out of date. If everyone
+    sends work to whichever server looked idle a moment ago, they all pile onto the same
+    server at once, and it suddenly chokes, right as the stale reading finally catches up.
+    The "smart" rule causes a stampede. Strangely, sending requests to servers at random
+    can do better, because randomness never synchronizes everyone onto the same target.
+  </p>
+
+  <p>
+    The sweet spot is a tiny bit of awareness on top of randomness: pick two servers at
+    random and send the request to the less loaded of the two. This avoids the obviously
+    bad choices while still dodging the herd behavior, and it works remarkably well.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    To scale by adding servers, make them stateless so they are interchangeable and
+    disposable, keeping the important state in a shared store. Put a load balancer in
+    front to spread work and route around failures. And do not overthink the spreading:
+    always chasing the least-loaded server backfires on stale data, while a little
+    randomness, or picking the better of two random choices, beats stale cleverness.
+  </p>

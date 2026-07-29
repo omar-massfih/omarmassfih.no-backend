@@ -1,0 +1,81 @@
+---
+title: Two Ways Concurrent Updates Quietly Go Wrong
+heading: Two Ways Concurrent Updates Quietly Go Wrong
+listTitle: Lost Updates and Write Skew
+description: Why two correct-looking updates running at once can still corrupt your data, the difference between a lost update and write skew, and the simplest ways to stop each.
+lang: en
+category: Distributed Systems
+date: 2026-10-06
+dateText: Oct 6
+tags: distributed-systems, transactions, race-conditions, concurrency, isolation
+---
+  <p>
+    When two updates happen at the same moment, each one can look perfectly
+    correct on its own and still, together, leave the data wrong. These are race
+    conditions, and they are nasty because they only show up sometimes, when the
+    timing lines up just so. Two patterns are worth being able to spot by name.
+  </p>
+
+  <h2>The lost update</h2>
+  <p>
+    Many updates follow a read-then-write shape: read the current value, change
+    it, write it back. Add a comment to a counter, for example: read 10, add one,
+    write 11.
+  </p>
+
+  <p>
+    Now suppose two people do this at once. Both read 10. Both compute 11. Both
+    write 11. Two comments were added, but the counter only went up by one. One
+    person's change was quietly erased by the other, because the second write did
+    not know the first had happened. This is a lost update: two read-modify-write
+    cycles overlap, and one clobbers the other.
+  </p>
+
+  <p>
+    The fixes all come down to not letting the two cycles overlap blindly. You can
+    ask the database to do the change as one indivisible step ("add one to this
+    counter"), instead of reading and writing separately. You can lock the value
+    so the second person has to wait for the first to finish. Or you can write the
+    new value only on the condition that it has not changed since you read it, and
+    retry if it has. Each closes the gap where the second writer was working from
+    stale information.
+  </p>
+
+  <h2>Write skew: the sneakier one</h2>
+  <p>
+    Write skew is subtler because the two transactions do not even touch the same
+    row. Picture a rule: at least one doctor must stay on call. Two doctors are on
+    call, and both, at the same time, decide to go off call. Each one checks the
+    rule, sees "there is still one other doctor on call," and concludes it is safe
+    to leave. Each updates their own row. Both checks were true when made. But
+    together they leave zero doctors on call, breaking the rule.
+  </p>
+
+  <p>
+    Notice what happened: each transaction read some shared state, decided it was
+    fine, and then wrote to a different row. Neither overwrote the other, so it
+    does not look like a lost update. Yet the thing they both relied on, "someone
+    else is still on call," stopped being true the moment the other one acted.
+    They quietly pulled the rug out from under each other.
+  </p>
+
+  <h2>Why a snapshot is not enough</h2>
+  <p>
+    You might hope that giving each transaction a clean, frozen view of the
+    database would fix this. It fixes some problems, but not write skew. Each
+    transaction happily makes its decision based on a snapshot that was true when
+    it started, and commits, unaware that the other transaction just invalidated
+    the very assumption it depended on. The snapshots were each internally
+    consistent; the conflict lived in between them.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Two updates can each be correct and still corrupt your data together. A lost
+    update is when overlapping read-modify-writes erase one another; guard the
+    value with an atomic step, a lock, or a check-before-write. Write skew is when
+    two transactions act on a shared assumption that their own writes destroy;
+    catching it needs stronger protection, because nothing they wrote actually
+    collided. The first lesson is simply to recognize that "each change looks
+    fine" does not mean the combination is.
+  </p>

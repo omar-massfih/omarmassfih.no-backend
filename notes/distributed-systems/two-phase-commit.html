@@ -1,0 +1,82 @@
+---
+title: Committing Across Several Databases, and Why It Can Get Stuck
+heading: Committing Across Several Databases, and Why It Can Get Stuck
+listTitle: Two-Phase Commit
+description: How a two-step handshake makes several separate databases commit or abort as one, and why a coordinator crash at exactly the wrong moment can leave everyone frozen and waiting.
+lang: en
+category: Distributed Systems
+date: 2027-01-14
+dateText: Jan 14
+tags: distributed-systems, two-phase-commit, atomicity, blocking, transactions, consistency
+---
+  <p>
+    Inside one database, a transaction can make several changes all-or-nothing. But
+    what if a single action has to change data in several separate databases at
+    once, and you need them all to commit together or all to abort together, never
+    some of each? No single database can enforce that, because each only controls
+    itself. The usual answer is a two-step handshake.
+  </p>
+
+  <h2>The handshake</h2>
+  <p>
+    One machine acts as coordinator and runs the change in two phases.
+  </p>
+
+  <p>
+    First, it asks each database the same question: "are you able to commit your
+    part?" Each one checks, and if it can, it makes a durable promise: yes, I can
+    commit, and I will not back out on my own. If any database says no, the whole
+    thing will be called off.
+  </p>
+
+  <p>
+    Second, once the coordinator has heard back from everyone, it announces the
+    verdict. If all said yes, it tells them all to commit. If any said no, it tells
+    them all to abort. Because everyone already promised in the first phase, they
+    can all carry out the verdict together. When it works, it delivers exactly the
+    all-or-nothing outcome you wanted.
+  </p>
+
+  <h2>The crack: a crash at the wrong moment</h2>
+  <p>
+    Now the flaw. Picture the coordinator collecting "yes" from every database, and
+    then crashing before it announces the verdict. Each database is now in an
+    agonizing spot. It promised it could commit and swore not to abort on its own,
+    so it cannot just give up. But it also never heard whether the final decision
+    was commit or abort. It is stuck holding its promise, unable to move either way.
+  </p>
+
+  <p>
+    All it can do is wait for the coordinator to come back and tell it the outcome.
+    While it waits, it is holding resources and cannot finish, effectively frozen.
+    This is why the handshake is called a blocking approach: a crash at that one
+    precise moment can leave the participants waiting indefinitely.
+  </p>
+
+  <h2>Why one straggler freezes everyone</h2>
+  <p>
+    The same fragility shows up if any single database becomes unreachable during
+    the handshake. Since the outcome has to be unanimous, the coordinator cannot
+    safely declare commit while one participant is silent, so the whole transaction
+    stalls on the slowest or sickest member. One unavailable part is enough to hold
+    up all the others.
+  </p>
+
+  <h2>Why it is still used</h2>
+  <p>
+    Given that flaw, why is this handshake everywhere? Because when things are
+    healthy it is simple, cheap, and easy to reason about. It takes few messages,
+    it is straightforward to implement, and the blocking case, a crash at the exact
+    wrong instant, is rare. For many systems, that simplicity is worth the risk of
+    an occasional stall, especially with a coordinator that recovers quickly.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    To make several databases commit as one, ask them all "can you?", collect their
+    promises, then tell them all the verdict. It gives clean all-or-nothing results
+    when everyone is up. Its weakness is blocking: if the coordinator dies after the
+    promises but before the verdict, participants are stuck waiting, and one
+    unreachable member can freeze the rest. Simple and cheap in the good case,
+    stuck in the bad one, which is the trade it makes.
+  </p>

@@ -1,0 +1,75 @@
+---
+title: Getting a Group to Agree When You Can't Tell Who's Alive
+heading: Getting a Group to Agree When You Can't Tell Who's Alive
+listTitle: Consensus and Majorities
+description: Why making several machines agree on one value is genuinely hard, why a crashed machine looks exactly like a slow one, and why insisting on a majority is the trick that keeps everyone safe.
+lang: en
+category: Distributed Systems
+date: 2027-01-06
+dateText: Jan 6
+tags: distributed-systems, consensus, quorum, majority, agreement, failure
+---
+  <p>
+    Sometimes a group of machines has to agree on a single answer: who the leader
+    is, what order events happened in, whether a value is final. This is called
+    consensus, and it sounds like it should be easy. It is not, and understanding
+    why reveals one of the most useful ideas in distributed systems.
+  </p>
+
+  <h2>The core difficulty</h2>
+  <p>
+    The trouble is that you can never be sure who is alive. When you send a message
+    to another machine and hear nothing back, you cannot tell whether it has
+    crashed or is just slow, or whether the network is delaying the reply. A dead
+    machine and a very slow one look identical from the outside.
+  </p>
+
+  <p>
+    This is a real bind. You must not wait forever for a machine that may be dead,
+    but you also must not wrongly declare a slow machine dead and act without it. If
+    agreement required hearing from everyone, a single silent machine could freeze
+    the whole group indefinitely.
+  </p>
+
+  <h2>The trick: don't require everyone</h2>
+  <p>
+    The way out is to stop requiring everyone and require only a majority: more than
+    half the group. If more than half agree on something, that decision stands, and
+    the group can move on without waiting for the silent ones.
+  </p>
+
+  <p>
+    Why is that safe? Because any two majorities of the same group must overlap.
+    Take more than half the members twice, in any two ways, and at least one member
+    is in both. That shared member is the guard: it will not go along with two
+    conflicting decisions. So it is impossible for the group to agree to two
+    different answers, because there is no way to form two majorities that do not
+    share someone who would object.
+  </p>
+
+  <h2>What this buys, and what it costs</h2>
+  <p>
+    This overlap is quietly powerful. It means the group can keep making decisions
+    as long as more than half its members are reachable, tolerating the rest being
+    crashed or cut off. You trade "wait for everyone" for "wait for most," and gain
+    the ability to make progress despite failures.
+  </p>
+
+  <p>
+    The cost is that you must actually be able to reach a majority. If too many
+    machines are down or partitioned away, no majority can form, and the group
+    correctly refuses to decide rather than risk a split answer. It also means that
+    to survive a certain number of failures, you need enough machines that a
+    majority still exists after those failures happen. Surviving more failures
+    means running more machines.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    Agreement is hard because you can never be certain who is alive; silence could
+    mean death or just delay. The escape is to decide by majority instead of
+    unanimity. Because any two majorities share a member, the group can never
+    commit to two conflicting answers, and it can keep going as long as most
+    members are reachable. "More than half" turns an impossible wait into a safe,
+    workable rule.
+  </p>

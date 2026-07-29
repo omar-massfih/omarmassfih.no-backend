@@ -1,0 +1,74 @@
+---
+title: Separate the Fast Path From the Control Path
+heading: Separate the Fast Path From the Control Path
+listTitle: Control Plane and Data Plane
+description: Why serving requests and managing configuration are such different jobs that they deserve to be separated, and why the request-serving path must never stop working just because the configuration service is down.
+lang: en
+category: Distributed Systems
+date: 2027-06-07
+dateText: Jun 7
+tags: distributed-systems, control-plane, data-plane, availability, feedback-loop, scalability, reconciliation
+---
+  <p>
+    Many systems quietly do two very different kinds of work at once. One is serving the
+    actual requests users make. The other is managing configuration: deciding what the
+    servers should be doing, pushing out settings, keeping track of what exists. These two
+    jobs have almost opposite needs, and mixing them causes trouble. Pulling them apart is
+    a powerful move.
+  </p>
+
+  <h2>Two jobs, opposite needs</h2>
+  <p>
+    The request-serving part sits on the critical path: every user request goes through it,
+    so it has to be fast, always available, and able to grow with traffic. Call it the data
+    plane. The configuration-managing part, the control plane, works very differently. It
+    changes far less often, and it cares more about being correct and consistent than about
+    raw speed, because a wrong or conflicting configuration makes the serving part
+    misbehave.
+  </p>
+
+  <p>
+    Because their needs pull in different directions, one being about speed under heavy
+    traffic and the other about correctness of slowly-changing settings, trying to build one
+    thing that does both well is hard. Separating them lets each be designed for its own job.
+  </p>
+
+  <h2>The critical rule: don't depend on the manager</h2>
+  <p>
+    Here is the single most important consequence. The serving part must not hard-depend on
+    the managing part. If the data plane stops working whenever the control plane is down,
+    then your whole system is only as available as that smaller, less-exercised configuration
+    service. You have quietly made your critical path hostage to a non-critical one, which is
+    a terrible trade.
+  </p>
+
+  <p>
+    So the serving part should keep running on the last configuration it received, even when
+    the manager is temporarily unreachable. Serving slightly stale settings almost always
+    preserves more usefulness than going dark while waiting for perfectly fresh ones. The
+    fast path carries on; the control path catches up when it can.
+  </p>
+
+  <h2>The manager is a feedback loop</h2>
+  <p>
+    One more idea makes the control plane much more effective: think of it not as a one-time
+    settings-pusher but as a feedback loop. It should watch the actual state of the serving
+    part, compare it against the desired state, and keep nudging until the two match, rather
+    than firing off a change and assuming it took. Without that watching step, it is pushing
+    blind, with no way to know whether anything worked.
+  </p>
+
+  <p>
+    This is also why a careful rollout should behave like a control plane rather than a blind
+    script: release the change gradually, watch the live system, and stop or reverse if the
+    evidence turns bad.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Serving requests and managing configuration are different jobs with opposite needs, so
+    separate the fast per-request path from the slower control path and build each for its
+    own role. Above all, never let the critical serving path depend on the control path
+    staying up; keep serving on stale settings rather than stopping. And treat the control
+    path as a feedback loop that watches and corrects, not a one-shot command.
+  </p>

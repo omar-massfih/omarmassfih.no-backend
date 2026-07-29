@@ -1,0 +1,106 @@
+---
+title: Timeouts, Retries, and Knowing When to Stop Trying
+heading: Timeouts, Retries, and Knowing When to Stop Trying
+listTitle: Downstream Resiliency
+description: Why every network call needs a deadline, why retries can make an overloaded system worse, and why a circuit breaker sometimes protects you better than trying again.
+lang: en
+category: Distributed Systems
+date: 2026-08-23
+dateText: Aug 23
+tags: distributed-systems, resiliency, timeouts, retries, circuit-breaker
+---
+  <p>
+    When one service calls another over the network, that call can hang. The
+    other side might be slow, overloaded, or stuck in a way that never sends
+    back an answer or an error. How the caller handles that moment decides
+    whether one slow dependency stays a small problem or drags the whole caller
+    down with it.
+  </p>
+
+  <h2>Always set a deadline</h2>
+  <p>
+    A call with no time limit is a trap. If it never returns, it holds onto a
+    thread, a connection, and memory the whole time. Enough stuck calls and the
+    caller runs out of those resources and fails too, even though the caller
+    itself is fine. So every network call needs a timeout: a deadline after
+    which the caller gives up and moves on.
+  </p>
+
+  <p>
+    Be suspicious of any library that has no timeout, or defaults to waiting
+    forever. It quietly turns a slow dependency into an unbounded wait. Picking
+    the deadline is a trade-off, not a fixed number. Too short, and you give up
+    on healthy-but-slow calls and cry wolf. Too long, and real failures tie up
+    resources for ages. A reasonable method is to look at how long calls
+    normally take and set the deadline a bit beyond that, so only the genuinely
+    stuck ones get cut off.
+  </p>
+
+  <h2>Retry, but gently</h2>
+  <p>
+    Many failures are brief. A quick hiccup clears up on its own, so trying again
+    after a short wait often just works, with no human involved. That is the case
+    for retries.
+  </p>
+
+  <p>
+    But retrying carelessly can turn a small problem into a large one. If a
+    dependency is failing because it is overloaded, retrying right away piles on
+    more load exactly when it is already struggling, and pushes it further down.
+    Two habits fix this. First, wait a little longer before each attempt instead
+    of hammering at a fixed pace, so a struggling dependency gets room to
+    recover. Second, add a bit of randomness to those waits. Otherwise every
+    client that failed together retries together, in one synchronized wave that
+    keeps knocking the dependency over just as it tries to get up.
+  </p>
+
+  <p>
+    Some failures should not be retried at all. If the error is permanent, like a
+    rejected password, trying again only wastes effort. And retrying an action
+    that is unsafe to repeat can cause real damage, such as charging a card
+    twice.
+  </p>
+
+  <h2>Do not stack retries</h2>
+  <p>
+    Retries are dangerous when they pile up across layers. If A calls B calls C,
+    and each layer retries, the attempts multiply: a few retries at the top can
+    become a flood by the time they reach the bottom. The deepest, most stressed
+    service gets the worst of it. The cleaner rule is to let one layer own the
+    retrying and have the others fail fast, so the recovery effort does not
+    become its own overload.
+  </p>
+
+  <h2>When to stop trying: the circuit breaker</h2>
+  <p>
+    Retries assume the next attempt might succeed soon. Sometimes that stops
+    being true, and every call is just going to fail. Waiting through timeouts
+    and retries for calls you know will fail only spreads the slowness back into
+    the caller.
+  </p>
+
+  <p>
+    A circuit breaker handles this. Like the one in a house, it cuts the flow
+    when things go wrong. While the dependency looks healthy, calls pass through.
+    Once failures pile up, it flips open and calls fail instantly instead of
+    hanging. After a while it lets a trickle through to test whether the
+    dependency has recovered, and only fully reopens if those probes succeed.
+    Retries and circuit breakers are partners: one keeps trying when success is
+    near, the other stops trying when it is not.
+  </p>
+
+  <p>
+    One more thing to plan for. When the breaker opens on a feature that is not
+    essential, the caller should carry on with a reduced experience rather than
+    fail completely. Losing one optional feature is far better than taking down
+    the whole page because of it.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Give every call a deadline. Retry only when another try might genuinely help,
+    and space the tries out with a little randomness so recovery does not become
+    a stampede. And know when to stop: sometimes failing fast, and gracefully
+    dropping a non-essential feature, protects users better than trying one more
+    time.
+  </p>

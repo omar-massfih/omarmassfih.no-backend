@@ -1,0 +1,82 @@
+---
+title: Redundancy Only Helps If Failures Are Not Shared
+heading: Redundancy Only Helps If Failures Are Not Shared
+listTitle: Redundancy and Correlated Failure
+description: Why keeping spare copies is the first defense against failure, and why the real limit on redundancy is not the number of copies but whether they can all fail for the same reason at once.
+lang: en
+category: Distributed Systems
+date: 2026-08-15
+dateText: Aug 15
+tags: distributed-systems, redundancy, availability, correlated-failure, availability-zones, failure
+---
+  <p>
+    The simplest way to survive a failure is to keep more than one copy of
+    whatever might fail. If one machine goes down, another takes over and users
+    never notice. This is redundancy, and it is usually the first defense a
+    system reaches for. But keeping spare copies is not automatically an
+    improvement, and it helps to understand why.
+  </p>
+
+  <h2>Spare copies are not free safety</h2>
+  <p>
+    Every extra copy adds moving parts. Something has to notice when a copy is
+    unhealthy and stop sending it work. The healthy copies have to carry the
+    extra load the failed one dropped. And a failed copy has to be replaced,
+    because a system running on its last copy is one fault away from an outage
+    even though nothing looks wrong yet.
+  </p>
+
+  <p>
+    So redundancy only pays off if the complexity it adds removes more failures
+    than it introduces. Copies you cannot detect as broken, or cannot afford to
+    lose because the rest would collapse under the load, do not buy you much.
+  </p>
+
+  <h2>The real limit: shared reasons to fail</h2>
+  <p>
+    Here is the part that surprises people. The number of copies is not the main
+    thing that decides how much redundancy protects you. What matters is whether
+    the copies can fail for the same reason at the same time.
+  </p>
+
+  <p>
+    Imagine ten copies of a service, all plugged into the same power supply. If
+    that power fails, all ten go down together, and the ten copies protected you
+    no better than one. Failures that strike many copies at once for a single
+    shared cause are called correlated failures, and they are what quietly makes
+    redundancy useless.
+  </p>
+
+  <h2>Spreading copies apart</h2>
+  <p>
+    The fix is to make the copies fail for different reasons. Cloud providers
+    group machines into what they call availability zones: separate buildings
+    with their own power and networking. Putting copies in different zones is
+    stronger than putting many copies in one building, because a power or
+    network fault in one zone does not reach the others.
+  </p>
+
+  <p>
+    Zones are kept far enough apart to avoid sharing a single failure, but close
+    enough that they can still talk quickly. That closeness matters: because the
+    delay between zones is small, copies can stay tightly in sync. Regions,
+    which are much farther apart, are a different story. The delay is large
+    enough that waiting for a faraway copy on every request would be too slow,
+    so cross-region copies usually sync in the background instead, accepting that
+    they can lag a little behind.
+  </p>
+
+  <p>
+    Spreading across regions survives even the loss of a whole region, but it
+    adds real cost and complexity, so it is worth doing only when the risk of a
+    regional failure, or a rule about where data must live, actually justifies
+    it.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    Do not count copies and assume you are safe. Ask what could take several
+    copies down at once, and place them so that fewer and fewer faults are
+    shared between them. Redundancy is not about how many copies you have. It is
+    about how independent their failures are.
+  </p>

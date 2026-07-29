@@ -1,0 +1,68 @@
+---
+title: Keeping a Live List of Who's Available
+heading: Keeping a Live List of Who's Available
+listTitle: Service Discovery
+description: Why a system whose set of servers changes on its own also needs its list of servers to maintain itself, why a hand-kept config file is the wrong tool, and how a self-expiring registry makes automatic scaling possible.
+lang: en
+category: Distributed Systems
+date: 2027-06-03
+dateText: Jun 3
+tags: distributed-systems, service-discovery, autoscaling, registry, load-balancing, scalability
+---
+  <p>
+    Once you run a pool of servers that grows and shrinks with demand, a new problem
+    appears: something has to keep track of which servers currently exist and are healthy,
+    so requests only ever go to real, ready ones. Sending traffic to a server that has
+    gone away is just a failure waiting to happen. This tracking job is called service
+    discovery.
+  </p>
+
+  <h2>The hand-kept list breaks down</h2>
+  <p>
+    The naive approach is to write the list of servers down somewhere by hand, in a
+    configuration file. This is fine until the pool changes, which is constantly. Every
+    time a server is added or removed, someone has to edit the list, which is slow and
+    easy to get wrong.
+  </p>
+
+  <p>
+    Worse, it fights directly against scaling automatically. The whole point of adding and
+    removing servers on their own is that no human is in the loop, but a hand-kept list
+    puts a human right back in it. A brittle, manually maintained list cannot keep up with
+    a pool that changes by itself.
+  </p>
+
+  <h2>A registry that maintains itself</h2>
+  <p>
+    The better approach is a live registry that servers join when they start and drop out
+    of when they stop. The neat trick that makes it self-maintaining is to have each
+    server periodically renew its entry, like checking in to say "still here." If a server
+    crashes or freezes, it stops checking in, and its entry simply expires and vanishes on
+    its own. Nobody has to notice the failure and remove it by hand; absence takes care of
+    itself.
+  </p>
+
+  <p>
+    Now the current list is always roughly right, without anyone tending it. Whatever
+    needs to route traffic can ask the registry who is available right now and trust the
+    answer.
+  </p>
+
+  <h2>Why automatic scaling depends on it</h2>
+  <p>
+    This is the quiet piece that makes automatic scaling real. A newly started server is
+    useless if it cannot announce itself and begin receiving traffic without someone
+    editing a config; the self-registering list is how it joins instantly. And a removed
+    server only saves you money if it disappears from the pool just as automatically;
+    otherwise traffic keeps being sent to something that is gone. Scaling up and scaling
+    down both rely on the list keeping itself current.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    In a system where the set of servers changes on its own, the list of who is available
+    has to maintain itself too. A hand-kept config file cannot keep pace and blocks
+    automatic scaling. A live registry that servers check in to, and that expires the ones
+    who stop checking in, keeps the list honest without human tending, which is exactly
+    what lets servers come and go on their own.
+  </p>

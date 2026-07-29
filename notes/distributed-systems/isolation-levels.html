@@ -1,0 +1,77 @@
+---
+title: How Much Should Transactions Pretend They Are Alone?
+heading: How Much Should Transactions Pretend They Are Alone?
+listTitle: Isolation Levels
+description: Why databases offer several levels of protection between concurrent transactions instead of just one, what each stronger level buys you, and why the strongest costs the most.
+lang: en
+category: Distributed Systems
+date: 2026-10-10
+dateText: Oct 10
+tags: distributed-systems, transactions, isolation, snapshot-isolation, serializable, consistency
+---
+  <p>
+    When many transactions run at once, the ideal would be for each to behave as
+    if it were the only one touching the database. Delivering that ideal fully is
+    expensive, so databases offer a ladder of weaker-to-stronger guarantees. You
+    pick how much protection you need. Knowing the rungs helps you avoid paying too
+    much, or too little.
+  </p>
+
+  <h2>The bottom rung: only see finished work</h2>
+  <p>
+    The first useful guarantee is simple: a transaction should only see changes
+    from other transactions that have actually finished. It should never read a
+    half-made change that might still be undone, and it should never overwrite
+    someone else's half-made change. This rules out the crudest mix-ups, where you
+    read a value that then vanishes.
+  </p>
+
+  <p>
+    It is not much, though. Within a single transaction, you can still read the
+    same data twice and get two different answers, because other transactions
+    finished in between. For a report that reads many rows, that means an
+    inconsistent picture: some rows from before a change, some from after.
+  </p>
+
+  <h2>The middle rung: a frozen view</h2>
+  <p>
+    The next rung fixes that. When a transaction starts, it gets a consistent
+    snapshot of the whole database, frozen at that instant. No matter how long it
+    runs or what others do meanwhile, it keeps seeing the database as it was when
+    it began. Read the same row a hundred times and you get the same answer.
+  </p>
+
+  <p>
+    This is exactly what long reads want. A backup or a big analytics query can
+    take its time and still see one coherent version of the data, even while
+    writes keep pouring in around it. The database quietly keeps a few versions of
+    things around so readers and writers do not trip over each other.
+  </p>
+
+  <h2>The top rung: as if one at a time</h2>
+  <p>
+    Even a frozen view has gaps, as write skew shows: two transactions can each act
+    on a snapshot whose assumption the other quietly breaks. The strongest
+    guarantee closes every such gap. It promises that the final result is the same
+    as if the transactions had run one after another, in some order, never
+    overlapping at all. If it comes out that way, no race condition can survive,
+    because there was effectively no concurrency to exploit.
+  </p>
+
+  <p>
+    Databases reach this in different ways. Some literally run transactions one at
+    a time. Some make conflicting transactions wait on each other with locks, at
+    the cost of blocking and occasional deadlocks. Some let everything run freely
+    and then cancel any transaction that turns out to have clashed, asking it to
+    retry. Each approach trades speed, waiting, and wasted work differently.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    Isolation is a dial, not a switch. Weaker settings are faster but let subtle
+    races slip through; the strongest is airtight but costs performance, through
+    blocking, retries, or reduced throughput. The practical move is to know which
+    races each level still allows, and turn the dial only as high as the data
+    actually needs. Reaching for the strongest everywhere is as much a mistake as
+    forgetting it where it matters.
+  </p>

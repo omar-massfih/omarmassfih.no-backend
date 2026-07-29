@@ -1,0 +1,90 @@
+---
+title: What a Service Should Do When It Is Overwhelmed
+heading: What a Service Should Do When It Is Overwhelmed
+listTitle: Upstream Resiliency
+description: Why saying no quickly beats trying to accept every request under overload, and how load shedding, queues, and rate limits keep a busy service from collapsing.
+lang: en
+category: Distributed Systems
+date: 2026-08-27
+dateText: Aug 27
+tags: distributed-systems, resiliency, load-shedding, rate-limiting, overload, retries
+---
+  <p>
+    A service has a limit. Past some rate of requests it runs out of memory,
+    threads, or connections, and its responses slow to a crawl. The dangerous
+    part is what happens next: if it keeps accepting everything, it does not
+    just get slow, it gets slow for everyone at once, and the whole thing
+    becomes unusable. Handling that moment well is the difference between a busy
+    service and a fallen one.
+  </p>
+
+  <h2>Say no quickly</h2>
+  <p>
+    The instinct under load is to try to serve every request. That is the wrong
+    instinct. Once a service is at capacity, the kindest thing it can do is
+    reject extra work fast, so the requests already in progress get the
+    resources they need to finish. This is called load shedding: dropping some
+    requests on purpose to keep the rest healthy.
+  </p>
+
+  <p>
+    Shedding can be smart about what it drops. If some requests matter more, or
+    if a request has been waiting so long the user has probably given up, those
+    are the ones to reject first, protecting the work most worth finishing. But
+    shedding has a limit too: even rejecting a request costs a little effort, so
+    if the flood keeps rising, eventually the cost of saying no can itself
+    overwhelm the service.
+  </p>
+
+  <h2>Let a queue absorb the spikes</h2>
+  <p>
+    When callers do not need an instant answer, a queue helps. Instead of hitting
+    the service directly, requests go into a channel, and the service pulls from
+    it at its own comfortable pace. A short burst piles up briefly and then
+    drains, so the spike never reaches the service at full force.
+  </p>
+
+  <p>
+    A queue smooths bumps, but it is not a cure for too much traffic. If requests
+    keep arriving faster than they can be handled, the backlog just grows and
+    grows until it becomes its own kind of failure. A queue buys time; only more
+    capacity, added by hand or automatically, actually keeps up with a lasting
+    rise in load.
+  </p>
+
+  <h2>Set limits per user</h2>
+  <p>
+    Load shedding reacts to one machine's stress in the moment. Rate limiting is
+    different: it caps how much any single user or client may use over time, no
+    matter how the machines are doing. It protects a service from one client,
+    often a buggy or overeager one, quietly hogging everything by accident.
+  </p>
+
+  <p>
+    When you do turn a client away for going over its limit, tell it clearly that
+    it hit a quota rather than sending a vague error. A well-behaved client that
+    knows it was throttled will back off and try later, instead of treating the
+    rejection as a random failure and retrying harder. Rate limits also double as
+    a fairness and pricing tool: heavier users can be given, or charged for,
+    larger quotas that match the capacity they consume.
+  </p>
+
+  <h2>Do a steady amount of work</h2>
+  <p>
+    A subtler idea helps a service stay calm under stress: try to do roughly the
+    same amount of work no matter what is happening. A system whose effort barely
+    changes with load has few surprise slow paths to trip over when things get
+    busy. Doing a steady, slightly wasteful amount of work is often more reliable
+    than doing the clever minimum, because steady behavior is easier to test and
+    predict. Reserving a fixed amount of capacity up front fits the same idea: you
+    can test the service at its true worst case, because its worst case is known.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    Under overload, protect the work you can finish instead of trying to accept
+    everything. Shed excess quickly, let queues flatten short spikes, cap what any
+    one client can take, and lean toward steady, predictable work. A service that
+    knows how to say no gracefully stays useful for the people it can still
+    serve.
+  </p>

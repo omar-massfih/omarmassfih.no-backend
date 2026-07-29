@@ -1,0 +1,69 @@
+---
+title: A Call Over the Network Is Not a Normal Function Call
+heading: A Call Over the Network Is Not a Normal Function Call
+listTitle: Remote Calls Aren't Local Calls
+description: Why making a call to another machine look like an ordinary function call hides the ways it can fail, and why the worst part is often not knowing whether it succeeded.
+lang: en
+category: Distributed Systems
+date: 2027-03-03
+dateText: Mar 3
+tags: distributed-systems, rpc, network, failure, idempotence, retries
+---
+  <p>
+    It is tempting to make calling another service look exactly like calling an
+    ordinary function in your own program: same familiar syntax, the network tucked
+    out of sight. It feels clean. But that tidiness hides differences that matter,
+    and they tend to reappear as production surprises.
+  </p>
+
+  <h2>A local call always comes back</h2>
+  <p>
+    When you call a function inside your own program, it runs and returns. Barring a
+    crash that takes the whole program down with it, there is no world where you call
+    it and simply never hear back. You do not worry about the call getting lost on
+    the way there, or its answer getting lost on the way back.
+  </p>
+
+  <p>
+    A call across the network has all of those failure modes and more. The request
+    can be lost before it arrives. The reply can be lost after the work is done. The
+    other machine can be slow, so the answer takes seconds instead of an instant. Or
+    it can be down entirely. None of this can happen to a local call, and all of it
+    is routine over a network.
+  </p>
+
+  <h2>The worst part: not knowing</h2>
+  <p>
+    The hardest failure is not that something went wrong; it is that you often cannot
+    tell what went wrong. When you send a request and hear nothing, you cannot
+    distinguish between two very different situations: the other side never received
+    the request, or it received it, did the work, and its reply got lost on the way
+    back. From where you stand, both look identical: silence.
+  </p>
+
+  <p>
+    That uncertainty is exactly why simply retrying is dangerous. If the work already
+    happened and only the reply was lost, retrying does the work a second time. For
+    something like a payment, that is real harm. Retrying is only safe when the action
+    can be repeated without extra effect, so this is a place where designing actions
+    to be safely repeatable pays off directly.
+  </p>
+
+  <h2>Why the disguise backfires</h2>
+  <p>
+    When a remote call is dressed up to look local, it is easy to forget all of this.
+    You write code as if the call always returns promptly and exactly once, because
+    that is what local calls do. Then, in production, the lost messages, timeouts, and
+    duplicate effects arrive as baffling bugs, precisely because the code was written
+    as though they could not happen.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    A call over the network is not a normal function call, however much it is made to
+    look like one. It can be lost, delayed, or left unanswered, and often you cannot
+    tell whether it succeeded. Treat it as a message that might not arrive, to a
+    partner that might not answer, whose outcome you might not learn, and design for
+    retries by making the work safe to repeat. Respect the network, and it surprises
+    you far less.
+  </p>

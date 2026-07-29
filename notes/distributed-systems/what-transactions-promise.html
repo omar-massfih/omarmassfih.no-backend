@@ -1,0 +1,89 @@
+---
+title: What a Database Transaction Actually Promises
+heading: What a Database Transaction Actually Promises
+listTitle: What Transactions Promise
+description: Why grouping several changes into one all-or-nothing unit is worth so much, and how it lets an application retry after a failure instead of untangling a half-finished mess.
+lang: en
+category: Distributed Systems
+date: 2026-10-02
+dateText: Oct 2
+tags: distributed-systems, transactions, atomicity, durability, databases
+---
+  <p>
+    A transaction lets you group several changes to a database and treat them as
+    one unit. Either all of them happen, or none of them do. That sounds modest,
+    but it removes an entire category of nightmare from writing software.
+  </p>
+
+  <h2>The problem it removes</h2>
+  <p>
+    Imagine moving money from one account to another: subtract from one, add to
+    the other. If the machine crashes between those two steps, the money has
+    vanished from one account and never arrived in the other. Now imagine every
+    pair of related changes in your system carrying that same risk. You would
+    spend your life reasoning about half-finished states.
+  </p>
+
+  <p>
+    A transaction makes that whole class of problem go away. Bundle the two steps
+    into one transaction, and the database guarantees you never end up in the
+    middle. This is why transactions simplify error handling so much: when
+    something goes wrong, you do not have to figure out how far you got. You just
+    try again from the start, because a failed transaction leaves no trace.
+  </p>
+
+  <h2>The promises, in plain terms</h2>
+  <p>
+    People bundle a transaction's guarantees under four words. They are worth
+    knowing as plain ideas rather than vocabulary.
+  </p>
+  <ul>
+    <li>
+      <strong>All-or-nothing.</strong> If the transaction cannot finish, every
+      change it made is undone. You are never left half-done.
+    </li>
+    <li>
+      <strong>No harmful interference.</strong> When many transactions run at
+      once, the result should come out as if they had not stepped on each other.
+      Each one can mostly pretend it is alone.
+    </li>
+    <li>
+      <strong>It sticks.</strong> Once the database says a transaction is done,
+      its changes survive a crash right afterward. A confirmed write is not
+      quietly lost.
+    </li>
+    <li>
+      <strong>Your rules hold.</strong> If your data had to obey some rule before
+      (an account balance is never negative, say), a correct transaction leaves
+      that rule holding afterward too.
+    </li>
+  </ul>
+
+  <h2>Why grouping writes matters</h2>
+  <p>
+    The real value shows up when one fact lives in several places. Systems often
+    store the same information more than once, for speed or convenience: a count
+    here, a copy there, an entry in an index. If those are updated separately and
+    a failure lands in between, they disagree, and now your data contradicts
+    itself. Wrapping the related updates in one transaction keeps them in step, so
+    they move together or not at all.
+  </p>
+
+  <h2>Retrying is not always the whole answer</h2>
+  <p>
+    Because a failed transaction leaves nothing behind, retrying is usually safe.
+    But it is not a cure-all. Retrying something that already sent an email or
+    charged a card can repeat that outside effect, since the database can undo its
+    own writes but not an email that already went out. And blindly retrying during
+    an overload just adds more pressure. The clean undo is a powerful tool, but it
+    only covers what lives inside the database.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    A transaction's core gift is that it hides the messy middle. Group related
+    changes so they all land or none do, and a crash can no longer leave your data
+    half-updated. That single guarantee turns "reason carefully about every
+    partial failure" into "just try again," which is one of the best trades in all
+    of software.
+  </p>

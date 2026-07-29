@@ -1,0 +1,83 @@
+---
+title: Two Ways a Database Stores Data on Disk
+heading: Two Ways a Database Stores Data on Disk
+listTitle: Append vs Overwrite Storage
+description: Why some databases add new data and tidy up later while others change data in place, and how that one choice decides whether writes or reads are the easy part.
+lang: en
+category: Distributed Systems
+date: 2026-09-08
+dateText: Sep 8
+tags: distributed-systems, storage-engines, lsm-tree, b-tree, databases, immutability
+---
+  <p>
+    Underneath every database is a decision about how to put data on disk. There
+    are two main answers, and they pull in opposite directions. Knowing which one
+    a database uses tells you a lot about what it will be fast at and what it will
+    struggle with.
+  </p>
+
+  <h2>The append-and-tidy approach</h2>
+  <p>
+    The first approach never changes old data. When you write something, it just
+    adds the new value to the end of a file. If you update the same key ten
+    times, all ten writes are simply tacked on, and the newest one wins. Writing
+    is fast because adding to the end of a file is about the cheapest thing a
+    disk can do.
+  </p>
+
+  <p>
+    The catch is that the file fills up with old, dead values. So in the
+    background the database periodically rewrites its files, throwing away the
+    outdated versions and keeping only the latest of each key. This cleanup is
+    the price of cheap writes: the database is always quietly tidying up after
+    itself.
+  </p>
+
+  <h2>The change-in-place approach</h2>
+  <p>
+    The second approach keeps data in fixed-size slots and updates a value by
+    overwriting the slot where it lives. To find a value it walks down a tree of
+    these slots, narrowing the range at each step until it lands on the right
+    one. There is no pile of old versions to clean up later, because each update
+    happens in place.
+  </p>
+
+  <p>
+    The cost shows up on writes. Changing a slot in the middle of a file, and
+    sometimes splitting a full slot into two, is more work than appending to the
+    end. To stay safe if the machine crashes mid-update, these databases also
+    write down what they are about to do first, so they can recover to a clean
+    state.
+  </p>
+
+  <h2>The trade-off this creates</h2>
+  <p>
+    Here is the heart of it. The append-and-tidy approach is great when you write
+    a lot, because it turns writes into cheap sequential work. But reads can be
+    slower and less predictable, because the value you want might be spread
+    across several files, and the background cleanup competes for the same disk.
+  </p>
+
+  <p>
+    The change-in-place approach tends to give steadier, more predictable reads,
+    because each value sits in one known spot rather than scattered across files
+    being merged. That makes it a good fit when reads matter most and you can
+    accept slightly more expensive writes.
+  </p>
+
+  <p>
+    One trap worth naming: a single logical write can quietly cause several
+    physical writes to disk over time, whether from background tidying or from
+    updating and splitting slots. On systems where disk wear or bandwidth is
+    tight, that hidden multiplication can matter more than the raw speed of
+    either approach.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    There is no universally best way to store data, only a trade-off between easy
+    writes and easy reads. Append-and-tidy favors heavy writing at the cost of
+    background cleanup and less predictable reads. Change-in-place favors steady
+    reads at the cost of pricier writes. When you pick a database, you are
+    largely picking which side of that trade you want.
+  </p>

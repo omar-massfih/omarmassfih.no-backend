@@ -1,0 +1,87 @@
+---
+title: Why Copies Lag, and the Odd Reads That Follow
+heading: Why Copies Lag, and the Odd Reads That Follow
+listTitle: Replication and Stale Reads
+description: Why keeping copies of data up to date takes time, and the three confusing things a user can see when they read from a copy that has fallen behind.
+lang: en
+category: Distributed Systems
+date: 2026-09-12
+dateText: Sep 12
+tags: distributed-systems, replication, consistency, stale-reads, followers
+---
+  <p>
+    To survive machine failures and to serve users closer to home, databases keep
+    copies of the same data on several machines. A common setup has one machine
+    take all the writes and the others copy those changes. Reads can then be
+    spread across the copies. It works well, but it introduces a subtle problem:
+    the copies are not always up to date.
+  </p>
+
+  <h2>Why copies fall behind</h2>
+  <p>
+    When a write lands, the main machine can either wait for the copies to catch
+    up before confirming, or confirm right away and let them catch up in the
+    background. Waiting is safer, because the write is truly in more than one
+    place, but it makes every write slower and stalls if a copy is down. Not
+    waiting keeps writes fast and the system available, but it means a copy can
+    be a moment behind, missing the newest writes.
+  </p>
+
+  <p>
+    Most systems lean toward not waiting, so lag is normal. Usually the gap is
+    tiny. But when a user reads from a copy that is briefly behind, they can see
+    some genuinely confusing things. Three of them are worth knowing by name.
+  </p>
+
+  <h2>Not seeing your own write</h2>
+  <p>
+    You post a comment, the write goes to the main machine, and then you reload.
+    If the reload is served by a copy that has not caught up yet, your comment is
+    gone. You know you wrote it, but the system seems to have lost it. It has
+    not; the copy simply has not received it yet.
+  </p>
+
+  <p>
+    The fix is to make sure that, at least for the thing you just changed, you
+    read from a copy that is guaranteed to have it. A user should always be able
+    to see their own writes, even if they cannot yet see everyone else's.
+  </p>
+
+  <h2>Time appearing to run backward</h2>
+  <p>
+    Now imagine you refresh a page twice. The first read hits an up-to-date copy
+    and shows a new message. The second read happens to hit a copy that is
+    behind, and the new message vanishes. From your side, time ran backward:
+    something you already saw disappeared.
+  </p>
+
+  <p>
+    The fix is to keep a given user reading from copies that never go backward in
+    time. Once they have seen newer data, they should not later be shown older
+    data. Things may be a little stale, but they should only ever move forward.
+  </p>
+
+  <h2>Seeing effects before their cause</h2>
+  <p>
+    The third oddity is about order. Suppose one write is a question and a later
+    write is its answer. If different copies receive these two writes and a reader
+    sees the answer before the question, the conversation makes no sense. The
+    cause and its effect arrived out of order.
+  </p>
+
+  <p>
+    The fix is to make sure that writes which depend on each other are always
+    shown in the right order. If B only makes sense after A, no reader should ever
+    see B without A. The data can lag, but it should never scramble cause and
+    effect.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    Copies lag because keeping them perfectly in step would make the system slow
+    and fragile, so most systems accept a little delay. The delay is usually
+    harmless, but it produces three specific surprises: not seeing your own
+    write, seeing time run backward, and seeing an effect before its cause.
+    Naming them is the first step to designing around them, one guarantee at a
+    time, instead of demanding perfect freshness everywhere.
+  </p>
