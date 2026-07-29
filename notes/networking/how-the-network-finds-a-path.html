@@ -1,0 +1,73 @@
+---
+title: How the Network Finds a Path When No One Sees the Whole Map
+heading: How the Network Finds a Path When No One Sees the Whole Map
+listTitle: How the Network Finds a Path
+description: Why routers can send your data the right way without any of them knowing the whole network, and the trade-off between sharing a full map and sharing only distances, including the trap of trusting a neighbor's route that secretly depends on you.
+lang: en
+category: Networking
+date: 2027-07-21
+dateText: Jul 21
+tags: networking, routing, distributed, link-state, distance-vector
+---
+  <p>
+    When you send data across a network, it passes through a series of routers, each handing it
+    one step closer to its destination. Here is the puzzle: no single router knows the whole
+    network. Yet each one somehow picks the right next step. They pull this off by cooperating,
+    and there are two classic ways to do it.
+  </p>
+
+  <h2>Share a full map</h2>
+  <p>
+    In the first approach, every router shares its own small piece of local knowledge: who it is
+    directly connected to, and how costly each of those links is. Every router announces just
+    its own connections to all the others. Once everyone has heard everyone else's local pieces,
+    each router can assemble the same complete map of the network and work out the best path to
+    anywhere by itself.
+  </p>
+
+  <p>
+    This is robust and gives everyone a consistent picture. Its cost is weight: every router has
+    to receive and process updates from every other one, which grows expensive as the network
+    gets large.
+  </p>
+
+  <h2>Share only distances</h2>
+  <p>
+    In the second approach, routers do not build a full map. Each one only tells its immediate
+    neighbors how far it thinks each destination is. To update itself, a router takes a
+    neighbor's claimed distance to some place and adds its own cost to reach that neighbor,
+    then keeps whichever total is best.
+  </p>
+
+  <p>
+    This is lighter: you only talk to your neighbors, and you only exchange short summaries
+    rather than whole maps. Good news, like a new shorter path appearing, spreads quickly from
+    neighbor to neighbor.
+  </p>
+
+  <h2>The trap in trusting summaries</h2>
+  <p>
+    Sharing only distances has a famous flaw. After a link fails, routers can start echoing
+    stale distances back and forth. A router hears a neighbor claim it still has a path to some
+    destination, not realizing that the neighbor's path actually ran back through the router
+    itself, along the link that just died. So it trusts a route that secretly depended on it,
+    the numbers creep upward step by step, and it can take a long time for everyone to realize
+    the destination is really gone.
+  </p>
+
+  <p>
+    The deeper point generalizes well beyond networks. Sharing full information gives everyone
+    an accurate, consistent view at a high cost. Sharing only summaries is cheap, but you act on
+    second-hand claims whose hidden dependencies you cannot see, and those hidden dependencies
+    can quietly loop back on you.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Routing is a distributed agreement about paths, assembled from purely local knowledge. You
+    can have every router broadcast its local links so all of them build the same full map,
+    accurate but expensive, or have each router share only its distance estimates with
+    neighbors, cheap but capable of being misled by stale claims that secretly depended on the
+    listener. It is the same trade whenever independent parties pool knowledge: the whole
+    picture costs more but lies less.
+  </p>

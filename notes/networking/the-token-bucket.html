@@ -1,0 +1,65 @@
+---
+title: Throttling That Still Allows a Burst: the Token Bucket
+heading: Throttling That Still Allows a Burst: the Token Bucket
+listTitle: The Token Bucket
+description: Why limiting something to one-every-fixed-interval is too rigid for real traffic, and how a bucket of tokens that refills at a steady rate lets you allow short bursts while still capping the long-run average.
+lang: en
+category: Networking
+date: 2027-09-19
+dateText: Sep 19
+tags: networking, rate-limiting, token-bucket, bursts, throttling, latency
+---
+  <p>
+    Suppose you want to limit how fast something can happen, requests to a service, messages sent,
+    actions taken, to keep a system from being overwhelmed. The crude way is to allow exactly one
+    every fixed interval, no exceptions. That is often too rigid, because real usage does not arrive
+    in a perfectly even drip. It comes in bursts, and a short burst followed by quiet is usually
+    harmless; what you actually want to stop is a sustained flood.
+  </p>
+
+  <h2>A bucket of tokens</h2>
+  <p>
+    There is an elegant mechanism that captures exactly this distinction: the token bucket. Picture a
+    bucket that holds tokens. Every action must take a token to proceed; no token, no action, so it
+    waits or is turned away. The bucket refills at a steady rate, a token every so often, up to some
+    maximum it can hold.
+  </p>
+
+  <p>
+    That is the whole mechanism. Its behavior, though, is exactly what you want.
+  </p>
+
+  <h2>Bursts allowed, floods capped</h2>
+  <p>
+    Watch what it permits. If actions have been quiet for a while, the bucket fills up. Then a sudden
+    burst can grab many tokens at once and all proceed immediately, so short bursts are welcome, up to
+    the size of the bucket. Real, well-behaved traffic that arrives in clumps sails through.
+  </p>
+
+  <p>
+    But you cannot keep it up. Once the bucket drains, you are limited to the steady refill rate,
+    because that is the only speed at which new tokens appear. So over any long stretch, the average
+    rate cannot exceed the refill rate, no matter how you time things. Bursts in the short term,
+    bounded in the long term.
+  </p>
+
+  <h2>Two knobs</h2>
+  <p>
+    The beauty is that you get two independent knobs. The refill rate sets the sustainable long-run
+    average, how fast the thing is allowed to go over time. The bucket size sets how big a burst you
+    will tolerate, how much slack can build up during quiet periods to be spent all at once. Tune them
+    separately to match what you actually want to allow.
+  </p>
+
+  <p>
+    This fits how real traffic looks, bursty in the short term and bounded in the long term, far
+    better than forcing everything into a rigid, even trickle.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    To throttle something while still allowing natural bursts, use a bucket of tokens that refills at
+    a steady rate: each action spends a token, and empty means wait. The refill rate caps the long-run
+    average, and the bucket's size sets how large a burst you permit. Two simple knobs give you a limit
+    that bends for real, clumpy traffic instead of fighting it.
+  </p>

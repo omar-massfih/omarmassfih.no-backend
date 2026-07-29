@@ -1,0 +1,76 @@
+---
+title: Reading the Same Thing Over and Over
+heading: Reading the Same Thing Over and Over
+listTitle: Caching on the Read Path
+description: Why keeping a copy of rarely-changing content close to the reader is really a way to scale, why it trades perfect freshness for that scale, and two tricks that make it work even better.
+lang: en
+category: Networking
+date: 2027-04-04
+dateText: Apr 4
+tags: networking, caching, scalability, freshness, reverse-proxy
+---
+  <p>
+    In many systems, the same unchanging things get requested again and again: a
+    logo, a stylesheet, a popular page. Fetching each one from the origin server every
+    single time is wasteful, because the answer is the same as last time. Caching is
+    the fix, and it is more powerful than it first appears.
+  </p>
+
+  <h2>A cache is really about scale</h2>
+  <p>
+    A cache keeps a copy of the answer closer to the reader, so a repeat request is
+    served from the copy and never reaches the origin server. It is easy to think of
+    this as just making one reader faster. The bigger effect is on load: every request
+    served from a cache is one the origin server never has to handle.
+  </p>
+
+  <p>
+    That is why caching is a scalability technique, not just a speed tweak. By taking
+    repeated reads off the backend, the same servers can support far more users. And
+    it leans on a fact true of most systems: reads vastly outnumber writes, so
+    speeding up the read path helps far more than trying to optimize every write.
+  </p>
+
+  <h2>The cost is freshness</h2>
+  <p>
+    Nothing is free. A cache may hand out a copy that is slightly behind the origin,
+    because the origin changed and the cache has not caught up yet. So cached reads can
+    lag behind the latest truth by design. You are trading perfectly up-to-date reads
+    for the scale and speed the cache buys. For content that changes rarely, that is
+    usually a great trade; for something that must always be current, less so.
+  </p>
+
+  <h2>Two tricks that sharpen it</h2>
+  <p>
+    Two refinements make caching much better. The first is to check instead of
+    blindly refetching. Rather than downloading the whole thing again to see if it
+    changed, the reader can ask the origin "is my copy still the current version?"
+    using a small version tag. If nothing changed, the origin says so and no data is
+    re-sent. You confirm freshness cheaply instead of paying for a full download.
+  </p>
+
+  <p>
+    The second is to give each version its own address. If changing the content also
+    changes its address, then old copies can be cached essentially forever, because a
+    change never alters an existing thing, it points at a new one. Readers keep the old
+    version safely until something references the new address.
+  </p>
+
+  <h2>Share the cache</h2>
+  <p>
+    A cache in front of the servers, shared by everyone, helps even more than each
+    reader keeping its own. One stored copy there can absorb the same request coming
+    from the whole population of users, so a single cached answer serves a crowd. That
+    shared front position also makes a natural place to handle other cross-cutting
+    jobs, since all the traffic flows through it anyway.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Keeping a copy of rarely-changing content close to readers is really a way to
+    scale: every cache hit is a request the origin never sees, and reads usually
+    dominate. The price is that cached reads can be slightly stale. Sharpen it by
+    checking freshness cheaply instead of refetching, and by giving each version its
+    own address so old copies live forever. A shared cache multiplies the benefit
+    across everyone.
+  </p>

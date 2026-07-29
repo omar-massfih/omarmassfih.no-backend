@@ -1,0 +1,63 @@
+---
+title: When One Slow Thing Stalls Everyone Behind It
+heading: When One Slow Thing Stalls Everyone Behind It
+listTitle: Head-of-Line Blocking
+description: Why work handled strictly in order through a single channel lets the slowest item at the front hold up everything queued behind it, even things that were ready to finish instantly, and how opening more lines fixes it.
+lang: en
+category: Networking
+date: 2027-08-22
+dateText: Aug 22
+tags: networking, head-of-line-blocking, queues, latency, concurrency
+---
+  <p>
+    Picture a single checkout line at a shop. The customer at the front hits a snag, a price check,
+    a card that will not go through, and everyone behind them waits. Even the person with one item,
+    who would have been done in seconds, is stuck. Their speed does not matter; their position does.
+    This everyday frustration has a name in computing, and it shows up everywhere.
+  </p>
+
+  <h2>The pattern</h2>
+  <p>
+    It is called head-of-line blocking: when work is handled strictly in order through one channel,
+    the slowest item at the front holds up everything queued behind it, including things that could
+    have finished immediately. The later items are not slow. They are ready. They are simply trapped
+    behind something slow, on a single shared path that insists on going in order.
+  </p>
+
+  <p>
+    That is the crucial and counterintuitive part. The delay is not caused by the waiting items being
+    slow. It is caused purely by their position, one shared line, strict order, and one slow thing at
+    the front. Remove any of those and the problem eases.
+  </p>
+
+  <h2>Where it shows up</h2>
+  <p>
+    Send a batch of requests one after another over a single connection, and if one response is slow,
+    all the responses queued behind it wait, even though they were ready. Process messages in strict
+    arrival order, and one stuck message freezes every message after it. In each case the system is
+    fast in aggregate but crippled by one straggler at the front, because everything is funneled
+    through a single, strictly ordered channel.
+  </p>
+
+  <h2>Breaking the single file</h2>
+  <p>
+    The fixes all come down to removing the single-file constraint. Open more lines: if there are
+    several independent channels, a stuck item only blocks its own line while the others keep flowing,
+    the way extra checkout registers rescue the people behind the one difficult customer. Or stop
+    insisting on strict order: let items that are ready proceed independently, so a slow one no longer
+    holds a place in front of everyone else.
+  </p>
+
+  <p>
+    Either way, the goal is the same, do not let the slowest item at the front set the pace for the
+    whole crowd. Give the ready ones a way around it.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Whenever work flows single-file and in strict order, the slowest item at the front becomes
+    everyone's problem, stalling things that were ready to finish at once. Watch for that shape,
+    requests over one connection, messages in strict order, any single ordered queue, and when it
+    bites, break the single file: add more independent lines, or let the ready work proceed without
+    waiting its turn behind the slow.
+  </p>

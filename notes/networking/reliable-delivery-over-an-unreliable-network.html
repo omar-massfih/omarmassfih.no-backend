@@ -1,0 +1,81 @@
+---
+title: Building a Reliable Connection on an Unreliable Network
+heading: Building a Reliable Connection on an Unreliable Network
+listTitle: Reliable Delivery
+description: How data arrives complete and in order even though the network underneath can lose, duplicate, and reorder it, and why the sender must also avoid drowning a slow receiver.
+lang: en
+category: Networking
+date: 2026-10-30
+dateText: Oct 30
+tags: networking, reliability, acknowledgments, sliding-window, flow-control
+---
+  <p>
+    The internet, underneath, makes no promises. Pieces of your data can be lost,
+    can arrive twice, or can show up out of order. Yet when you load a page or send
+    a file, it arrives whole and in the right order. That reliability is not in the
+    network itself; it is built on top of an unreliable network by the two ends
+    working together.
+  </p>
+
+  <h2>Number everything, then confirm it</h2>
+  <p>
+    The foundation is simple. The sender numbers every piece of data it sends. The
+    receiver, as pieces arrive, tells the sender how much it has received in order
+    so far, essentially saying "I have everything up to here." With numbering and
+    these confirmations, both sides can spot trouble: a gap in the numbers means
+    something is missing, a repeat means a duplicate, and out-of-order pieces can
+    be put back in order using their numbers.
+  </p>
+
+  <p>
+    When a piece is not confirmed within a reasonable time, the sender assumes it
+    was lost and sends it again. That is the whole reliability mechanism: keep
+    track of what has been confirmed, and resend what has not.
+  </p>
+
+  <h2>The trouble with "a reasonable time"</h2>
+  <p>
+    How long should the sender wait before deciding a piece was lost? This is a
+    genuine trade-off. Wait too short a time and it will resend things that were
+    actually fine but just slow, wasting effort and adding load. Wait too long and
+    it is slow to recover when something really was lost, leaving the connection
+    stalled.
+  </p>
+
+  <p>
+    Since network delays vary, the sender cannot use a fixed guess. Instead it
+    watches how long confirmations are actually taking and adjusts its waiting time
+    to match, smoothing over the natural bumpiness so a single slow moment does not
+    trigger a flood of needless resends.
+  </p>
+
+  <h2>Do not wait for each confirmation</h2>
+  <p>
+    Sending one piece, waiting for its confirmation, then sending the next would be
+    dreadfully slow, because the sender spends most of its time idle waiting for
+    the round trip. So instead it keeps several pieces in flight at once, sending
+    more before earlier confirmations arrive. It keeps a copy of anything not yet
+    confirmed, in case it needs to resend. This keeps the connection busy instead
+    of stalling after every single piece.
+  </p>
+
+  <h2>Do not drown a slow receiver</h2>
+  <p>
+    There is one more danger: the sender might be faster than the receiver can keep
+    up with. If it blasts data faster than the receiver can process it, the extra
+    just overflows and is lost. To prevent this, the receiver tells the sender how
+    much room it currently has, and the sender never sends more than that. As the
+    receiver works through its backlog and frees up room, it raises the amount. If
+    it is completely full, it says so, and the sender pauses until space opens up.
+    The receiver, in effect, controls the tap.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    Reliable delivery is not something the network provides; it is something the
+    two endpoints construct. Number the pieces, confirm what arrived, resend what
+    did not, and tune the waiting time to real conditions. Keep several pieces in
+    flight so the link stays busy, but never send faster than the receiver says it
+    can handle. Out of those simple agreements comes a clean, ordered stream over a
+    network that guarantees none of it.
+  </p>

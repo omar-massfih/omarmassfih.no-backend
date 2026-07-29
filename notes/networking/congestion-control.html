@@ -1,0 +1,78 @@
+---
+title: Why Senders Have to Slow Themselves Down
+heading: Why Senders Have to Slow Themselves Down
+listTitle: Congestion Control
+description: What happens when everyone sends as fast as they can through a shared network, and how a simple "creep up, back off hard" rule keeps the network stable and shares it fairly.
+lang: en
+category: Networking
+date: 2026-11-03
+dateText: Nov 3
+tags: networking, congestion-control, aimd, fairness, throughput
+---
+  <p>
+    A network is shared. Many connections send data through the same links and the
+    same junction points in the middle. Each sender would love to go as fast as
+    possible. The problem is what happens when they all do at once: the shared
+    middle cannot keep up, and everyone loses.
+  </p>
+
+  <h2>The traffic jam</h2>
+  <p>
+    Picture a junction where data piles up faster than it can be passed along. A
+    queue forms. If the queue keeps growing, either delays become enormous, or the
+    junction runs out of room and starts throwing data away. Congestion is just
+    this: more traffic offered than some part of the network can handle.
+  </p>
+
+  <p>
+    Now it gets worse. When data is dropped, senders notice it did not arrive and
+    resend it. So exactly when the network is overloaded, everyone adds even more
+    traffic by resending. That extra load causes more drops, which causes more
+    resends. Without something to stop it, the whole network can spiral down into
+    doing almost no useful work, a jam that feeds on itself.
+  </p>
+
+  <h2>Guessing a safe speed</h2>
+  <p>
+    No sender can see the whole network or know how much room is left, so it cannot
+    simply be told the right speed. Instead each sender feels its way to a safe
+    rate using a strikingly simple rule: when things are going well, creep a little
+    faster; the moment there is a sign of trouble, back off sharply.
+  </p>
+
+  <p>
+    The sign of trouble is usually a lost piece of data, since loss often means a
+    queue somewhere overflowed. So a sender nudges its rate up bit by bit while
+    data flows cleanly, and cuts it hard, often to something like half, as soon as
+    it sees a loss. Gentle up, sharp down. This keeps each sender probing for a
+    little more speed while pulling back quickly whenever it has pushed too far.
+  </p>
+
+  <h2>Why this shares the network fairly</h2>
+  <p>
+    That "gentle up, sharp down" rhythm has a lovely side effect: it shares a busy
+    link fairly. A sender that is hogging more than its share is, by definition,
+    sending a lot, so when congestion causes a loss, its sharp cut takes away a
+    big chunk. A sender using less gives up less. Over time the greedy ones are
+    pulled down harder and the modest ones catch up, and they settle toward roughly
+    equal shares without anyone coordinating.
+  </p>
+
+  <h2>Starting out carefully</h2>
+  <p>
+    There is also the question of how to begin, when a sender has no idea what the
+    network can take. Rather than guess high and cause an instant jam, it starts
+    small and ramps up quickly, roughly doubling its rate each round until it sees
+    the first sign of a limit. It begins cautious, finds the ceiling fast, and then
+    settles into the gentle-up, sharp-down rhythm around it.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    If every sender sent as fast as it could, the shared middle would collapse into
+    a self-worsening jam. The fix is for each sender to hold back on its own:
+    speed up slowly while things are fine, slow down sharply at the first sign of
+    congestion, and start gently when it knows nothing. Out of that local, selfish
+    caution comes a network that stays stable and, remarkably, divides itself
+    fairly.
+  </p>

@@ -1,0 +1,64 @@
+---
+title: The Thundering Herd When a Cache Empties
+heading: The Thundering Herd When a Cache Empties
+listTitle: The Thundering Herd
+description: Why the moment a popular cached item expires can slam the very system the cache was protecting, as everyone misses at once and stampedes the origin together, and how to keep the herd from forming.
+lang: en
+category: Networking
+date: 2027-08-30
+dateText: Aug 30
+tags: networking, caching, thundering-herd, load, resilience
+---
+  <p>
+    A cache keeps a copy of an answer so that repeated requests can skip the expensive work of
+    rebuilding it. It usually protects the system behind it beautifully. But there is a nasty failure
+    hiding in the arrangement, and it strikes at the exact moment you would least expect: when the
+    cache is doing its job.
+  </p>
+
+  <h2>The moment of expiry</h2>
+  <p>
+    Imagine a very popular item sitting in the cache, served to thousands of requests without ever
+    touching the expensive origin. Then its cached copy expires. In the instant after it expires,
+    every request for that item misses the cache at once, and they all rush to the origin together to
+    rebuild it.
+  </p>
+
+  <p>
+    A moment ago the origin saw almost no traffic for this item; now it is slammed by a stampede,
+    potentially thousands of identical requests all doing the same expensive work at the same time.
+    This is the thundering herd: many clients that were peacefully served from a cache all miss at the
+    same moment and pile onto the thing behind it.
+  </p>
+
+  <h2>Why it is especially cruel</h2>
+  <p>
+    The bitter irony is that the cache existed to protect the origin, and instead the cache's expiry
+    created a synchronized flood against it. The busier the item, the bigger the herd, so your most
+    popular content produces your worst stampede. And it generalizes: whenever many parties are
+    shielded from an expensive resource by a shared shortcut, the moment that shortcut blinks out,
+    they all hit the expensive path together.
+  </p>
+
+  <h2>Keeping the herd from forming</h2>
+  <p>
+    The fixes share a theme: do not let everyone miss at the same instant, and do not let everyone
+    rebuild the same thing at once.
+  </p>
+
+  <p>
+    You can let just one request rebuild the item while all the others wait for its result, so the
+    origin does the expensive work once instead of thousands of times. You can refresh the cached copy
+    slightly before it expires, so the popular item is never actually absent. Or you can stagger when
+    things expire, so a whole batch of items does not wink out together and produce one giant
+    coordinated miss.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    A cache quietly concentrates risk at the moment it empties: everyone who was being served from it
+    misses at once and stampedes the system it was protecting. Guard against the herd by having one
+    request rebuild the item rather than many, by refreshing popular items before they vanish, and by
+    staggering expiry so misses do not all happen together. The cache's most dangerous instant is the
+    one right after it lets go.
+  </p>

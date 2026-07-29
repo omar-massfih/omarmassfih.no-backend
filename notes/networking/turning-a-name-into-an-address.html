@@ -1,0 +1,75 @@
+---
+title: Turning a Name Into an Address
+heading: Turning a Name Into an Address
+listTitle: Turning a Name Into an Address
+description: How a hierarchy that hands off level by level lets you find the address behind any name from a fixed starting point, why caching makes it fast, and why the system that does this is a single point of failure worth respecting.
+lang: en
+category: Networking
+date: 2027-03-31
+dateText: Mar 31
+tags: networking, dns, name-resolution, caching, ttl
+---
+  <p>
+    When you type a name like a website's address, that name is not something the
+    network can connect to directly. Something has to turn the human-friendly name
+    into the actual numeric address of a machine. That translation is quietly one of
+    the most important services on the internet, and how it works is worth
+    understanding.
+  </p>
+
+  <h2>A hierarchy that delegates</h2>
+  <p>
+    The naming system is built as a hierarchy that hands off responsibility level by
+    level. A small set of well-known starting servers do not know every name, but
+    they know who is responsible for each broad area, like the part covering names
+    ending in one suffix. That responsible server, in turn, knows who is authoritative
+    for a specific name underneath it.
+  </p>
+
+  <p>
+    So from one fixed starting point, you can find the address behind any name by
+    following the handoffs downward: start at the top, get pointed to who handles this
+    area, then to who handles this exact name, until you reach the answer. Nobody has
+    to know the whole map; each level only needs to know who to ask next.
+  </p>
+
+  <h2>Caching makes it bearable</h2>
+  <p>
+    Doing that multi-step journey for every single lookup would be slow and would
+    bury the upper servers in traffic. So answers are cached: once you learn a name's
+    address, you hold onto it for a while instead of asking again. Each answer comes
+    stamped with how long it may be treated as valid.
+  </p>
+
+  <p>
+    That validity time is a real trade-off. Make it long and you cut down on lookups,
+    but a change to the address takes a long time to spread, because everyone keeps
+    trusting the old answer until it expires. Make it short and changes appear
+    quickly, but you pay for far more lookups. And expiry is not even a firm
+    guarantee: some clients cling to stale answers longer than they should, so you can
+    never assume everyone has picked up a new value.
+  </p>
+
+  <h2>A single point of failure</h2>
+  <p>
+    Here is the part that surprises people. This translation is a single point of
+    failure for everything that depends on it. If people cannot turn your name into an
+    address, they cannot even attempt to reach you, no matter how healthy your actual
+    servers are. The connection never gets started.
+  </p>
+
+  <p>
+    A useful consequence: during trouble, serving a slightly stale answer is often
+    better than serving none. Addresses usually change slowly, so an old one frequently
+    still works and keeps things reachable, whereas refusing to answer breaks discovery
+    entirely. A stale address beats no address.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Turning a name into an address is done by a hierarchy that delegates level by
+    level, so any name is reachable from a fixed starting point. Caching, with a
+    validity time, keeps it fast at the cost of changes spreading slowly. And because
+    nothing connects without this translation, treat it as a critical dependency, one
+    where an old answer usually serves people better than no answer at all.
+  </p>

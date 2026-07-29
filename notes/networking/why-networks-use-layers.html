@@ -1,0 +1,77 @@
+---
+title: Why Networks Are Built in Layers
+heading: Why Networks Are Built in Layers
+listTitle: Why Networks Use Layers
+description: How wrapping each message in layers lets one part of the network change without disturbing the rest, and why getting data to the right place takes three different kinds of address.
+lang: en
+category: Networking
+date: 2026-10-26
+dateText: Oct 26
+tags: networking, layering, addressing, protocols, encapsulation
+---
+  <p>
+    Sending data across the internet involves a stack of separate problems: which
+    machine to reach, which program on it, how to cross each individual cable or
+    wireless link along the way. Networks solve this by stacking layers, each
+    handling one problem and leaning on the layer below it. Understanding that
+    stack explains a lot about how the whole thing holds together.
+  </p>
+
+  <h2>Each layer talks to its twin</h2>
+  <p>
+    The trick is that each layer on the sending machine has a matching layer on the
+    receiving machine, and they act as if they were talking directly. As your data
+    heads out, each layer wraps it with a little extra information meant only for
+    its twin on the other side, like putting a letter in an envelope, then that
+    envelope in a bigger one.
+  </p>
+
+  <p>
+    On arrival, the process runs in reverse. Each layer reads and removes the
+    wrapping meant for it, then hands what is inside up to the next layer. A layer
+    never has to understand the wrappings above or below it; it only reads its
+    own. That is the whole point of layering.
+  </p>
+
+  <h2>Why the wrapping is worth it</h2>
+  <p>
+    This separation means each layer can change without disturbing the others. The
+    part that crosses a wireless link works completely differently from the part
+    that crosses a fiber cable, but the layers above them neither know nor care.
+    You can swap the bottom layer entirely, and everything stacked on top keeps
+    working, because it only ever spoke to its own twin, not to the hardware. Each
+    layer solves its problem once and hides the details from everyone else.
+  </p>
+
+  <h2>Three questions, three addresses</h2>
+  <p>
+    Delivering data actually needs three different kinds of address, because it is
+    answering three different questions.
+  </p>
+  <ul>
+    <li>
+      <strong>Which machine?</strong> One address identifies the destination
+      computer somewhere out on the network. This is the one that stays the same
+      for the whole trip, the final destination on the envelope.
+    </li>
+    <li>
+      <strong>Which program on it?</strong> A machine runs many programs at once,
+      so another address picks out the specific one that should receive the data,
+      like an apartment number after the street address.
+    </li>
+    <li>
+      <strong>Which next hop?</strong> The data crosses the network one link at a
+      time, and each link needs to know only the very next stop. This address
+      changes at every hop, because "the next stop" is different each time, even
+      though the final destination never moves.
+    </li>
+  </ul>
+
+  <h2>Putting it together</h2>
+  <p>
+    Layering turns one huge problem into a stack of small ones, each wrapped so it
+    can be solved and changed on its own. And getting data delivered is not one
+    lookup but three: which machine, which program, and which next hop. The first
+    stays fixed for the journey while the last is rewritten at every step. Once you
+    see those pieces, a lot of networking stops looking like magic.
+  </p>
