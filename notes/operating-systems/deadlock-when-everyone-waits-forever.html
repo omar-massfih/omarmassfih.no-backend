@@ -1,0 +1,67 @@
+---
+title: Deadlock: When Everyone Waits Forever
+heading: Deadlock: When Everyone Waits Forever
+listTitle: Deadlock
+description: How a circle of parties, each holding something the others need and each waiting on the others, can freeze forever even though every one of them acted reasonably, and the two ways to make that circle impossible.
+lang: en
+category: Operating Systems
+date: 2027-08-02
+dateText: Aug 2
+tags: operating-systems, deadlock, concurrency, locks, circular-wait, failure
+---
+  <p>
+    Picture two people who each need the same two tools to finish a job, and there is only one
+    of each tool. One grabs the hammer, the other grabs the wrench. Now each is waiting for the
+    other to let go of the tool they are holding, and neither will, because neither can finish
+    without both. They wait forever. Nobody did anything foolish, yet everything is stuck.
+  </p>
+
+  <h2>What a deadlock is</h2>
+  <p>
+    That is a deadlock: a circle of parties, each holding something the others need, and each
+    waiting on the others to release it. Because the waiting forms a loop, the loop never breaks
+    on its own. The unsettling part is that every individual choice was reasonable. Each party
+    took a resource it legitimately needed and then waited politely for the next one. The problem
+    is not any single action; it is the collective pattern.
+  </p>
+
+  <p>
+    In software, this happens whenever parts of a program lock resources and wait for each other.
+    One task holds lock A and wants lock B, while another holds lock B and wants lock A. Each is
+    just trying to do its job, and together they are frozen solid.
+  </p>
+
+  <h2>The circle is the key</h2>
+  <p>
+    The essential ingredient is the circle. A deadlock needs a loop in the chain of who is
+    waiting for whom, where following "this one is waiting for that one" eventually leads back to
+    where you started. Break the possibility of that loop and you cannot have a deadlock. Both of
+    the common cures work by attacking the circle.
+  </p>
+
+  <h2>Cure one: impose an order</h2>
+  <p>
+    The first cure is to make everyone acquire resources in the same agreed order, always the
+    hammer before the wrench. If every party reaches for resources in the same sequence, the
+    circular pattern simply cannot form, because no one is ever holding a later resource while
+    waiting for an earlier one. A consistent ordering quietly removes the loop before it can
+    exist.
+  </p>
+
+  <h2>Cure two: refuse to wait forever</h2>
+  <p>
+    The second cure is to stop waiting indefinitely. If a party cannot get what it needs within
+    some reasonable time, it gives up what it is already holding and tries again later. This does
+    not prevent the circle from forming, but it keeps any circle from lasting: a stuck loop
+    eventually times out, someone lets go, and the jam clears. It trades a little wasted effort
+    for a guarantee that no one is frozen permanently.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    A deadlock is a circle of mutual waiting, where each party holds something the others need and
+    each waits on the others, so nobody can proceed, even though every one of them acted
+    reasonably. The circle is what makes it permanent. Prevent it either by having everyone
+    acquire resources in the same order, so the circle cannot form, or by refusing to wait
+    forever, so any circle eventually breaks itself apart.
+  </p>

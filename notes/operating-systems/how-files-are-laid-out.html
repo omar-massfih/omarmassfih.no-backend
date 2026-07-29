@@ -1,0 +1,79 @@
+---
+title: Keeping Track of a File Scattered Across a Disk
+heading: Keeping Track of a File Scattered Across a Disk
+listTitle: How Files Are Laid Out
+description: Why a file's data is spread across many blocks rather than sitting in one place, and the three ways to remember which blocks belong to it, each trading bookkeeping against how fast you can jump around.
+lang: en
+category: Operating Systems
+date: 2027-04-28
+dateText: Apr 28
+tags: operating-systems, filesystems, storage, indexing, trade-offs
+---
+  <p>
+    A file feels like one continuous thing, but on disk it usually is not. Its data is
+    broken into many fixed-size blocks, and those blocks end up scattered around the
+    disk wherever there was room. So the system needs a way to remember which blocks
+    belong to a file, and in what order. There are three classic approaches, and they
+    trade off in a way that generalizes well beyond files.
+  </p>
+
+  <h2>A chain of blocks</h2>
+  <p>
+    The simplest idea is to have each block point to the next one, like a treasure hunt
+    where every clue leads to the following clue. To read the file, you start at the
+    first block and follow the links.
+  </p>
+
+  <p>
+    This is easy and works fine when you read a file straight through from start to
+    finish. But it is terrible for jumping to the middle. To reach the hundredth block,
+    you have to walk through the ninety-nine before it, because the only way to find a
+    block is to follow the chain to it. Random access is painfully slow.
+  </p>
+
+  <h2>An index of blocks</h2>
+  <p>
+    A better idea for jumping around is to keep a separate list of all the file's block
+    locations in one place. Now, to reach any block, you look it up in the list and go
+    straight there. No walking a chain: the whole map is in one spot.
+  </p>
+
+  <p>
+    The cost is that you maintain and store that list, a bit of extra bookkeeping per
+    file. In exchange you get fast access to any part of the file, whether you read it
+    in order or leap straight to the middle.
+  </p>
+
+  <h2>Runs of consecutive blocks</h2>
+  <p>
+    The third idea notices that a file's blocks are often placed together. Instead of
+    listing every single block, you record runs: "this file occupies blocks five hundred
+    through eight hundred." One short note describes a huge stretch.
+  </p>
+
+  <p>
+    This keeps the bookkeeping tiny and is excellent for reading large files in order,
+    because the data sits together and you know the whole span at once. It works best
+    when the blocks really are contiguous; the more a file is broken into scattered
+    pieces, the more runs you need and the less this saves.
+  </p>
+
+  <h2>The same trade-off, generalized</h2>
+  <p>
+    These three are worth remembering because the trade-off appears anywhere you track
+    the scattered pieces of something. A chain is cheap to store but slow to jump around
+    in. An index gives fast access to any piece at the cost of keeping the map. Runs are
+    compact and fast when the pieces are contiguous, and less helpful when they are
+    fragmented. Whenever you have to remember where the parts of something live, you are
+    choosing among these same shapes.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    A file is scattered across many blocks, and the system must track which are its own.
+    Chaining each block to the next is simple but slow to jump around. An index of block
+    locations gives fast random access for a little bookkeeping. Recording runs of
+    consecutive blocks is compact and great for sequential reads when the data sits
+    together. The right choice depends on whether you read in order or leap around, and
+    on how contiguous the pieces are.
+  </p>

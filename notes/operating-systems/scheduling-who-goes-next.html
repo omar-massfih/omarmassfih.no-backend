@@ -1,0 +1,74 @@
+---
+title: Deciding Who Goes Next
+heading: Deciding Who Goes Next
+listTitle: Scheduling: Who Goes Next
+description: Why there is no single best way to decide which task runs next, and how the simple options each trade fairness, responsiveness, and total work done against one another.
+lang: en
+category: Operating Systems
+date: 2026-10-22
+dateText: Oct 22
+tags: operating-systems, scheduling, round-robin, fairness, responsiveness
+---
+  <p>
+    When many tasks are ready to run and only one processor can serve them, the
+    system has to keep choosing who goes next. This choice is called scheduling,
+    and it turns out there is no single right answer. Each simple rule is good at
+    something and bad at something else, and seeing those trade-offs is the whole
+    point.
+  </p>
+
+  <h2>First come, first served</h2>
+  <p>
+    The most obvious rule is to run tasks in the order they arrive. It is
+    beautifully simple and feels fair. But it has a nasty failure: if a long task
+    arrives first, every quick task behind it has to wait for the whole thing to
+    finish. One slow customer at the front of the queue holds up everyone, even
+    people who only needed a moment.
+  </p>
+
+  <h2>Shortest first</h2>
+  <p>
+    You could instead always run the quickest task next. This is great for the
+    average wait: lots of short tasks finish fast instead of being stuck behind a
+    long one. But it has two catches. You have to guess in advance how long each
+    task will take, which you often cannot do reliably. And a long task can be
+    starved: if quick tasks keep arriving, the long one never reaches the front and
+    waits forever.
+  </p>
+
+  <h2>Take turns</h2>
+  <p>
+    A popular middle path gives each task a small, equal turn, then moves on to the
+    next and comes back around. Nobody is stuck waiting for a long task to finish,
+    because the long task only gets a slice at a time. This feels responsive, which
+    is exactly what you want when people are interacting with the system and expect
+    it to react quickly.
+  </p>
+
+  <p>
+    The size of each turn is its own trade-off. Short turns make everything feel
+    snappy and let waiting-heavy tasks get their quick bursts often, but they mean
+    more frequent switching, and switching is wasted effort. Long turns cut that
+    waste and suit heavy computing tasks, but they make everyone else wait longer
+    for a turn. There is no perfect slice, only the right one for your workload.
+  </p>
+
+  <h2>Letting urgent work cut in</h2>
+  <p>
+    Sometimes you cannot wait for a task to finish its turn. Being able to
+    interrupt whatever is running and hand the processor to something more urgent
+    is what keeps time-sensitive work from getting stuck behind ordinary work. The
+    cost is that you can also rank tasks by importance, and if you are not careful,
+    low-priority tasks may never run at all while important ones keep jumping the
+    queue.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Scheduling is a set of trade-offs wearing different masks. Running in arrival
+    order is fair but lets one long task block everyone. Shortest-first is
+    efficient on average but needs guesses and can starve big jobs. Taking turns is
+    responsive but pays for switching. There is no universally best policy, only
+    the one that fits what you care about most: total work done, quick response, or
+    making sure nobody is left behind.
+  </p>

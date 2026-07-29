@@ -1,0 +1,81 @@
+---
+title: Why Every Program Thinks It Owns All the Memory
+heading: Why Every Program Thinks It Owns All the Memory
+listTitle: Virtual Memory
+description: How the operating system gives each program its own private view of memory, why that keeps programs from stepping on each other, and how it lets a computer pretend to have more memory than it really does.
+lang: en
+category: Operating Systems
+date: 2026-10-14
+dateText: Oct 14
+tags: operating-systems, virtual-memory, paging, page-fault, memory
+---
+  <p>
+    Many programs run on one computer at the same time, and they all need memory.
+    If each program used raw physical memory directly, two problems would appear
+    at once: they would have to agree on who gets which addresses, and one buggy
+    program could scribble over another's data. Virtual memory is the clever trick
+    that makes both problems disappear.
+  </p>
+
+  <h2>A private view for each program</h2>
+  <p>
+    The idea is to give every program its own private map of memory. Inside that
+    map, a program sees a clean, simple space that always starts at the same place,
+    as if it were alone on the machine. Behind the scenes, the operating system
+    quietly translates each of these private addresses into a real location in
+    physical memory, and no two programs are ever pointed at the same spot unless
+    that sharing is intended.
+  </p>
+
+  <p>
+    This buys two big things. A program does not need to know or care where it was
+    actually loaded, because its own addresses never change. And one program
+    simply cannot reach into another's memory, because its private map has no way
+    to name those locations. Isolation comes for free from the design.
+  </p>
+
+  <h2>Memory in fixed-size blocks</h2>
+  <p>
+    To make the translation manageable, memory is handled in fixed-size blocks
+    rather than one giant stretch. A program's memory is chopped into equal pages,
+    and physical memory into equal slots of the same size. Any page can go into any
+    free slot, so a program's memory does not have to sit in one continuous run. It
+    can be scattered across whatever slots happen to be free, and the map keeps
+    track of where each piece landed.
+  </p>
+
+  <p>
+    This scattering solves a nagging problem. Without it, free memory tends to end
+    up as many small gaps, none big enough for a large request even though the
+    total free space is plenty. Fixed-size blocks that can go anywhere sidestep
+    that waste.
+  </p>
+
+  <h2>Pretending to have more than you do</h2>
+  <p>
+    The map enables a second trick. Not every page a program uses has to be in
+    physical memory right now. Rarely used pages can be parked on disk, and only
+    the pages actually being used need a real slot. A program can then behave as if
+    it has far more memory than the machine physically holds, because only the
+    active parts are kept in the fast memory at any moment.
+  </p>
+
+  <p>
+    When the program touches a page that is currently on disk, the hardware notices
+    it is missing and pauses the program. The operating system fetches the page,
+    finds a slot for it (evicting some other page if needed), updates the map, and
+    lets the program continue as if nothing happened. The program never sees the
+    detour; it just experiences a brief slowdown. Choosing which page to evict
+    matters, and a good rule of thumb is to drop the page that has gone longest
+    without being used, since it is least likely to be needed soon.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    Virtual memory hands each program a private, tidy view of memory and does the
+    bookkeeping to map it onto real hardware. That single layer of indirection
+    delivers three things at once: programs that do not care where they live,
+    strong isolation between them, and the ability to run programs whose memory is
+    larger than the machine. It is one of the quiet foundations that makes running
+    many programs on one computer practical.
+  </p>

@@ -1,0 +1,70 @@
+---
+title: The Elevator Trick: Serving Requests in a Smart Order
+heading: The Elevator Trick: Serving Requests in a Smart Order
+listTitle: Serving Requests in a Smart Order
+description: Why the order you handle waiting requests in can matter more than how fast you handle each one when there's an expensive "travel" cost, and why always serving the nearest one can leave the unlucky waiting forever.
+lang: en
+category: Operating Systems
+date: 2027-05-02
+dateText: May 2
+tags: operating-systems, scheduling, disk, fairness, starvation
+---
+  <p>
+    Some resources are slow because something physical has to move to reach the work. A
+    classic example is a spinning disk, where an arm must travel to the right spot before
+    it can read. When many requests are waiting for such a resource, the order you serve
+    them in can matter more than anything else, because the travel between requests is
+    the expensive part.
+  </p>
+
+  <h2>Why order dominates</h2>
+  <p>
+    Imagine a stack of requests scattered across the disk, and one arm that has to visit
+    each spot. If you serve them in a careless order, the arm spends most of its time
+    darting back and forth across long distances. If you serve them in an order that
+    keeps the arm moving smoothly, it covers far less ground for the same set of
+    requests. The work is identical; only the route changed, and the route is what costs.
+  </p>
+
+  <h2>Always-nearest, and its cruelty</h2>
+  <p>
+    One tempting rule is to always serve whichever waiting request is closest to where
+    the arm is right now. Each individual move is as short as possible, which sounds
+    efficient.
+  </p>
+
+  <p>
+    But it has a cruel flaw. If new nearby requests keep arriving, the arm never has a
+    reason to travel out to a request sitting far away. That distant request can wait
+    forever while closer ones keep cutting in front. Being consistently unlucky enough
+    to be far from the action means being starved: served late or never. Pure greed for
+    the shortest next move abandons the stragglers.
+  </p>
+
+  <h2>The elevator</h2>
+  <p>
+    A better approach behaves like an elevator in a building. An elevator does not race
+    to whoever is physically closest; it sweeps steadily in one direction, stopping for
+    everyone along the way, then reverses and sweeps back. Applied to the disk arm, you
+    move across the disk in one direction serving every request you pass, then turn
+    around and sweep the other way.
+  </p>
+
+  <p>
+    This keeps the total travel low, because you are always making forward progress
+    rather than doubling back, and it is fair, because a steady sweep is guaranteed to
+    reach every request within one pass or two. Nobody gets stranded, and the arm still
+    moves efficiently. It gives up the tiny savings of always taking the nearest hop in
+    exchange for never abandoning anyone.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    When serving requests carries an expensive travel or setup cost, the order you serve
+    them in can matter more than the speed of each one, so reordering to cut the travel
+    is a big win. But always grabbing the nearest request is greedy and can starve the
+    unlucky ones far away. A steady sweep, like an elevator, keeps travel low while
+    making sure everyone is eventually served. The same balance between greedy
+    efficiency and fairness shows up whenever you batch and order work to reduce a
+    movement cost.
+  </p>

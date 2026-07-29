@@ -1,0 +1,78 @@
+---
+title: Running Many Programs at Once Is an Illusion
+heading: Running Many Programs at Once Is an Illusion
+listTitle: Context Switches
+description: How one processor creates the appearance of many programs running together by switching between them fast, why that switching is pure overhead, and why threads switch more cheaply than processes.
+lang: en
+category: Operating Systems
+date: 2026-10-18
+dateText: Oct 18
+tags: operating-systems, context-switch, processes, threads, scheduling
+---
+  <p>
+    Your computer seems to run dozens of programs at once. For a single processor,
+    that is an illusion. A processor can only do one thing at a time. The
+    appearance of many things happening together comes from switching between them
+    so quickly that no one notices the gaps.
+  </p>
+
+  <h2>Saving your place</h2>
+  <p>
+    When the processor stops working on one task and starts another, it cannot just
+    jump. The paused task was in the middle of something: partway through a
+    calculation, holding values, pointing at the next instruction to run. All of
+    that in-progress state has to be saved so the task can be resumed later exactly
+    where it left off. Then the saved state of the next task is loaded in, and it
+    picks up as if it had never stopped.
+  </p>
+
+  <p>
+    This save-and-restore is called a context switch. Think of it like two people
+    sharing one desk. Every time they swap, one has to gather and file all their
+    papers and the other has to lay theirs back out. The swap itself produces
+    nothing; it is just the cost of taking turns.
+  </p>
+
+  <h2>Why the switching is not free</h2>
+  <p>
+    That is the key point: a context switch does no useful work. While the
+    processor is filing one task's state away and setting up another's, it is not
+    running anyone's actual program. The time spent is pure overhead. Switch too
+    often and the machine spends more effort shuffling papers than doing work.
+  </p>
+
+  <p>
+    Switches happen for good reasons. A task's turn runs out, or it pauses to wait
+    for something like a disk or the network, or something more urgent needs to
+    run. Each is worth it, but each still costs. The art is switching enough to
+    stay responsive and keep the processor busy, without switching so much that the
+    overhead dominates.
+  </p>
+
+  <h2>Why waiting tasks make switching worthwhile</h2>
+  <p>
+    Switching pays off especially when tasks spend time waiting. Some tasks mostly
+    compute; others mostly wait for slow things like disks or networks. If a task
+    is just sitting idle waiting for data, handing the processor to another task
+    during that wait turns dead time into useful work. Mixing tasks that wait a lot
+    with tasks that compute a lot keeps the processor from sitting idle.
+  </p>
+
+  <h2>Why some switches are cheaper</h2>
+  <p>
+    Not all switches cost the same. A program can be split into several threads:
+    separate lines of work that live inside the same program and share its memory.
+    Switching between two threads of the same program is cheaper than switching
+    between two separate programs, because they share so much already. Less state
+    has to change hands, so there is less to save and restore. That is a big reason
+    threads are popular when a program wants to do several things at once.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    "Running at the same time" on one processor really means "taking rapid turns."
+    Each turn change means saving one task's place and restoring another's, which
+    is real work that produces nothing on its own. Switch enough to stay responsive
+    and to cover for tasks that are waiting, but remember that every switch has a
+    price, and that sharing more, as threads do, makes the switch cheaper.
+  </p>

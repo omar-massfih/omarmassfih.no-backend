@@ -1,0 +1,61 @@
+---
+title: Who Decides When to Switch Tasks?
+heading: Who Decides When to Switch Tasks?
+listTitle: Who Decides When to Switch
+description: Two ways to share one worker among many tasks, one where the system forcibly interrupts them and one where each task voluntarily steps aside when it would otherwise wait, and why the second shines when tasks mostly wait.
+lang: en
+category: Operating Systems
+date: 2027-08-26
+dateText: Aug 26
+tags: operating-systems, concurrency, cooperative, preemptive, async
+---
+  <p>
+    One worker can create the illusion of many tasks running at once by switching rapidly between
+    them. But there is a deeper question hiding in that: who decides when to switch? There are two
+    very different answers, and the difference shapes how the whole system behaves.
+  </p>
+
+  <h2>The system forces it</h2>
+  <p>
+    In the first approach, the system is in charge. It interrupts a running task whenever it decides
+    to, its time is up, something more urgent arrived, whether the task likes it or not. The task
+    can be paused at any moment, even in the middle of a step.
+  </p>
+
+  <p>
+    This is fair, because no single task can hog the worker forever; the system will always cut in
+    and give others a turn. The price is that, since a task can be interrupted at any instant, any
+    data it shares with others needs careful protection against being caught half-changed.
+  </p>
+
+  <h2>The tasks volunteer</h2>
+  <p>
+    In the second approach, the tasks are in charge. A task runs until it voluntarily gives up
+    control, and it does that at natural pause points, typically right when it is about to wait for
+    something slow like a disk or the network. Instead of sitting idle through that wait, it says "I
+    am about to wait anyway, let someone else run," and hands the worker to another task.
+  </p>
+
+  <p>
+    This is the idea behind a great deal of modern code that juggles many things at once: a single
+    worker hops to another task whenever the current one would otherwise be waiting, so it is almost
+    never idle while there is work to do. Because a task only ever steps aside at a point it chose,
+    it is never interrupted mid-step, which means far less to protect and simpler code to reason about.
+  </p>
+
+  <h2>The catch with volunteering</h2>
+  <p>
+    The weakness is the flip side of the strength. If a task forgets to step aside, or does a long
+    stretch of pure computation without ever pausing, it hogs the worker and everything else stalls,
+    because nothing can force it to let go. The whole scheme depends on tasks being considerate, and
+    one inconsiderate task freezes the rest.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    Switching between tasks can be forced by the system, which is fair but means interruptions can
+    land at any moment, or volunteered by the tasks themselves, which is efficient and simpler to
+    reason about but lets one greedy task freeze everyone. The volunteer style shines exactly when
+    tasks spend most of their time waiting, because stepping aside during the wait turns dead time
+    into someone else's turn.
+  </p>
