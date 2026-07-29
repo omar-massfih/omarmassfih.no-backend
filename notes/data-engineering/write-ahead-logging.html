@@ -1,0 +1,65 @@
+---
+title: Write Down What You're About to Do, Then Do It
+heading: Write Down What You're About to Do, Then Do It
+listTitle: Write-Ahead Logging
+description: Why changing stored data can leave it half-done if the machine crashes at the wrong moment, and how recording your intent before acting turns a crash from a disaster into a replay.
+lang: en
+category: Data Engineering
+date: 2027-03-19
+dateText: Mar 19
+tags: data-engineering, write-ahead-log, durability, recovery, crash-safety
+---
+  <p>
+    Changing data that lives on disk is riskier than it looks. A single logical
+    change, moving money, updating a record, often takes several smaller steps to
+    fully land in durable storage. If the power dies partway through, you are left
+    with something half-applied: not the old state, not the new state, but a broken
+    in-between that is worse than either.
+  </p>
+
+  <h2>The core trick</h2>
+  <p>
+    The fix is almost embarrassingly simple. Before you touch the real data, first
+    write down what you are about to do. You append a short record of the intended
+    change to a log: a running, append-only list on disk. Only once that record is
+    safely stored do you go and make the actual change to the data.
+  </p>
+
+  <p>
+    Appending to the end of a log is quick and hard to interrupt, so this "note your
+    intent first" step is cheap. And it changes everything about what a crash means.
+  </p>
+
+  <h2>Why it makes crashes survivable</h2>
+  <p>
+    Suppose the machine dies mid-change. On restart, you read back the log and use it
+    to put things right. For changes whose intent was fully recorded and meant to
+    stick, you re-apply them to make sure they actually took hold. For changes that
+    were only partly done, you undo them, rolling back to a clean state. The log is
+    the authority the system trusts to decide what really happened.
+  </p>
+
+  <p>
+    This is also what "your change is committed" really means. It does not mean the
+    data has been fully written everywhere. It means your intent is safely in the
+    log, from which the system can always finish the job, even after a crash. Commit
+    is a promise backed by the log, not by the data being everywhere yet.
+  </p>
+
+  <h2>The same idea shows up everywhere</h2>
+  <p>
+    Once you see the pattern, you notice it all over. Record what you are going to do
+    before you do it, so an interruption can be recovered from the record. Filesystems
+    use it to survive power loss. Accounting has done it for centuries: the ledger of
+    intended entries comes before, and outlives, any particular tally. Anytime an
+    operation could be interrupted midway, a durable note of intent is cheap insurance.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    A change that takes several steps can be left broken if a crash lands in the
+    middle. Writing down what you intend to do, in a durable log, before you do it,
+    means a crash is no longer a disaster: you replay the log to finish what was meant
+    to stick and undo what was not. Record intent first, act second, and recovery
+    becomes possible instead of hopeless.
+  </p>

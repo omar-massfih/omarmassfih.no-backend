@@ -1,0 +1,70 @@
+---
+title: Making Retries Safe: the Power of Idempotence
+heading: Making Retries Safe: the Power of Idempotence
+listTitle: Idempotence and Safe Retries
+description: Why failures leave you unsure whether an action happened, why that makes retrying dangerous, and how designing actions so repeating them changes nothing turns "exactly once" from a myth into a workable goal.
+lang: en
+category: Data Engineering
+date: 2027-02-07
+dateText: Feb 7
+tags: data-engineering, idempotence, retries, exactly-once, fault-tolerance
+---
+  <p>
+    Any system that keeps working through failures ends up retrying things. And
+    retrying runs into a nasty uncertainty: when an action fails partway, you often
+    cannot tell whether it actually took effect before it broke, or not. If you retry
+    and it did already happen, you have now done it twice.
+  </p>
+
+  <h2>The double-action danger</h2>
+  <p>
+    Doing something twice can be harmless or disastrous depending on what it is.
+    Sending a confirmation twice is annoying. Charging a card twice, shipping an
+    order twice, or adding the same amount to a total twice is real damage. Because
+    you cannot always know whether the first attempt went through, a naive retry is a
+    gamble on whether you are fixing a failure or causing a duplicate.
+  </p>
+
+  <h2>The escape: make repeating harmless</h2>
+  <p>
+    The clean way out is to design the action so that doing it again has no extra
+    effect beyond the first time. An action with that property is called idempotent.
+    The word is fancy; the idea is simple.
+  </p>
+
+  <p>
+    Compare two ways to update a total. "Add 100 to the balance" is not idempotent:
+    run it twice and the balance is 200 too high. "Set the balance to 500" is
+    idempotent: run it once or five times, the balance is 500 either way. Same goes
+    for "mark this order as paid" versus "record another payment." When the action is
+    idempotent, a retry is completely safe, because at worst it repeats something that
+    changes nothing.
+  </p>
+
+  <h2>Why "exactly once" is really this</h2>
+  <p>
+    People often say they want each event processed exactly once. Taken literally,
+    that is nearly impossible: across crashes and retries, you cannot guarantee a
+    piece of work runs one and only one time. What you can guarantee is that the
+    visible result is as if it ran once, and idempotence is how you get there. You
+    stop trying to make the action happen exactly once, and instead make it not
+    matter if it happens more than once. The outcome is the same, and it is achievable.
+  </p>
+
+  <h2>How to get idempotence</h2>
+  <p>
+    Sometimes an action is naturally idempotent, like setting a value. When it is
+    not, a common trick is to give each request a unique identifier and remember which
+    ones you have already handled, so a repeat is recognized and skipped. Either way,
+    the goal is the same: arrange things so that a retry either does nothing or lands
+    on the same result as the first try.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    Failures leave you unsure whether an action happened, which makes blind retries
+    risky. Rather than chase the impossible promise of running something exactly once,
+    make repeating it harmless: design idempotent actions, or track which requests
+    you have already done. Once a retry cannot cause a duplicate, recovering from
+    failure stops being scary and becomes routine.
+  </p>

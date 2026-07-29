@@ -1,0 +1,76 @@
+---
+title: When It Happened vs When You Saw It
+heading: When It Happened vs When You Saw It
+listTitle: Event Time vs Processing Time
+description: Why using the wrong clock to analyze a stream of events invents spikes and dips that never happened, and why you can never be quite sure all the events for a past window have arrived.
+lang: en
+category: Data Engineering
+date: 2027-02-03
+dateText: Feb 3
+tags: data-engineering, streaming, event-time, windows, late-data, consistency
+---
+  <p>
+    When you process a stream of events, sales, clicks, sensor readings, there are
+    two different times attached to each one, and mixing them up quietly ruins your
+    numbers. Keeping them straight is one of the most practical ideas in working
+    with streams.
+  </p>
+
+  <h2>Two clocks</h2>
+  <p>
+    The first time is when the event actually happened: the moment of the sale, the
+    click, the reading. Call it event time; it is usually stamped on the event when
+    it is created. The second is when your system got around to handling it. Call it
+    processing time.
+  </p>
+
+  <p>
+    In a perfect world these would be nearly the same. In the real world they drift
+    apart. Events get delayed on the network, wait in a queue, or get reprocessed
+    after a restart. An event that happened at noon might not reach your processor
+    until 12:05, or until tomorrow if something was backed up.
+  </p>
+
+  <h2>Why the wrong clock lies</h2>
+  <p>
+    Suppose you want to count sales per hour. If you count by processing time, by
+    when you handled each event, you get a distorted picture whenever the two clocks
+    diverge. If your processor was down for an hour and then caught up all at once,
+    all those delayed events get handled together and show up as a giant spike, even
+    though the real sales were spread out evenly. The outage itself looks like an
+    hour with no sales at all. Both the spike and the dip are inventions of your
+    processing schedule, not things that happened in the world.
+  </p>
+
+  <p>
+    So for any question about when things really occurred, you must use event time.
+    Group events by when they happened, not by when you happened to process them, and
+    the picture reflects reality regardless of delays and restarts.
+  </p>
+
+  <h2>The catch: you never know if everyone has arrived</h2>
+  <p>
+    Using event time raises a hard question. To count "sales between noon and one,"
+    you need all the events from that hour. But an event from that hour might still
+    be stuck somewhere and arrive late, after you thought the hour was done. These
+    late arrivals are stragglers, and you can never be fully certain none are still
+    coming.
+  </p>
+
+  <p>
+    That forces a choice. You can decide that once an hour's window is closed, you
+    ignore anything that shows up late, accepting a slightly incomplete count. Or you
+    can keep the window open, or revise the answer, emitting a correction when late
+    events arrive. Neither is free: one trades completeness for a firm answer, the
+    other trades a firm answer for completeness.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    Every event carries two times: when it happened and when you processed it.
+    Analyzing by processing time invents spikes and dips that reflect your schedule,
+    not reality, so use event time for anything about when things occurred. Just
+    accept that you can never be sure all of a past window's events have arrived, and
+    decide in advance whether you will ignore latecomers or revise your answer for
+    them.
+  </p>

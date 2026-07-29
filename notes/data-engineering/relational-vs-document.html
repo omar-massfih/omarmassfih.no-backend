@@ -1,0 +1,76 @@
+---
+title: Tables of References, or Self-Contained Documents?
+heading: Tables of References, or Self-Contained Documents?
+listTitle: Relational vs Document
+description: Two ways to shape data, one that stores each fact once and links things by reference, and one that keeps related things together in a single record, and how the way your data connects decides which fits.
+lang: en
+category: Data Engineering
+date: 2027-01-18
+dateText: Jan 18
+tags: data-engineering, data-modeling, relational, document, normalization
+---
+  <p>
+    When you store data, you choose a shape for it. Two shapes dominate, and they
+    take opposite approaches. One breaks data into linked tables; the other keeps
+    related data bundled together. Neither is better in general, but one usually
+    fits a given problem better, and the way your data connects tells you which.
+  </p>
+
+  <h2>Tables that reference each other</h2>
+  <p>
+    The first approach splits data into separate tables and links them by
+    reference. A fact lives in exactly one place, and everything that needs it
+    points to it by an identifier rather than repeating it.
+  </p>
+
+  <p>
+    The big win is no duplication. If a country's name or a customer's address
+    lives in one row, and everything else refers to it, then changing it means
+    changing one place. Using a stable identifier to point at it helps here too:
+    the identifier never changes even if the human-readable text does, so
+    references never go stale. Storing each fact once, and pointing at it, keeps the
+    data from quietly contradicting itself.
+  </p>
+
+  <h2>Documents that stand alone</h2>
+  <p>
+    The second approach keeps related data together in one self-contained record: a
+    customer with their addresses and orders all nested inside, like a little tree.
+    To read the whole thing, you fetch one record and it is all there, no stitching
+    together from many tables.
+  </p>
+
+  <p>
+    This shines when your data really is shaped like a tree, one thing owning many
+    smaller things, and when you usually want the whole thing at once. It is all in
+    one place, so reading it is one simple fetch. The costs are the mirror of the
+    other approach: you load the entire record even when you only need a corner of
+    it, and any fact shared across many records gets copied into all of them, so
+    updating that fact means hunting down every copy.
+  </p>
+
+  <h2>The deciding question: how is it connected?</h2>
+  <p>
+    The choice really comes down to how your data is linked. If things are mostly
+    self-contained trees that you read whole, the bundled document fits. If things
+    are linked every which way, many items related to many other items in many
+    directions, the linked tables fit far better, because that web of relationships
+    is exactly what references and stored-once facts handle gracefully, and what
+    bundling into documents handles badly.
+  </p>
+
+  <p>
+    A rough test: if you keep needing to combine records from different places to
+    answer your questions, that is a sign the linked-tables shape suits you. If you
+    almost always grab one whole record at a time, the document shape suits you.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    Linked tables store each fact once and connect data by reference, which avoids
+    duplication and handles richly interconnected data well. Self-contained
+    documents keep related data together, which makes reading a whole thing simple
+    but duplicates shared facts. Match the shape to how your data is connected and
+    how you read it: trees you read whole lean toward documents; tangled webs lean
+    toward tables.
+  </p>

@@ -1,0 +1,77 @@
+---
+title: Getting Changes Out of a Database Without Rescanning It
+heading: Getting Changes Out of a Database Without Rescanning It
+listTitle: Change Data Capture
+description: Why copying a whole database over and over is wasteful, and how treating each write as an event lets other systems stay up to date cheaply, with a catch about the changes you never see.
+lang: en
+category: Data Engineering
+date: 2026-09-24
+dateText: Sep 24
+tags: data-engineering, change-data-capture, cdc, ingestion, replication
+---
+  <p>
+    A common need in data work is to keep a second system in step with a
+    database: a warehouse for reports, a search index, another team's copy. The
+    naive way is to copy the whole database on a schedule. That works when the
+    data is small, but it gets painful fast: you re-read everything every time,
+    most of which has not changed, and the copy is always as old as your last
+    run.
+  </p>
+
+  <h2>Only move what changed</h2>
+  <p>
+    The better idea is to move only what actually changed since last time. This
+    is the whole point of change data capture: instead of asking "give me
+    everything," you ask "give me what is new." Far less data moves, and the
+    other system can stay much fresher.
+  </p>
+
+  <p>
+    There is more than one way to find those changes, and they are not equal.
+  </p>
+
+  <h2>Asking versus listening</h2>
+  <p>
+    The first way is to periodically ask the database which rows changed since a
+    certain time, usually by checking a "last updated" marker. This is simple and
+    needs no special setup. But it has a quiet gap: it only sees the current state
+    of each row. If a row changed three times between checks, you see the final
+    value and miss the two in between. For counting or reporting that is often
+    fine; for anything that cares about the full history, it is not.
+  </p>
+
+  <p>
+    The second way is to listen to the database's own record of what it did.
+    Every database keeps an internal log of each write, in order, so it can
+    recover from a crash. By reading that log, you capture every single change as
+    it happened, in sequence, nothing skipped. This is the most complete and
+    timely approach, because it catches each write instead of sampling the result
+    later.
+  </p>
+
+  <h2>It is not free</h2>
+  <p>
+    Capturing changes continuously puts extra load on the source database: it
+    costs processor time, memory, and network. Turned on carelessly on a busy
+    production system, it can cause real problems. So it is worth testing first,
+    and often worth reading from a spare copy of the database rather than the one
+    serving live traffic, so heavy extraction does not slow down real users.
+  </p>
+
+  <p>
+    There is also a subtler trap. Because each write becomes a separate event, and
+    events can arrive more than once or slightly out of order, whatever receives
+    them has to cope with duplicates and reordering. The stream of changes is
+    honest about everything that happened, which means it also carries the messy
+    reality of a real system.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Do not copy a whole database to keep another system current; move only the
+    changes. Asking for changed rows is easy but only shows you the latest state.
+    Reading the database's own write log shows you every change in order, at the
+    cost of more load and more care. Either way, the shift in thinking is the same:
+    treat a change as an event worth capturing, not a difference to rediscover
+    later.
+  </p>

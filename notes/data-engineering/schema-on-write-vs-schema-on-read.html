@@ -1,0 +1,79 @@
+---
+title: Enforce Structure Now, or Figure It Out Later
+heading: Enforce Structure Now, or Figure It Out Later
+listTitle: Schema on Write vs Read
+description: Why you can demand that data fit a shape before you store it, or store it raw and make sense of it when you read it, and how that choice trades safety for flexibility.
+lang: en
+category: Data Engineering
+date: 2026-12-21
+dateText: Dec 21
+tags: data-engineering, schema, flexibility, data-lake, trade-offs
+---
+  <p>
+    Data has structure: fields, types, expected shapes. The question is when you
+    enforce that structure. You have two moments to choose from: the moment you
+    store the data, or the moment you read it back. It sounds like a small
+    technical detail. It quietly shapes how your whole data system feels to work
+    with.
+  </p>
+
+  <h2>Structure at storage time</h2>
+  <p>
+    The first choice is to insist the data fit a defined shape before you save it.
+    Every record must have the right fields, of the right types, or it is rejected
+    at the door. What lands in storage is always clean and predictable.
+  </p>
+
+  <p>
+    The payoff comes later, and to everyone. Anyone who reads the data can trust
+    its shape without checking. Reports, tools, and downstream steps can rely on
+    the fields being there and being valid. You paid for structure once, up front,
+    and everyone downstream reaps the reliability.
+  </p>
+
+  <p>
+    The price is rigidity. If the incoming data does not fit, or its shape changes,
+    it is turned away. Storing something new means updating the agreed shape first.
+    You cannot just dump in whatever arrives, which is exactly the point, and also
+    the limitation.
+  </p>
+
+  <h2>Structure at reading time</h2>
+  <p>
+    The second choice is to store the data raw, in whatever form it arrives, and
+    make sense of it only when you query it. Nothing is rejected; everything is
+    kept as-is, and interpreting it is a problem for later.
+  </p>
+
+  <p>
+    This is wonderfully flexible. You can capture new and messy data immediately,
+    without designing a shape for it first, and decide what it means once you
+    actually need it. Nothing is lost because it did not fit.
+  </p>
+
+  <p>
+    The price is that the mess never went away; it just moved. Every time you read
+    the data, you have to interpret it, handle the odd shapes, and cope with things
+    that do not line up. The work you skipped at storage time is now paid over and
+    over, by every reader, on every read.
+  </p>
+
+  <h2>Paying now or paying later</h2>
+  <p>
+    So the choice is really about when you pay for structure. Enforce it at storage
+    time and you pay once, up front, buying reliability and ease for everyone
+    downstream, at the cost of flexibility. Leave it until reading time and you
+    stay flexible and capture everything, at the cost of paying the interpreting
+    tax again and again later. Many systems deliberately do both: raw and flexible
+    at the edges where data lands, cleaned and structured further in where people
+    depend on it.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    Structure is not free, and you get to choose when to pay for it. Demand it
+    before storing, and you get clean, trustworthy data at the cost of turning away
+    whatever does not fit. Store raw and sort it out on read, and you get
+    flexibility at the cost of doing the interpreting forever. Decide based on
+    whether you value dependable shape or the freedom to capture anything.
+  </p>

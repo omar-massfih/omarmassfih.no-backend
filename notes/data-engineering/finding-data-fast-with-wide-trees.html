@@ -1,0 +1,66 @@
+---
+title: Finding One Record Among Billions
+heading: Finding One Record Among Billions
+listTitle: Finding Data Fast
+description: Why a database can locate a single record among billions in just a few steps, and why making a search tree wide and shallow beats a tall one when every step is a slow trip to disk.
+lang: en
+category: Data Engineering
+date: 2027-03-23
+dateText: Mar 23
+tags: data-engineering, indexes, b-tree, fanout, storage
+---
+  <p>
+    A database might hold billions of records, yet it can find the one you asked for
+    almost instantly, without looking at the others. The way it pulls this off is a
+    lovely piece of design, and the key insight is about what to optimize when each
+    step of the search is expensive.
+  </p>
+
+  <h2>Narrowing down by sorting</h2>
+  <p>
+    Start with the basic idea: keep the records sorted, and organize them as a tree so
+    each step of a search rules out a big chunk of what is left. Ask "is the key above
+    or below this point?" and you throw away half the possibilities, then half again.
+    That is how you avoid scanning everything.
+  </p>
+
+  <p>
+    But there is a catch when the data lives on disk. Each step down the tree means
+    going to a new spot on disk to read it, and reading from disk is slow. A tree
+    where each step only rules out half the remaining keys is very tall, so a search
+    takes many of these slow reads. The sorting is right; the shape is wrong.
+  </p>
+
+  <h2>Wide and shallow beats narrow and tall</h2>
+  <p>
+    The fix is to make each node of the tree hold not one key but many, so each node
+    has many children instead of two. This makes the tree very wide, and therefore
+    very shallow: even for an enormous amount of data, it is only a handful of levels
+    deep.
+  </p>
+
+  <p>
+    That shallowness is the whole point, because depth is the number of slow disk
+    reads. When each node holds hundreds of keys, a single read does not cut the
+    search in half, it cuts it by hundreds. So a few reads are enough to narrow
+    billions of records down to one. The trick is not fewer keys per step but more: by
+    packing each expensive step with lots of information, you need very few steps.
+  </p>
+
+  <h2>A bonus from sorted order</h2>
+  <p>
+    Because the keys stay in sorted order throughout, you get two abilities for the
+    price of one. You can jump straight to an exact record, and you can walk through a
+    whole range of records in order, one after another, without starting the search
+    over each time. Both "find me this" and "give me everything from here to there"
+    fall out of the same structure.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    Databases find a needle in billions by keeping data sorted in a tree, and by
+    making that tree wide and shallow rather than narrow and tall. Since each step is a
+    slow disk read, the goal is to make each step count for as much as possible, so a
+    handful of reads reaches any record. When each move is expensive, pack more into
+    each move. And sorted order throws in fast range scans for free.
+  </p>

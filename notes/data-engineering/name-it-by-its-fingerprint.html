@@ -1,0 +1,60 @@
+---
+title: Name a Thing by a Fingerprint of Its Contents
+heading: Name a Thing by a Fingerprint of Its Contents
+listTitle: Name It by Its Fingerprint
+description: Why deriving a thing's name from its own content, instead of from where it lives or an id you assign, gives you automatic deduplication, built-in verification, and names that mean the same to everyone everywhere.
+lang: en
+category: Data Engineering
+date: 2027-09-07
+dateText: Sep 7
+tags: data-engineering, content-addressing, hashing, deduplication, integrity, immutability
+---
+  <p>
+    We usually name things by where they are, a file at a path, or by an arbitrary label we assign,
+    record number 12345. There is a different and surprisingly powerful way: name a thing by a
+    fingerprint computed from its own contents. You run the content through a function that boils it
+    down to a short, essentially unique fingerprint, and that fingerprint becomes the name. This
+    small shift has deep consequences.
+  </p>
+
+  <h2>Identical content, identical name</h2>
+  <p>
+    Because the name comes from the content, two copies of the exact same thing produce the exact
+    same fingerprint, so they end up with the same name. That means the system recognizes them as
+    the same thing automatically and can store it once instead of twice. Deduplication, not storing
+    the same data over and over, falls out for free, without anyone having to hunt for duplicates.
+  </p>
+
+  <h2>The name verifies the content</h2>
+  <p>
+    Since the name was derived from the content, you can check that you received the right thing:
+    re-compute the fingerprint of whatever you got, and see whether it matches the name you asked
+    for. If someone hands you corrupted or wrong data, the fingerprints will not match, and you know
+    instantly. The name is a built-in integrity check, so you never have to take on faith that you
+    got what you requested.
+  </p>
+
+  <h2>Names that need no coordinator</h2>
+  <p>
+    The name also does not depend on where the thing is stored or who assigned it. Anyone, anywhere,
+    computing the fingerprint of the same content arrives at the same name, with no central authority
+    handing out ids and no risk of two parties choosing the same name for different things. The
+    content names itself, consistently, everywhere.
+  </p>
+
+  <h2>The trade-off</h2>
+  <p>
+    There is a natural consequence to accept: because the name comes from the content, changing the
+    content changes the name. You do not edit a thing in place and keep its name; a change produces a
+    new fingerprint and therefore a new name. This pairs naturally with keeping old versions around
+    rather than overwriting, and it means the name always refers to one exact, unchanging piece of
+    content.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Naming things by a fingerprint of their content, instead of by location or an assigned label,
+    gives you three things at once: identical content is deduplicated automatically, the name lets you
+    verify you got the right data, and names mean the same thing to everyone without coordination. A
+    lot of power comes from simply letting the content name itself.
+  </p>

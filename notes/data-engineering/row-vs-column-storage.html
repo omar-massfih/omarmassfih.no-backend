@@ -1,0 +1,70 @@
+---
+title: Storing Data by Row or by Column
+heading: Storing Data by Row or by Column
+listTitle: Row vs Column Storage
+description: Why the same table can be laid out two very different ways on disk, and how that choice decides whether you are fast at handling whole records or fast at analyzing one field across millions of them.
+lang: en
+category: Data Engineering
+date: 2026-12-13
+dateText: Dec 13
+tags: data-engineering, storage, columnar, analytics, compression
+---
+  <p>
+    A table looks like a neat grid of rows and columns, but a disk is just a long
+    line of bytes. So the same table can be written down in two very different
+    orders, and which one you pick has a big effect on what the system is good at.
+  </p>
+
+  <h2>Two ways to write the same table</h2>
+  <p>
+    The first way keeps each record together. All the fields of the first customer,
+    then all the fields of the second, and so on. If you want one whole record, it
+    is right there in one place, easy to grab.
+  </p>
+
+  <p>
+    The second way keeps each field together instead. All the names in a row, then
+    all the ages, then all the cities. Now a single record is scattered, but every
+    value of one field sits side by side.
+  </p>
+
+  <h2>Which is better depends on what you ask</h2>
+  <p>
+    These suit opposite jobs. If your work is about individual records, look up a
+    customer, update their details, place an order, then keeping each record
+    together wins, because everything you need is in one spot.
+  </p>
+
+  <p>
+    But analysis usually asks a different kind of question: "what is the average
+    age across ten million customers?" With records kept together, you have to
+    read every field of every customer just to pick out the one you care about,
+    dragging along all the names and cities you did not want. With each field kept
+    together, you read only the ages, one tidy run of values, and ignore the rest.
+    When you touch only a few fields but many records, storing by field means
+    reading far less.
+  </p>
+
+  <h2>A bonus: it compresses beautifully</h2>
+  <p>
+    Storing each field together has a second benefit. Values in one field tend to
+    be alike: lots of repeated cities, ages in a narrow range, the same status over
+    and over. Runs of similar values squash down very well, so the data takes less
+    space and there is less to read from disk. Records kept together mix different
+    kinds of values, so they never compress quite as neatly.
+  </p>
+
+  <p>
+    This is also why analytical systems happily use very wide tables with lots of
+    fields. Since a query only reads the handful of fields it needs, having many
+    others sitting unused nearby costs almost nothing.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    The grid is an illusion; underneath, a table is written either record by record
+    or field by field. Record by record is fast when you work with whole records
+    one at a time. Field by field is fast when you scan a few fields across huge
+    numbers of records, and it compresses well on top. Knowing which pattern your
+    work follows tells you which layout you want.
+  </p>

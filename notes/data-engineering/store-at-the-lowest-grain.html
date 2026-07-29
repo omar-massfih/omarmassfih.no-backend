@@ -1,0 +1,67 @@
+---
+title: Keep Your Data as Detailed as You Can
+heading: Keep Your Data as Detailed as You Can
+listTitle: Store at the Lowest Grain
+description: Why storing summaries instead of raw detail quietly closes doors, and why you can always add detail up into totals later but can never pull detail back out of a total.
+lang: en
+category: Data Engineering
+date: 2026-12-17
+dateText: Dec 17
+tags: data-engineering, data-modeling, grain, aggregation, analytics
+---
+  <p>
+    When you decide how to store data, you decide how detailed each record is. You
+    could store one record per individual sale, or one record per day holding just
+    that day's total. This level of detail has a name: the grain. Choosing it is
+    one of the most consequential and easily underestimated decisions in working
+    with data.
+  </p>
+
+  <h2>Detail only flows one way</h2>
+  <p>
+    Here is the asymmetry that makes this matter. If you keep every individual
+    sale, you can always add them up into a daily total, a weekly total, a total
+    per product, whatever you need. Fine detail rolls up into any summary you like.
+  </p>
+
+  <p>
+    But it does not work in reverse. If you only stored the daily total, you can
+    never recover the individual sales that made it up. The detail is gone. You
+    cannot ask "what time of day do people buy?" or "which products sold together?"
+    because those answers lived in the detail you threw away. Summaries flow out of
+    detail, but detail never flows back out of a summary.
+  </p>
+
+  <h2>Why the temptation is real</h2>
+  <p>
+    Storing summaries is tempting because it is smaller, cheaper, and faster to
+    query. If today you only ever look at daily totals, keeping every sale feels
+    wasteful. The catch is that you are deciding, permanently, that you will never
+    want to ask a more detailed question. And the questions people want to ask
+    almost always grow over time.
+  </p>
+
+  <p>
+    This is why the safe default is to store data at the finest grain you
+    reasonably can. You are not just saving today's numbers; you are keeping future
+    questions answerable. The extra space is the price of not painting yourself
+    into a corner.
+  </p>
+
+  <h2>Summaries still have a place</h2>
+  <p>
+    None of this means you must query raw detail every time. You can, and often
+    should, build summary tables on top for speed, so common questions run fast
+    without crunching everything from scratch. The key is that those summaries are
+    built from detail you still keep, not a replacement for it. Keep the detail
+    underneath, and add fast summaries above it.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    The detail you store is a one-way door: you can always summarize it later, but
+    you can never rebuild it once it is gone. Store data at the finest grain you
+    can afford, and build summaries on top for convenience. It costs more space
+    today, and it keeps tomorrow's questions from becoming unanswerable, which is
+    almost always the better trade.
+  </p>

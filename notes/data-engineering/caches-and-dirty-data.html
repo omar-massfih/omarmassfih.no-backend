@@ -1,0 +1,61 @@
+---
+title: Change It in Memory Now, Save It to Disk Later
+heading: Change It in Memory Now, Save It to Disk Later
+listTitle: Caches and Dirty Data
+description: Why keeping hot data in fast memory and writing changes back to disk later is a big speed win, the gap it opens between the fast copy and the real one, and the two jobs that gap creates.
+lang: en
+category: Data Engineering
+date: 2027-03-27
+dateText: Mar 27
+tags: data-engineering, caching, dirty-data, eviction, durability
+---
+  <p>
+    Reading from disk is slow; reading from memory is fast. So databases, and many
+    other systems, keep the data they use most in memory and only occasionally reach
+    down to the slow disk. When you change something, they change the fast in-memory
+    copy first and write it back to disk later. This is a huge speed win, and it comes
+    with a subtlety worth understanding.
+  </p>
+
+  <h2>The gap between the copies</h2>
+  <p>
+    The moment you change the in-memory copy but have not yet written it back, the
+    memory version and the disk version disagree. Data in that state, changed in
+    memory but not yet saved, is often called dirty. It is the newest, correct value,
+    but it exists only in the fragile place: memory.
+  </p>
+
+  <p>
+    That fragility matters, because memory does not survive a crash. If the machine
+    loses power before a dirty change is written to disk, that change is gone. This is
+    exactly the gap that a durable log is there to cover: the log records the intent so
+    that even a change still sitting only in memory can be recovered. The cache buys
+    speed; the log guards the gap the cache opens.
+  </p>
+
+  <h2>Two jobs the gap creates</h2>
+  <p>
+    Living with a fast copy and a slow copy creates two ongoing jobs.
+  </p>
+  <p>
+    The first is flushing: eventually, dirty changes have to be written back to disk so
+    they truly persist. Do it too rarely and you risk losing more on a crash; do it
+    constantly and you give up the speed the cache was meant to provide. There is a
+    balance to strike.
+  </p>
+  <p>
+    The second is eviction. Memory is limited, so when it fills up you must decide what
+    to throw out to make room. The goal is to keep what you are likely to use again and
+    discard what you are not. Evict something you are about to need and you pay for an
+    expensive trip back to disk to fetch it again, undoing the benefit. A good rule of
+    thumb is to keep recently and frequently used data and drop the rest.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    Keeping hot data in fast memory and writing changes back later makes systems
+    dramatically quicker, at the cost of a gap: for a while the fast copy holds changes
+    the slow copy does not, and a crash can lose them. Managing that gap is the real
+    work, flushing changes so they survive, and choosing wisely what to keep in memory
+    versus evict. The cache is easy; keeping its promises is the interesting part.
+  </p>

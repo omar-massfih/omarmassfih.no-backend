@@ -1,0 +1,76 @@
+---
+title: All Data Is a Stream Until Someone Cuts It Up
+heading: All Data Is a Stream Until Someone Cuts It Up
+listTitle: Batch and Streaming
+description: Why batch and streaming are not two kinds of data but two ways of slicing the same never-ending flow, and why a buffer between stages is what keeps a pipeline from breaking under pressure.
+lang: en
+category: Data Engineering
+date: 2026-09-20
+dateText: Sep 20
+tags: data-engineering, ingestion, batch, streaming, pipelines
+---
+  <p>
+    People talk about "batch data" and "streaming data" as if they were
+    different things. They mostly are not. Almost all data starts as a steady
+    flow of events: a sale happens, a button is clicked, a sensor reports a
+    reading. That flow never really stops. What we call a batch is just that flow
+    with a line drawn across it.
+  </p>
+
+  <h2>Batches are slices of a stream</h2>
+  <p>
+    A batch is created by choosing a boundary. Take every event from the last
+    hour, or every event until the file reaches a certain size, and treat that
+    chunk as one unit. The boundary is something we add for convenience; the
+    underlying events did not arrive in a neat group. A useful way to hold this
+    is that data is unbounded until we decide to bound it.
+  </p>
+
+  <p>
+    This reframes the choice. The question is not "is this batch or streaming
+    data?" It is "how often do we want to draw the line?" Draw it once a day and
+    you have daily batches. Draw it constantly and you have something that feels
+    like streaming. Even a streaming pipeline usually ends up drawing lines
+    somewhere, because storage and reports downstream still like to work in
+    chunks.
+  </p>
+
+  <h2>Waiting versus not waiting</h2>
+  <p>
+    There is a second choice that matters more than batch size: whether each
+    stage waits for the one before it. In a waiting design, a stage cannot start
+    until the previous stage has finished its whole batch. Everything is lined up
+    in a chain.
+  </p>
+
+  <p>
+    That chain is fragile. If one stage fails, everything behind it is blocked,
+    and you may have to rerun the whole thing. Because the stages are locked
+    together, a problem anywhere becomes a problem everywhere. It is simple, but
+    it breaks in an all-or-nothing way.
+  </p>
+
+  <h2>Why a buffer changes everything</h2>
+  <p>
+    The alternative is to let stages work independently and put a holding area
+    between them: a place where finished work waits until the next stage is ready
+    for it. Now each event can move forward on its own, without the whole batch
+    marching in step.
+  </p>
+
+  <p>
+    That holding area does something important during a rush. When events arrive
+    in a sudden burst, the buffer soaks up the flood so the next stage is not
+    overwhelmed. The producer can run fast and the consumer can run at its own
+    steady pace, and neither one drags the other down. A slow or briefly failing
+    stage no longer stalls the entire pipeline; the work simply waits for it.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Do not think of batch and streaming as different worlds. It is one flow of
+    events, sliced more or less finely. The choices that actually shape a
+    pipeline are how often you draw the boundary, and whether you lock the stages
+    together or let a buffer sit between them. A buffer costs a little complexity
+    and buys a lot of resilience, which is usually a trade worth making.
+  </p>

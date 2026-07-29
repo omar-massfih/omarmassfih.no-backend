@@ -1,0 +1,75 @@
+---
+title: One Source of Truth, Everything Else Derived
+heading: One Source of Truth, Everything Else Derived
+listTitle: System of Record and Derived Data
+description: Why naming a single source of truth and treating everything else as rebuildable from it clarifies what is precious, and why writing the same fact into two systems directly is a recipe for permanent disagreement.
+lang: en
+category: Data Engineering
+date: 2027-01-30
+dateText: Jan 30
+tags: data-engineering, system-of-record, derived-data, dual-writes, consistency
+---
+  <p>
+    Real systems keep the same information in several places: the main database, a
+    cache, a search index, a recommendation list, a summary table for reports. It
+    is easy to treat these as equals. They are not, and drawing a clear line
+    between them prevents a whole class of painful bugs.
+  </p>
+
+  <h2>Source of truth versus copies</h2>
+  <p>
+    Pick one place as the source of truth: where a new fact is first written and
+    officially recorded. Everything else is derived data, computed from that source.
+    A search index is derived from the records it indexes. A cache is derived from
+    whatever it caches. A daily summary is derived from the raw events.
+  </p>
+
+  <p>
+    The useful thing about this split is that it tells you what is precious and what
+    is not. The source is irreplaceable; lose it and the facts are gone. Everything
+    derived is, by definition, rebuildable: if your search index is corrupted, you
+    can throw it away and regenerate it from the source. Derived data is redundant
+    on purpose, kept around for speed and convenience, but never the thing you
+    truly cannot lose.
+  </p>
+
+  <h2>The dual-write trap</h2>
+  <p>
+    Here is where teams get hurt. Suppose that when something changes, you write it
+    directly into two systems yourself, say the database and the search index, one
+    after the other. It seems reasonable, and it quietly breaks.
+  </p>
+
+  <p>
+    If the process crashes between the two writes, one system has the change and the
+    other does not, and they stay that way. If two updates to the same thing race,
+    they might land in the two systems in different orders, so each ends up believing
+    something different. Now your two systems permanently disagree, and nothing tells
+    you which one is right. This is the dual-write problem, and it does not fix
+    itself.
+  </p>
+
+  <h2>Derive instead of dual-writing</h2>
+  <p>
+    The way out follows straight from the source-of-truth idea. Do not write the
+    fact into two places by hand. Write it once, to the source, and let the other
+    systems follow the source's stream of changes to update themselves. Because they
+    all derive from one place, in one order, they cannot drift into permanent
+    disagreement. If one falls behind or breaks, it catches up from the source
+    rather than holding its own conflicting version.
+  </p>
+
+  <p>
+    This also makes recovery calm. A derived system that gets corrupted or needs a
+    new shape is just rebuilt from the source's history. The source holds the truth;
+    the copies are always reconstructable views of it.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Name one source of truth and treat everything else as derived: redundant,
+    disposable, rebuildable. That tells you what to protect and what you can always
+    regenerate. And resist writing the same fact into two systems directly, because
+    a crash or a race leaves them disagreeing forever. Write once to the source, let
+    the rest follow, and the pieces stay in step.
+  </p>

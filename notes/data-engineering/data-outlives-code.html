@@ -1,0 +1,67 @@
+---
+title: Your Data Will Outlive the Code That Wrote It
+heading: Your Data Will Outlive the Code That Wrote It
+listTitle: Data Outlives Code
+description: Why stored data lingers for years after the code that created it is gone, why that means old and new formats always coexist, and the quiet trap of code that drops fields it doesn't understand.
+lang: en
+category: Data Engineering
+date: 2027-02-27
+dateText: Feb 27
+tags: data-engineering, schema-evolution, compatibility, storage, data-longevity
+---
+  <p>
+    It is easy to picture your data as matching your code: whatever shape the
+    program uses today is the shape the data is in. That picture is wrong, and
+    believing it causes real bugs. Data has a much longer life than code, and that
+    changes how you have to treat it.
+  </p>
+
+  <h2>Code gets rewritten; data stays</h2>
+  <p>
+    Code is replaced constantly. You refactor, rewrite, and redeploy, and last
+    year's version is gone. Data does not work that way. A record written years ago
+    may still be sitting in storage today, long after the program that created it
+    has been thrown away and replaced twice over. The data quietly outlives the code.
+  </p>
+
+  <p>
+    So at any moment, your storage almost certainly holds a mix of shapes: records
+    written by the current code, and records written by every earlier version that
+    ever ran. You cannot assume everything is in the newest format, because the old
+    formats never left.
+  </p>
+
+  <h2>Why this shapes your formats</h2>
+  <p>
+    This is the practical reason to care about letting old and new formats coexist.
+    Today's code has to be able to read data written long ago, and, because upgrades
+    are gradual, older code may still have to read data written by newer code. The
+    format has to tolerate this spread of ages rather than assuming one uniform
+    shape.
+  </p>
+
+  <h2>The quiet corruption trap</h2>
+  <p>
+    Here is a subtle way this bites. Suppose newer code writes a record with a field
+    the old code knows nothing about. Then a piece of old code reads that record,
+    changes something small, and writes it back. If the old code only understands
+    the fields it knew about, it may drop the unfamiliar field entirely when it
+    rewrites the record. Nothing errors; the data is just silently damaged, as if
+    the new field was never there.
+  </p>
+
+  <p>
+    This is nasty precisely because it looks like normal, successful work. The fix
+    is to make sure code that reads and then rewrites a record carries along the
+    parts it does not understand, instead of quietly discarding them.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Your stored data will outlive the code that wrote it, so at any time it holds a
+    mixture of old and new shapes. Design formats so those shapes can coexist, and
+    watch for the trap where old code reads a newer record and drops the fields it
+    does not recognize on the way back out. Treat data as a long-lived thing your
+    code must stay compatible with, not as a mirror of whatever the program looks
+    like today.
+  </p>

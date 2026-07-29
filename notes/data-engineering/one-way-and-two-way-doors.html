@@ -1,0 +1,75 @@
+---
+title: One-Way Doors and Two-Way Doors
+heading: One-Way Doors and Two-Way Doors
+listTitle: One-Way and Two-Way Doors
+description: Why the cost of undoing a decision matters more than the decision itself, and how sorting choices into reversible and irreversible ones lets you move fast without being reckless.
+lang: en
+category: Data Engineering
+date: 2026-09-28
+dateText: Sep 28
+tags: data-engineering, architecture, decisions, reversibility, trade-offs
+---
+  <p>
+    Not all decisions deserve the same amount of worry. Some choices are easy to
+    take back if they turn out wrong. Others lock you in for years. A simple but
+    powerful habit is to sort a decision into one of these two kinds before you
+    spend energy on it.
+  </p>
+
+  <h2>Two doors</h2>
+  <p>
+    Picture a decision as a door. A two-way door opens both ways: if you walk
+    through and do not like what you find, you can turn around and come back at
+    little cost. Choosing a library you can swap later, or a setting you can
+    change next week, is a two-way door.
+  </p>
+
+  <p>
+    A one-way door only opens forward. Once you go through, coming back is hard,
+    expensive, or nearly impossible. Picking the core way your data is stored,
+    committing to a platform everything else will depend on, or a choice that
+    locks you to one vendor: these are one-way doors. The trouble is that people
+    often treat both kinds the same, agonizing over trivial reversible choices and
+    rushing the ones they cannot undo.
+  </p>
+
+  <h2>Match the caution to the door</h2>
+  <p>
+    For a two-way door, the fastest good decision is usually to just pick
+    something reasonable and move on. If it is wrong, you will learn that quickly
+    and change it cheaply. Spending days in meetings on a choice you could reverse
+    in an afternoon is wasted effort, and the delay itself has a cost.
+  </p>
+
+  <p>
+    For a one-way door, slow down. This is where careful thought, wider input, and
+    small experiments earn their keep, because the price of being wrong is high
+    and lasting. The skill is not "always be careful" or "always be fast." It is
+    telling the two kinds apart and spending your caution where it actually
+    matters.
+  </p>
+
+  <h2>Prefer building more two-way doors</h2>
+  <p>
+    There is a further move: you can often turn a one-way door into a two-way
+    door by how you design things. If parts of a system talk to each other through
+    stable, agreed connection points, and hide their inner workings behind those
+    points, then you can replace a part later without disturbing everything around
+    it. A choice that would have been permanent becomes reversible.
+  </p>
+
+  <p>
+    This is why loose connections between parts are worth the effort. They are not
+    just tidy; they keep your future options open. In a world where requirements
+    and tools keep shifting, the ability to change your mind later is itself
+    valuable, and good design manufactures more of it.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    Before deliberating, ask how hard this decision is to undo. Move quickly
+    through two-way doors and save your real care for one-way doors. And wherever
+    you can, design so that fewer doors are one-way, because staying able to
+    change direction cheaply is one of the most useful properties a system can
+    have.
+  </p>
