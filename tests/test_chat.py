@@ -16,6 +16,13 @@ CONFIGURED = SimpleNamespace(
     vercel_oidc_token=None,
     turso_database_url="libsql://test.turso.io",
     turso_auth_token="token",
+    chat_top_k=6,
+    chat_graph_top_k=2,
+    chat_max_tokens=1000,
+    hybrid_candidate_k=24,
+    hybrid_semantic_weight=1.0,
+    hybrid_lexical_weight=0.7,
+    hybrid_rrf_k=60,
 )
 
 CHUNK = RetrievedChunk(
@@ -53,7 +60,9 @@ def configure(
     async def fake_embed_texts(texts, *, token=None):
         return [[0.1, 0.2] for _ in texts]
 
-    async def fake_search_chunks(db, embedding, k):
+    async def fake_hybrid_search_chunks(db, query, embedding, k, **ranking):
+        assert query
+        assert ranking["candidate_k"] == 24
         return chunks
 
     async def fake_expand_neighbors(db, embedding, hits, k):
@@ -68,7 +77,7 @@ def configure(
         yield SimpleNamespace()
 
     monkeypatch.setattr(chat_module, "embed_texts", fake_embed_texts)
-    monkeypatch.setattr(chat_module, "search_chunks", fake_search_chunks)
+    monkeypatch.setattr(chat_module, "hybrid_search_chunks", fake_hybrid_search_chunks)
     monkeypatch.setattr(chat_module, "expand_neighbors", fake_expand_neighbors)
     monkeypatch.setattr(chat_module, "stream_chat", fake_stream_chat)
     monkeypatch.setattr(chat_module, "turso_client", fake_turso_client)
