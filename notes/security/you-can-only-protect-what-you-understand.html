@@ -1,0 +1,76 @@
+---
+title: You Can Only Protect What You Understand
+heading: You Can Only Protect What You Understand
+listTitle: Protect What You Understand
+description: Why a system is only as secure as your ability to reason about it, why testing cannot establish the properties that matter most, and why keeping the trusted parts small and simple is itself a security measure.
+lang: en
+category: Security
+date: 2027-04-12
+dateText: Apr 12
+tags: security, understandability, invariants, complexity, trusted-base
+---
+  <p>
+    Security and reliability both rest on a quieter foundation: whether people can
+    actually understand the system. If you cannot accurately picture how it behaves,
+    you cannot be sure a safety property holds, you cannot change it without fear, and
+    you cannot respond well when it breaks. Understandability is not a nicety; it is
+    what makes the other guarantees possible.
+  </p>
+
+  <h2>Complexity is the enemy</h2>
+  <p>
+    The thing that erodes understanding is complexity: too many parts interacting in
+    too many ways, with hidden assumptions about each other, for anyone to hold in
+    their head at once. As that grows, engineers stop being able to predict what the
+    system will do in unusual situations, which is exactly when security and
+    reliability are tested.
+  </p>
+
+  <p>
+    Notice that just chopping a system into pieces does not automatically help. If the
+    pieces are tangled together or secretly depend on each other's behavior, the whole
+    is still a knot. Real understandability comes from clean separation, not just more
+    boxes.
+  </p>
+
+  <h2>Why testing is not enough</h2>
+  <p>
+    It is tempting to lean on testing to establish that a system is safe. But tests
+    only check the specific cases you thought to write, and those are mostly the normal
+    ones. Security properties have to hold under the abnormal cases too: malformed
+    input, unexpected states, and deliberately hostile behavior. Those are precisely
+    the cases tests tend to miss, so passing tests can never prove that a safety
+    property always holds.
+  </p>
+
+  <p>
+    A better mental tool is the invariant: a property that must be true no matter what.
+    Instead of asking "does it work in these examples?", you ask "does this hold under
+    every possible behavior, including the weird and the malicious?" That question
+    forces you to reason about the whole space, not just the happy path.
+  </p>
+
+  <h2>Shrink what must be correct</h2>
+  <p>
+    Two habits make a system easier to reason about. First, keep the set of parts that
+    must be correct for a safety property as small as possible. The fewer pieces a
+    guarantee depends on, the easier it is to check them all and to defend them.
+    Sprawl in that trusted core is where confidence quietly dies.
+  </p>
+
+  <p>
+    Second, centralize the common checks. If every part of the system does its own
+    security checking, a reviewer has to hunt through all of them for the one that
+    forgot. If those checks live in one shared place that everything goes through, a
+    reviewer can validate that one place and trust the rest.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    A system is only as secure and reliable as your ability to reason about it, so
+    understandability underpins everything else. Fight complexity, because it is what
+    makes systems unreasonable. Do not trust tests to prove safety properties; think in
+    invariants that must hold under all behavior. And keep the trusted core small and
+    the common checks centralized, because simplicity is not just neatness, it is how
+    you stay able to protect what you built.
+  </p>

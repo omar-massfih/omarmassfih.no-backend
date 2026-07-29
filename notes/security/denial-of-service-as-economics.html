@@ -1,0 +1,74 @@
+---
+title: A Flood of Traffic Is an Economics Problem
+heading: A Flood of Traffic Is an Economics Problem
+listTitle: Denial of Service as Economics
+description: Why an attack that tries to overwhelm you is really about cost per request, why your weakest dependency decides your exposure, why your defenses must not depend on what they defend, and how retries can flood you all by themselves.
+lang: en
+category: Security
+date: 2027-04-20
+dateText: Apr 20
+tags: security, denial-of-service, capacity, layered-defense, retries
+---
+  <p>
+    An attack that tries to overwhelm a service with traffic looks like brute force,
+    but it is best understood as an economics problem. The attacker is trying to make
+    the demand on your system exceed its capacity, forcing you to either spend more to
+    keep up or start turning real users away. Once you see it that way, the defense
+    becomes clearer.
+  </p>
+
+  <h2>It is about cost per request</h2>
+  <p>
+    If the fight is economic, then what matters is the cost of each request to each
+    side. The attacker wins by finding requests that are cheap for them to send but
+    expensive for you to handle. Your defense is the mirror image: make the bad traffic
+    cheap for you to recognize and reject, so that absorbing it does not exhaust you
+    before it exhausts them.
+  </p>
+
+  <h2>Your weakest dependency is the target</h2>
+  <p>
+    An attacker does not aim at your strongest point; they aim at whichever piece gives
+    them the most damage per request. That means your least-protected dependency
+    defines your real exposure, whatever it happens to be. It does no good to harden
+    the front door if a side path falls over first. You have to find and shore up the
+    cheapest way to hurt you, not the most obvious one.
+  </p>
+
+  <h2>Drop bad traffic early, in layers</h2>
+  <p>
+    The most valuable move is to reject bad traffic as early and as cheaply as
+    possible, before it consumes the resources deeper in the system that legitimate
+    users need. This argues for layered defenses: each layer filters what it can so the
+    layer behind it faces less. Traffic that makes it deep into the system is more
+    expensive to handle, so the goal is to shed it while it is still cheap to shed.
+  </p>
+
+  <h2>Defenses must not depend on the victim</h2>
+  <p>
+    Here is a mistake that turns bad into catastrophic: building the tools that fight
+    the attack on top of the very system under attack. If the flood takes down
+    production, and your mitigation depends on production, then the attack disables your
+    ability to respond to it. The controls you use to defend must stand apart from what
+    they defend, or they go down together.
+  </p>
+
+  <h2>The self-inflicted flood</h2>
+  <p>
+    Not every flood comes from an enemy. During an outage, clients that retry
+    aggressively can pile on so much repeated load that they cause or worsen the very
+    overload they are reacting to, an attack you launch on yourself. The cure is for
+    clients to back off and spread their retries out rather than hammering in tight
+    synchronized loops. And an overloaded service should answer as many of the retrying
+    clients as it safely can, because each answered client stops retrying, which
+    relieves the pressure that is prolonging the outage.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    An overwhelming-traffic attack is a contest of cost: the attacker makes requests
+    cheap to send and expensive to serve. Defend by making bad traffic cheap to reject,
+    protecting your weakest dependency, and shedding load early in layers. Keep your
+    defenses independent of what they protect, and remember that careless retries can
+    flood you without any attacker at all.
+  </p>

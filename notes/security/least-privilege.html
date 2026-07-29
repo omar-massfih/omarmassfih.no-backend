@@ -1,0 +1,80 @@
+---
+title: Give Everything Only the Access It Needs
+heading: Give Everything Only the Access It Needs
+listTitle: Least Privilege
+description: Why handing out only the narrow access a task requires limits the damage from both mistakes and break-ins, why reading data can be as dangerous as changing it, and why an unusable control is no control at all.
+lang: en
+category: Security
+date: 2026-11-19
+dateText: Nov 19
+tags: security, least-privilege, blast-radius, access-control, zero-trust
+---
+  <p>
+    A simple, powerful security idea is to give every person and every program
+    only the access their actual job needs, and nothing more. If a task only reads
+    one kind of record, it should not also be able to delete the whole database.
+    This is least privilege, and its value is easiest to see when something goes
+    wrong.
+  </p>
+
+  <h2>Why narrow access matters</h2>
+  <p>
+    Whatever access a person or program has is also the access an attacker gains if
+    they take it over, and the damage a careless mistake can cause. Narrow that
+    access and you narrow the damage. A stolen account that can touch one small
+    thing is a small problem; the same account with the keys to everything is a
+    disaster. Least privilege caps how far any single failure, malicious or
+    accidental, can reach.
+  </p>
+
+  <p>
+    That reach has a name worth keeping in mind: blast radius. The whole point of
+    least privilege is to keep the blast radius of any one compromise or blunder as
+    small as possible, so a bad day does not become a catastrophe.
+  </p>
+
+  <h2>Reading can be as dangerous as changing</h2>
+  <p>
+    It is tempting to guard the ability to change or delete data far more carefully
+    than the ability to just read it. But reading sensitive data can be its own
+    disaster. Once secrets or private records have been seen and copied, the harm
+    is done and cannot be undone, even though nothing was modified. Read access to
+    the wrong thing deserves the same respect as write access.
+  </p>
+
+  <h2>Match the guard to the risk</h2>
+  <p>
+    Not everything needs the same level of protection. Guard everything equally and
+    you either leave the dangerous things underprotected or wrap the harmless
+    things in so much friction that people are miserable. The better approach is to
+    sort access by how much harm it could do, and put the strongest controls where
+    the risk is highest. Ordinary actions stay easy; sensitive ones get extra
+    checks.
+  </p>
+
+  <p>
+    One especially useful control is access that expires. Instead of granting
+    powerful permissions forever, grant them for as long as the task needs and let
+    them lapse. Permanent power tends to pile up quietly and be forgotten;
+    expiring access keeps the standing pile of authority small, and creates natural
+    moments to log and review who needed what.
+  </p>
+
+  <h2>An unusable control is no control</h2>
+  <p>
+    Here is the part that is easy to forget: if asking for access is too painful,
+    people will find a way around it. They will share credentials, keep broad
+    permissions "to save time," or route through some back door. A control so
+    annoying that everyone bypasses it protects nothing. Usability is therefore
+    part of security, not a separate nicety. The safe path has to also be the easy
+    path, or it will not be the path people take.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    Give each person and program the narrowest access that lets them do their job,
+    treat reading sensitive data as seriously as changing it, and put your
+    strongest controls where the potential harm is greatest. Prefer access that
+    expires over access that lingers. And make the secure way usable, because a
+    control people route around is no protection at all.
+  </p>

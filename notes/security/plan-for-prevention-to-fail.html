@@ -1,0 +1,68 @@
+---
+title: Plan for Prevention to Fail
+heading: Plan for Prevention to Fail
+listTitle: Plan for Prevention to Fail
+description: Why you cannot rely on stopping every problem at the front door, and how layered defenses, separate zones, simple design, and a plan for recovery keep one failure from becoming total collapse.
+lang: en
+category: Security
+date: 2026-11-27
+dateText: Nov 27
+tags: security, defense-in-depth, blast-radius, failure-domains, recovery, failure
+---
+  <p>
+    A tempting way to think about safety is to build one strong wall and keep every
+    bad thing out. It does not hold up. Perfect prevention is not achievable:
+    eventually a mistake, a bug, or an attacker gets past the wall. The systems
+    that survive are the ones designed on the assumption that prevention will
+    sometimes fail.
+  </p>
+
+  <h2>Layers, not a single wall</h2>
+  <p>
+    The first idea is to have more than one line of defense. If you rely on a single
+    protection, then the day it fails, everything is exposed. If instead there are
+    several independent protections stacked behind each other, one of them failing
+    is not the end: the next one still stands. This is defense in depth, and its
+    logic is simple. The chance of all layers failing at once is far smaller than
+    the chance of any one failing.
+  </p>
+
+  <h2>Divide the system into zones</h2>
+  <p>
+    The second idea is to make sure that when something does get through, it cannot
+    spread everywhere. Split the system into separate zones, so a failure, a stolen
+    password, or a compromised machine is trapped inside one zone instead of
+    reaching the whole system. This keeps the blast radius small: the damage is
+    contained to a section rather than sinking everything. The same walls that stop
+    an attacker spreading also stop an ordinary failure cascading.
+  </p>
+
+  <h2>Simple is safer</h2>
+  <p>
+    The third idea is to keep the design simple. Complexity hides connections you
+    did not know existed, so a small, innocent-looking change can trigger a large
+    failure through some dependency nobody remembered. A simpler system has fewer
+    dark corners, fewer surprising interactions, and is far easier to reason about
+    during an emergency, when you least want to be untangling something clever.
+    Simplicity is not just tidiness; it directly reduces how much can go wrong.
+  </p>
+
+  <h2>Assume you will need to recover</h2>
+  <p>
+    The last idea follows from the first: since something will eventually get
+    through, you need to be able to notice it and recover, not just prevent it.
+    Build in ways to detect that something is wrong and ways to return to a safe
+    state. And when you push out a change, roll it out gradually rather than to
+    everything at once, so a faulty or malicious change is caught while it has only
+    reached a small slice, instead of after it has hit the entire system.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Do not stake everything on keeping problems out, because sometimes they get in.
+    Stack independent defenses so one failure is not fatal, divide the system into
+    zones so trouble cannot spread, keep the design simple so it holds fewer
+    surprises, and plan to detect and recover rather than only to prevent. Good
+    safety is not one perfect wall; it is a system that stays standing when a wall
+    comes down.
+  </p>

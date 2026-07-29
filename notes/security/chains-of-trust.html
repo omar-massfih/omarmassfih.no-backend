@@ -1,0 +1,69 @@
+---
+title: Trusting a Stranger by Way of Someone You Trust
+heading: Trusting a Stranger by Way of Someone You Trust
+listTitle: Chains of Trust
+description: Why a claimed identity proves nothing on its own, how delegating trust to a few authorities lets you trust strangers you've never met, and why this powerful idea is only as strong as its weakest link.
+lang: en
+category: Security
+date: 2027-08-14
+dateText: Aug 14
+tags: security, trust, certificates, identity, delegation
+---
+  <p>
+    You have just connected to a stranger who claims to be a particular party. How can you tell
+    they really are who they say? They can send you their claimed identity, but anyone can claim
+    any name. A claim by itself proves nothing, and you cannot have personally arranged trust with
+    every stranger in the world ahead of time. That does not scale.
+  </p>
+
+  <h2>Delegate the trust</h2>
+  <p>
+    The way out is to delegate. You trust the stranger's identity not because you know them, but
+    because someone you already trust vouches for them. The stranger presents more than "I am
+    so-and-so"; they also present a trusted party's endorsement confirming it. If you trust that
+    party, and that party vouches for the stranger, then you can trust the stranger too, without
+    ever having met.
+  </p>
+
+  <p>
+    It is the digital version of "any friend of a friend is a friend." You extend your trust along
+    an introduction from someone whose word you already accept.
+  </p>
+
+  <h2>Why it chains</h2>
+  <p>
+    This delegation links into a chain. The party who vouched for the stranger may in turn be
+    vouched for by an even more established party, and so on up to a small number of well-known
+    authorities at the top. You only need to directly trust those few roots. Everyone else is
+    trusted transitively, through the chain of endorsements leading back to a root you accept.
+  </p>
+
+  <p>
+    That is what makes it scale. Instead of pre-arranging trust with millions of strangers, you
+    pre-arrange it with a handful of roots, and they, directly or through others, vouch for the
+    rest.
+  </p>
+
+  <h2>As strong as its weakest link</h2>
+  <p>
+    Two cautions come with this power. First, the whole structure is only as trustworthy as the
+    roots and every link in the chain. If a trusted voucher is careless or gets compromised, every
+    identity it endorsed inherits the problem, and you would have accepted them all. Delegated
+    trust concentrates risk at the top.
+  </p>
+
+  <p>
+    Second, these endorsements usually expire on purpose, so trust has to be renewed periodically.
+    A useful consequence, and an occasional nasty surprise, is that a lapsed endorsement can lock
+    out a perfectly healthy system: others correctly refuse to trust an identity whose vouching
+    has run out, even though nothing else is wrong. The service works fine; it just can no longer
+    prove who it is.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    You cannot trust a stranger's claimed identity on its own, and you cannot know every stranger
+    in advance. So you delegate: trust a few authorities, and trust whoever they vouch for,
+    transitively along a chain back to a root you accept. It is a powerful way to scale trust, as
+    strong as its weakest link, and quietly dependent on keeping the vouching current.
+  </p>

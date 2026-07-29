@@ -1,0 +1,71 @@
+---
+title: Design How You'll Recover Before You Need To
+heading: Design How You'll Recover Before You Need To
+listTitle: Design Recovery Before You Need It
+description: Why decisions made mid-crisis are the worst ones, why the emergency path should be the normal path at full speed, the hidden trap in rolling back after a security fix, and why an untested backup is only a hope.
+lang: en
+category: Security
+date: 2027-04-16
+dateText: Apr 16
+tags: security, recovery, rollback, backups, emergency-access
+---
+  <p>
+    When a system is on fire, that is the worst possible time to figure out how to put
+    it out. Decisions made under the pressure of a live incident are slower, riskier,
+    and more likely to miss subtle consequences. The way to recover well is to design
+    recovery in advance, calmly, before you need it. A few principles carry a long way.
+  </p>
+
+  <h2>The emergency path is the normal path, sped up</h2>
+  <p>
+    It is tempting to build a special, separate mechanism for emergencies. That is a
+    trap. A path used only in emergencies is almost never exercised, so it tends to be
+    quietly broken exactly when you finally reach for it. Far better to use the normal
+    path, the one used constantly and therefore known to work, and simply allow it to
+    run at full speed in an emergency. Keep the mechanism the same; change only how
+    fast and how governed it is.
+  </p>
+
+  <h2>The rollback trap</h2>
+  <p>
+    When something goes wrong after a release, the reflex is to roll back to the older
+    version that was working. Usually fine, but there is a sharp edge. If the newer
+    version fixed a security hole, rolling back reintroduces that hole. Worse, an
+    attacker can deliberately force you back to an old version they know how to break,
+    turning your safety mechanism into their way in.
+  </p>
+
+  <p>
+    So "just roll back" is not automatically safe after a security fix. You need a way
+    to prevent going back below a known-safe version, so stability can be restored
+    without reopening a door you already closed.
+  </p>
+
+  <h2>A backup is only a hope until you restore it</h2>
+  <p>
+    Everyone knows to take backups. Fewer act on the harder truth: a backup you have
+    never restored is not a backup, it is a hope. The only real proof that a backup
+    works is actually restoring from it under realistic conditions. Untested backups
+    fail in exactly the moment you depend on them, when the format has drifted, the
+    process is undocumented, or the data is incomplete. Test the restore, or you do not
+    have one.
+  </p>
+
+  <h2>The last way in must stand on its own</h2>
+  <p>
+    During a severe outage, there has to be a way for responders to get in and fix
+    things. The critical requirement is that this emergency access must not depend on
+    the very systems that might be down. If your only way to log in, or to coordinate,
+    relies on the thing that is broken, you are locked out precisely when you most need
+    in. The last line of defense has to stand on its own feet, and be practiced during
+    calm times so it actually works during a real one.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Recovery is something you design ahead of time, not improvise during the fire. Make
+    the emergency path the normal path at full speed, so it is battle-tested. Guard
+    against rolling back past a security fix. Treat a backup as unproven until you have
+    restored from it. And make sure the last way in does not depend on what just broke.
+    The calm work you do before an incident is what makes the incident survivable.
+  </p>

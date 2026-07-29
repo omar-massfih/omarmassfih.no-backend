@@ -1,0 +1,74 @@
+---
+title: When Keeping It Running Fights Keeping It Safe
+heading: When Keeping It Running Fights Keeping It Safe
+listTitle: When Safety and Uptime Disagree
+description: Why security and reliability usually pull together but sometimes point in opposite directions, and how a single failure forces a choice between staying open for real users and staying closed to attackers.
+lang: en
+category: Security
+date: 2026-11-23
+dateText: Nov 23
+tags: security, reliability, fail-open, fail-secure, trade-offs
+---
+  <p>
+    Security and reliability sound like the same goal wearing two hats: a good
+    system should be both safe and dependable. Most of the time they do reinforce
+    each other. But now and then they point in opposite directions, and noticing
+    where they split is what keeps you from being blindsided.
+  </p>
+
+  <h2>The moment of failure</h2>
+  <p>
+    The clearest split appears when something breaks. Suppose the part of your
+    system that checks whether someone is allowed in stops responding. You have two
+    choices, and they are opposites.
+  </p>
+
+  <p>
+    You can let people through when the check is down, so real users are not
+    blocked. That keeps the service available, which is what reliability wants. But
+    it may also hand an attacker a way straight past your controls, precisely when
+    you cannot verify who they are.
+  </p>
+
+  <p>
+    Or you can shut the door when the check is down, so no one gets in without a
+    proper check. That keeps you protected, which is what security wants. But it
+    can also lock out legitimate users, and sometimes the very responders trying to
+    fix the outage, exactly when access is most urgent.
+  </p>
+
+  <p>
+    Neither answer is universally right. Which failure you prefer depends on what
+    you are protecting: staying open by default suits a public reading service,
+    while staying closed by default suits a system holding money or secrets.
+  </p>
+
+  <h2>Even helpful things cut both ways</h2>
+  <p>
+    The tension shows up elsewhere too. Keeping spare copies and extra paths makes a
+    system more reliable, because users can survive a component failing. But every
+    extra path is also another way in: to stay safe you must defend all of them,
+    while an attacker only has to find one that is weak. The same redundancy that
+    helps reliability quietly enlarges the surface security has to guard.
+  </p>
+
+  <h2>No attacker required</h2>
+  <p>
+    It also works the other way: a plain accident can be a security failure with
+    nobody attacking at all. A message delivered to the wrong person leaks private
+    data just as surely as a break-in would. Corruption or an outage can break the
+    promises about confidentiality, integrity, and availability that security is
+    supposed to keep. Reliability problems and security problems are not separate
+    bins; one can become the other.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Treat security and reliability as usually-allied but sometimes-opposed. When a
+    control fails, decide in advance whether you would rather stay open for real
+    users or stay closed to attackers, because you cannot always have both.
+    Remember that redundancy helps uptime while widening the attack surface, and
+    that an accident can breach security with no adversary present. Seeing these
+    tensions ahead of time lets you choose deliberately, instead of discovering the
+    trade-off mid-incident.
+  </p>
