@@ -1,0 +1,75 @@
+---
+title: Staying Organized When Everything Is on Fire
+heading: Staying Organized When Everything Is on Fire
+listTitle: Staying Organized in a Crisis
+description: Why the slow part of a big outage is usually coordination, not the fix itself, and how clear roles, steady communication, and practice keep a response from turning into chaos.
+lang: en
+category: Site Reliability Engineering
+date: 2026-12-05
+dateText: Dec 5
+tags: site-reliability-engineering, sre, incident-response, coordination, on-call
+---
+  <p>
+    When a serious outage hits, the hard part is often not the technical fix. It is
+    the coordination: several people, some of whom do not normally work together,
+    trying to understand the problem, try things, and keep everyone informed all at
+    once. Without structure, that turns into a scramble where work is duplicated,
+    decisions stall, and nobody knows who is doing what.
+  </p>
+
+  <h2>Give people clear roles</h2>
+  <p>
+    The fix is to hand out clear roles at the start. One person coordinates: they
+    hold the overall picture, decide what happens next, and pull in help, but they
+    do not get sucked into hands-on debugging themselves, because someone has to
+    keep the big picture. Others do the actual investigating and fixing. And
+    someone owns communication, keeping everyone outside the response updated.
+  </p>
+
+  <p>
+    Separating these matters because they conflict under pressure. The person
+    deep in the logs cannot also be tracking who to notify and what to try next.
+    When one person tries to do everything, things get dropped. Distinct roles mean
+    each important job has someone actually responsible for it.
+  </p>
+
+  <h2>Communicate even when there is nothing new</h2>
+  <p>
+    People outside the response are anxious and in the dark. If they hear nothing,
+    they assume the worst: that nothing is being done, or that a long-fixed problem
+    is still going. So send regular updates, even ones that just say "still working
+    on it, next update in thirty minutes." Silence gets filled with bad guesses.
+    Steady updates keep everyone calm and stop a flood of "is it fixed yet?"
+    questions from pulling responders away from the work.
+  </p>
+
+  <h2>Stop the bleeding first</h2>
+  <p>
+    In the moment, making the pain stop matters more than fully understanding the
+    cause. If a broad action like undoing the last change makes the problem go
+    away, that is often worth doing before you know exactly what went wrong. These
+    blunt fixes are not precise and can cause their own disruption, so they are a
+    trade-off, but getting users working again buys you calm time to find the real
+    cause without the clock screaming at you.
+  </p>
+
+  <h2>Practice before it is real</h2>
+  <p>
+    You cannot learn coordination for the first time during a real emergency, when
+    stress is highest. Teams that handle incidents well have practiced: running
+    drills, or treating a minor problem as a formal incident just to rehearse the
+    roles and the communication. That practice builds habits, so when the real one
+    comes, people fall into their roles instead of freezing. The structure matters
+    more the bigger the incident gets, because that is when the most unfamiliar
+    people are suddenly working together.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    A big outage is a coordination problem as much as a technical one. Assign clear
+    roles so someone owns coordinating, someone owns fixing, and someone owns
+    communicating. Send updates even when there is no news, reach first for
+    whatever stops the immediate pain, and practice the whole dance before you need
+    it. Calm under pressure is not a personality trait; it is the result of having
+    a structure to fall back on.
+  </p>

@@ -1,0 +1,94 @@
+---
+title: Alert on Symptoms, Not on Causes
+heading: Alert on Symptoms, Not on Causes
+listTitle: Alert on Symptoms
+description: Why good alerts wake people up for user-visible problems rather than internal guesses, and why an alert that always has the same fix should become automation instead.
+lang: en
+category: Site Reliability Engineering
+date: 2026-08-11
+dateText: Aug 11
+tags: site-reliability-engineering, sre, monitoring, alerting, observability
+---
+  <p>
+    Monitoring is how a team watches a running system: collecting numbers about
+    what it is doing and turning them into something people can see. The hard
+    part is not collecting data. It is deciding when that data should wake a
+    human up in the middle of the night.
+  </p>
+
+  <h2>Symptoms and causes</h2>
+  <p>
+    A symptom is something a user feels: the page will not load, requests are
+    failing, answers come back slowly. A cause is a reason behind it: a full
+    disk, a crashed process, a slow database. The difference matters because
+    they answer different questions. A symptom tells you what is broken for
+    users. A cause suggests why.
+  </p>
+
+  <p>
+    The best alerts are based on symptoms. A full disk is only worth waking
+    someone for if it is actually hurting users. Sometimes a disk fills up and
+    nothing breaks, because the system routed around it. If you alert on the
+    cause, you page a person for a problem that may not be a problem. If you
+    alert on the symptom, you only interrupt someone when users are genuinely
+    affected.
+  </p>
+
+  <h2>Two ways to watch a system</h2>
+  <p>
+    One way is to test the system from the outside, the way a user would: send a
+    request, see if it works. This catches real, user-visible failures as they
+    happen, which makes it a good basis for paging someone.
+  </p>
+
+  <p>
+    The other way is to look inside the system at its internal numbers: queue
+    lengths, error counts, memory use. This is less useful for paging, because
+    an internal warning may never reach users, but it is invaluable for
+    debugging and for spotting trouble before it becomes visible. Both are
+    useful; they just serve different jobs.
+  </p>
+
+  <h2>What makes an alert worth sending</h2>
+  <p>
+    Every page has a cost: it interrupts a person and pulls their attention.
+    That cost is only worth paying when the alert is urgent, points to a real
+    problem, and needs a human to think. If a page fires often for things that
+    turn out to be fine, people stop trusting it. Then a genuine emergency gets
+    the same tired shrug as the false alarms. This is called alert fatigue, and
+    it is how real incidents get missed.
+  </p>
+
+  <p>
+    There is a sharper test. If an alert always has the same fix, and a person
+    just follows the same steps every time, that alert should not be waking
+    anyone. It should be automated. A page that leads to a predictable, rote
+    response is a task a computer should be doing, not a reason to interrupt a
+    human.
+  </p>
+
+  <h2>Why averages hide problems</h2>
+  <p>
+    When you do measure the system, be careful how you summarize it. An average
+    can look healthy while some users are suffering. If most requests are fast
+    but a small share are very slow, the average stays low and hides the slow
+    ones. Yet those slow requests may be exactly the broken experiences you care
+    about.
+  </p>
+
+  <p>
+    It also helps to separate successful and failed requests. Failures are often
+    fast, because giving up quickly is quicker than doing the work. Mixed
+    together, a burst of fast failures can even make the overall numbers look
+    better while users are getting errors. Looking at the slow tail, and at
+    failures on their own, keeps these hidden problems visible.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    Page people for what users feel, not for every internal hiccup. Keep the
+    inside view for understanding and prevention. Make sure every alert is worth
+    the interruption, and turn any alert with a fixed, repeatable fix into
+    automation. The goal is simple: when the pager goes off, it should mean
+    something real is wrong and a person is genuinely needed.
+  </p>

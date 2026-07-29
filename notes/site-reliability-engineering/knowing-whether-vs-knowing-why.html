@@ -1,0 +1,70 @@
+---
+title: Knowing Whether Something Is Wrong vs Knowing Why
+heading: Knowing Whether Something Is Wrong vs Knowing Why
+listTitle: Knowing Whether vs Knowing Why
+description: Why watching dashboards tells you the system is unwell but not why, and how keeping enough detailed evidence lets you answer questions about your system that nobody thought to ask in advance.
+lang: en
+category: Site Reliability Engineering
+date: 2027-08-06
+dateText: Aug 6
+tags: site-reliability-engineering, observability, monitoring, debugging, telemetry
+---
+  <p>
+    There are two very different questions you ask about a running system. "Is it healthy right
+    now?" and "why is this strange thing happening?" They sound similar, but they need different
+    things from you, and confusing them leaves you helpless at the worst moment.
+  </p>
+
+  <h2>Monitoring: is it healthy?</h2>
+  <p>
+    The first question is monitoring. You pick some measurements ahead of time, put them on
+    dashboards, and watch whether they look normal. This is good at telling you whether something
+    is wrong, especially for the kinds of failure you anticipated and set up to watch for. An
+    alarm goes off; a graph spikes; you know there is a problem.
+  </p>
+
+  <p>
+    But monitoring hits a wall when something surprising happens that you did not predict. A
+    dashboard can show that requests are slow, yet rarely explain why this particular request,
+    from this user, along this path, went bad. It answers the questions you knew to ask in
+    advance, and only those.
+  </p>
+
+  <h2>Observability: why is it happening?</h2>
+  <p>
+    The second question needs observability: keeping enough detailed evidence about what the
+    system actually did that you can explain behaviors nobody anticipated. The point is to be
+    able to ask brand-new questions after the fact, not just check the ones you wired up
+    beforehand. Monitoring answers the questions you knew to ask; observability lets you ask
+    questions you did not.
+  </p>
+
+  <p>
+    The real goal is speed of investigation. Debugging is a loop: "I suspect this, let me check,
+    no, maybe that." Good observability shrinks the time from a hunch to a confirmed or rejected
+    answer, so you close in on the cause quickly instead of guessing in the dark.
+  </p>
+
+  <h2>Three views of the same activity</h2>
+  <p>
+    In practice this rests on three kinds of evidence, each answering a different-resolution
+    question. Broad summaries reveal overall patterns and anomalies: is something generally off?
+    Detailed per-request records preserve the full context of one specific unit of work: what
+    happened to this exact request? And a way to stitch one request's journey across all the
+    services it passed through shows where, in a long chain, things went wrong.
+  </p>
+
+  <p>
+    These are not competitors. They are three views over the same underlying activity, each
+    optimized for a different question, and you want all three: the summary to notice trouble,
+    the detail to understand one case, and the end-to-end path to follow it across boundaries.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Monitoring tells you whether the system is unwell, and it is best at the failures you planned
+    for. Observability lets you find out why, including for problems nobody saw coming, by keeping
+    enough detailed evidence to ask new questions later. Aim for fast hypothesis testing, and keep
+    the summary, the per-request detail, and the end-to-end path together, because each answers a
+    question the others cannot.
+  </p>

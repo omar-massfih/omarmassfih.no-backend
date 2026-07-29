@@ -1,0 +1,74 @@
+---
+title: Learning From Failure Without Blaming Anyone
+heading: Learning From Failure Without Blaming Anyone
+listTitle: Blameless Postmortems
+description: Why blaming the person who "caused" an outage destroys the very learning you need, and how asking what made the wrong path look right turns a failure into a safer system.
+lang: en
+category: Site Reliability Engineering
+date: 2026-12-01
+dateText: Dec 1
+tags: site-reliability-engineering, sre, postmortem, blameless, incidents
+---
+  <p>
+    After something breaks badly, a good team writes up what happened: the
+    timeline, the cause, and what to change so it does not happen again. This
+    write-up is where an outage turns into a lesson. But whether it actually
+    teaches anything depends almost entirely on one choice: whether it blames a
+    person.
+  </p>
+
+  <h2>Why blame destroys learning</h2>
+  <p>
+    It is tempting to find the person who ran the bad command and point at them.
+    The trouble is what that does to everyone else. If being associated with an
+    incident means shame or punishment, people quietly protect themselves. They
+    leave out details, they avoid touching risky systems, they hope the incident
+    just gets forgotten. And with those details goes the very information you
+    needed to stop the next one.
+  </p>
+
+  <p>
+    So the write-up is kept blameless on purpose. The starting assumption is that
+    everyone involved acted reasonably given what they knew at the time. That is
+    not politeness; it is what keeps people honest enough to explain what really
+    happened.
+  </p>
+
+  <h2>Ask a better question</h2>
+  <p>
+    "Why did you do that?" puts a person on the defensive and teaches you nothing.
+    Better questions look at the situation instead of the individual: What made the
+    wrong action look like the right one at the time? What warning signs were
+    there, and why were they easy to miss? What information was the person missing
+    that would have changed their choice?
+  </p>
+
+  <p>
+    Almost always, the answer is that the system made the mistake easy to make. A
+    dangerous command looked like a safe one. A confusing screen invited the wrong
+    click. Those are things you can fix, and fixing them helps everyone, not just
+    the one person who happened to hit the trap this time.
+  </p>
+
+  <h2>"Be more careful" is not a fix</h2>
+  <p>
+    The weakest possible conclusion is "the person should pay more attention next
+    time." People are unreliable under stress; asking them to simply be more
+    careful is building on sand. It feels like a fix while changing nothing.
+  </p>
+
+  <p>
+    A real fix changes the system so the mistake is hard to make: a guard rail, a
+    confirmation on the dangerous action, a design where the safe path is also the
+    easy one. The goal is to make the next person's good outcome depend on the
+    system, not on their nerves holding up during a bad night.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    Treat a failure as a chance to learn, and protect that learning by keeping the
+    account blameless. Assume people did their reasonable best, and ask what
+    conditions made the wrong path look right rather than who to fault. Then fix the
+    conditions, because a safer system is far more dependable than a promise to try
+    harder. Blame ends the conversation; curiosity about the system continues it.
+  </p>

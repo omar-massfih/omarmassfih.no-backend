@@ -1,0 +1,88 @@
+---
+title: Toil, and Why It Quietly Eats a Team
+heading: Toil, and Why It Quietly Eats a Team
+listTitle: Eliminating Toil
+description: What separates toil from real engineering work, why manual operations grow to fill all the time you give them, and why a healthy team keeps toil from taking over.
+lang: en
+category: Site Reliability Engineering
+date: 2026-08-07
+dateText: Aug 7
+tags: site-reliability-engineering, sre, toil, automation, operations
+---
+  <p>
+    Every team that runs software has a pile of repetitive operational work:
+    restarting a stuck job, running the same recovery script, applying the same
+    small fix over and over. This kind of work has a name in reliability
+    engineering. It is called toil, and the reason it has a name is that it is
+    easy to underestimate and easy to let grow.
+  </p>
+
+  <h2>What makes work toil</h2>
+  <p>
+    Toil is not simply work you dislike. It has a specific shape. It is manual,
+    repetitive, and reactive. It can be automated. And, most importantly, it
+    leaves no lasting improvement: once you finish, the service is in the same
+    state it was before. You did the task, and next week you will do it again.
+  </p>
+
+  <p>
+    A useful test is to ask what is different after the work is done. If the
+    answer is "nothing, until it happens again," it is toil. If the answer is
+    "the problem can no longer happen, or now fixes itself," it is engineering.
+  </p>
+
+  <p>
+    Running a script by hand still counts as toil, even though a script is doing
+    the steps. The script automates the steps, but a person still has to notice
+    the problem, decide to act, and press the button. The human time is the toil,
+    not the individual commands.
+  </p>
+
+  <h2>Why toil grows if you let it</h2>
+  <p>
+    Toil expands to fill whatever time it is given. There is always one more
+    manual fix that seems quicker to just do than to automate away. Each small
+    task feels harmless on its own, so the pile grows without anyone deciding to
+    let it.
+  </p>
+
+  <p>
+    Worse, some toil grows with the service. If handling twice the traffic or
+    twice the customers means twice the manual work, the team has to grow at the
+    same rate just to keep up. That is the trap a healthy team wants to avoid: a
+    service should be able to grow a lot without the operational work growing
+    just as fast.
+  </p>
+
+  <h2>Why it matters beyond annoyance</h2>
+  <p>
+    Toil is not only tedious, it is quietly damaging. For a person, a job that is
+    mostly toil leads to boredom, stalled skills, and burnout. For a team, heavy
+    toil crowds out the projects that would have removed the toil in the first
+    place, so the team stays stuck reacting instead of improving.
+  </p>
+
+  <p>
+    There is also a slow drift in what the team becomes. A team that spends its
+    days on manual operations starts to look like a team whose only job is manual
+    operations, and it attracts more of that work. Protecting time for real
+    engineering is what keeps a team able to build its way out.
+  </p>
+
+  <h2>When grungy work is not toil</h2>
+  <p>
+    Not all unglamorous work is toil. Setting up monitoring, tuning a system so
+    it stops failing, or writing the automation that ends a recurring chore can
+    all be dull and fiddly. But they leave a lasting improvement behind, so they
+    are engineering, not toil. The dividing line is enduring value, not how
+    pleasant the task feels.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    Treat toil as something to measure and push back on, not as an unavoidable
+    fact of running software. Ask of repetitive work: does this leave anything
+    better behind? If not, the goal is to automate it away or design it out, and
+    to protect enough time to actually do that. Otherwise the manual work
+    quietly wins.
+  </p>

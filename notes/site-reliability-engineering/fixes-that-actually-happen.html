@@ -1,0 +1,68 @@
+---
+title: Turning Lessons Into Fixes That Actually Happen
+heading: Turning Lessons Into Fixes That Actually Happen
+listTitle: Fixes That Actually Happen
+description: Why a write-up full of good intentions changes nothing, and what makes a follow-up action real: a clear owner, a measurable finish, and a preference for preventing over merely softening.
+lang: en
+category: Site Reliability Engineering
+date: 2026-12-09
+dateText: Dec 9
+tags: site-reliability-engineering, sre, action-items, follow-up, prevention
+---
+  <p>
+    Understanding why something broke is only half the job. The other half is
+    making sure it does not break the same way again, and that half lives or dies
+    on the follow-up actions. A thoughtful write-up with a list of vague good
+    intentions changes nothing. The actions have to be real.
+  </p>
+
+  <h2>What makes an action real</h2>
+  <p>
+    A real follow-up has three things. It has an owner: one named person
+    responsible for getting it done, not "the team," because a task everyone owns
+    is a task no one owns. It has a clear finish: you can tell, without arguing,
+    whether it is done. And it is tracked somewhere, so it does not quietly fade
+    once the incident stops feeling urgent.
+  </p>
+
+  <p>
+    Vague actions fail all three tests. "Improve monitoring" or "make the system
+    more robust" sound responsible but cannot be finished, because no one can say
+    what "improved" means or when it is reached. So they drift, and next time the
+    same failure returns to a team that thought it had dealt with it.
+  </p>
+
+  <h2>Prevent, do not just soften</h2>
+  <p>
+    There are two kinds of fix, and it is worth being deliberate about the mix. One
+    kind softens the blow next time: it makes the same incident less painful if it
+    recurs. The other kind stops it from recurring at all. Both have value, but a
+    list that only softens the impact means you are accepting that the problem will
+    keep happening. At least some actions should attack the cause, so the incident
+    becomes less likely, not just less bad.
+  </p>
+
+  <h2>The fix that is not a fix</h2>
+  <p>
+    Watch out for the most common non-fix: "the person will be more careful next
+    time," or "we will remind everyone to double-check." These feel like actions
+    but change nothing, because people are unreliable under pressure and reminders
+    fade. Depending on humans not to slip is not a control.
+  </p>
+
+  <p>
+    The dependable version changes the system instead. If a dangerous step keeps
+    causing incidents, make it harder to do by accident, or make the safe version
+    the default. Then the good outcome does not rely on everyone staying sharp
+    forever.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    A lesson only counts if something changes because of it. Give every follow-up a
+    single owner and a finish line you can actually check, and track it so it does
+    not evaporate. Favor fixes that prevent the problem over ones that merely
+    cushion it, and never let "be more careful" stand in for a real change. The
+    measure of learning from failure is not the quality of the write-up; it is
+    whether the same failure stops coming back.
+  </p>

@@ -1,0 +1,103 @@
+---
+title: Error Budgets and the Cost of Being Too Reliable
+heading: Error Budgets and the Cost of Being Too Reliable
+listTitle: Error Budgets
+description: Why aiming for perfect reliability is the wrong goal, and how an error budget turns "how much downtime is acceptable" into a shared number that teams can plan around.
+lang: en
+category: Site Reliability Engineering
+date: 2026-08-03
+dateText: Aug 3
+tags: site-reliability-engineering, sre, error-budget, slo, reliability
+---
+  <p>
+    It sounds obvious that a service should be as reliable as possible. In
+    practice, chasing perfect reliability is a mistake. Past a certain point,
+    each extra bit of reliability costs a lot and gives users almost nothing
+    they can feel. The money and engineering time spent removing a rare failure
+    could have gone into new features, lower prices, or paying down old
+    problems.
+  </p>
+
+  <p>
+    So the useful question is not "how do we never fail?" It is "how reliable
+    does this service actually need to be?" The answer comes from the users and
+    the business, not from a wish for perfection.
+  </p>
+
+  <h2>Reliability is a target, not a maximum</h2>
+  <p>
+    A reliability target works in both directions. Falling below it hurts users
+    and should trigger action. But sitting far above it is also a signal, just a
+    different one: it means the team is spending effort on reliability that
+    nobody asked for, effort that could have gone somewhere more useful.
+  </p>
+
+  <p>
+    Two costs push back against endless reliability. One is the extra hardware
+    and spare capacity you have to run. The other is the time engineers spend
+    reducing risk instead of building things users want. Both are real, and both
+    grow quickly as you get closer to perfect.
+  </p>
+
+  <h2>From a target to a budget</h2>
+  <p>
+    A team first agrees on a reliability target: for example, that a service
+    should handle 99.9% of requests successfully over a month. This target is
+    often called a service level objective, or SLO. It is written as a goal the
+    team promises to meet, not a description of how the system happens to behave
+    today.
+  </p>
+
+  <p>
+    The gap between perfect and the target is the interesting part. If the goal
+    is 99.9%, then 0.1% of requests are allowed to fail. That small slice of
+    allowed failure is the error budget. It is not a mistake to be ashamed of.
+    It is a resource the team is free to spend.
+  </p>
+
+  <h2>What the budget is for</h2>
+  <p>
+    The budget solves a very human problem. Teams that build features want to
+    ship fast. Teams that keep the service running want stability. Without a
+    shared number, that tension gets settled by whoever argues hardest, or by
+    fear after the last outage.
+  </p>
+
+  <p>
+    An error budget replaces the argument with a rule. As long as the service is
+    inside its budget, new releases can keep going out. When the budget runs
+    low, the same number says the opposite: slow down, stabilize, and stop
+    taking risks until reliability recovers. Now both sides are looking at one
+    agreed measure instead of pushing personal opinions.
+  </p>
+
+  <p>
+    An important detail: everything counts against the budget, not just risky
+    releases. A datacenter losing power or a network fault burns budget the same
+    way a bad deploy does. The whole team owns availability, whatever the cause,
+    so the whole team shares the same limited budget.
+  </p>
+
+  <h2>Why 100% is the wrong goal</h2>
+  <p>
+    Setting the target at 100% quietly does harm. It leaves no room to release
+    changes, since any change carries some risk. It pushes teams to overbuild
+    for failures that almost never happen. And it usually costs far more than
+    users would ever pay for.
+  </p>
+
+  <p>
+    It is also easier to start with a loose target and tighten it later than to
+    start strict and loosen it. Loosening a promise after users have relied on
+    it feels like taking something away. Tightening a gentle target as you learn
+    more feels like steady improvement.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Reliability is a trade-off, not a virtue you can max out. Pick a target that
+    matches what users actually need, treat the leftover room as a budget, and
+    let that budget decide when to ship and when to slow down. The point is not
+    to avoid every failure. It is to spend a known, agreed amount of failure on
+    purpose, and put the saved effort where it does more good.
+  </p>
