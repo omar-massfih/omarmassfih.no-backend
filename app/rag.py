@@ -226,7 +226,7 @@ def _row_to_chunk(row: dict[str, Any]) -> RetrievedChunk:
         title=row["title"],
         url=row["url"],
         distance=row.get("distance", 0.0),
-        chunk_index=row["chunk_index"],
+        chunk_index=row.get("chunk_index", 0),
     )
 
 
