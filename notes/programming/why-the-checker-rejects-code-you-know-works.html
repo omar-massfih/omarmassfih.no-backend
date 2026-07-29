@@ -1,0 +1,68 @@
+---
+title: Why the Checker Rejects Code You Know Works
+heading: Why the Checker Rejects Code You Know Works
+listTitle: Why the Checker Rejects Working Code
+description: Why a type checker that promises to never miss a real error must sometimes reject programs that would have run fine, why that is a deliberate trade, and how its guesses can double as a bug detector.
+lang: en
+category: Programming
+date: 2027-05-26
+dateText: May 26
+tags: programming, type-checking, soundness, compile-time, type-inference
+---
+  <p>
+    A type checker's job is to catch, before you run the program, places where you would
+    use a value in a way that makes no sense: treating a number as if it were a list, and
+    the like. It is a safety net that acts ahead of time. But everyone who has used one
+    has hit the frustrating moment where it rejects code they are sure would work. That
+    is not always your mistake, and understanding why is illuminating.
+  </p>
+
+  <h2>The promise and its price</h2>
+  <p>
+    A good checker makes a strong promise: it will never let a real type error slip
+    through. If it accepts your program, there are no type mistakes of that kind, guaranteed.
+    That guarantee is valuable, because it means a whole class of bug simply cannot reach
+    running code.
+  </p>
+
+  <p>
+    But the promise has a price. To be certain it never misses a real error, the checker
+    must sometimes reject programs that would actually have run just fine. When it cannot
+    prove a piece of code is safe, it refuses it, rather than risk letting a genuine error
+    through. It errs on the side of caution: when in doubt, say no.
+  </p>
+
+  <h2>So a rejection is not always "you're wrong"</h2>
+  <p>
+    This reframes those frustrating rejections. "The checker won't accept this, even
+    though I know it works" can simply mean the checker cannot prove what you can see. You
+    have information or reasoning it does not, so it plays it safe and blocks the program.
+    It is being conservative, not necessarily correct that your code is broken.
+  </p>
+
+  <p>
+    That is the fundamental trade a checker makes: it accepts some false alarms, rejecting
+    safe programs, in exchange for never missing a real error. The alternative, only
+    checking while the program runs, has the opposite character: it lets everything
+    through until a mistake actually happens, so you find out later, in the middle of
+    running, when it breaks. Catch early and occasionally over-cautious, or catch late and
+    never over-cautious. You are choosing which.
+  </p>
+
+  <h2>A bonus: inferences that catch bugs</h2>
+  <p>
+    There is a happy side effect. When a checker works out the type of your code on its
+    own, and the type it arrives at is not the one you expected, that surprise is a clue.
+    A type broader or different than you intended often means you made a mistake, forgot to
+    use some data, or defined something wrong. The checker's reasoning, followed to a type
+    you did not predict, quietly points at a bug you had not noticed.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    A type checker that promises never to miss a real error must, in exchange, sometimes
+    reject programs that would have run fine, because it cannot prove they are safe. So a
+    rejection can mean "I can't prove this is safe," not "this is wrong." That is a
+    deliberate trade of a few false alarms for a firm guarantee, and as a bonus, when the
+    checker infers a type you did not expect, it is often showing you a real bug.
+  </p>

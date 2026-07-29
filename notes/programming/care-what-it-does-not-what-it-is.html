@@ -1,0 +1,71 @@
+---
+title: Care What It Can Do, Not What It Is
+heading: Care What It Can Do, Not What It Is
+listTitle: Care What It Does, Not What It Is
+description: Why writing code against the capability you actually use, rather than a specific type, keeps it flexible and decoupled, and why a matching shape is a promise about form, not about behavior.
+lang: en
+category: Programming
+date: 2027-05-18
+dateText: May 18
+tags: programming, duck-typing, interfaces, decoupling, structural-typing
+---
+  <p>
+    When you write a function, a natural question is: what kind of thing am I allowed to
+    pass in? One answer is to demand a specific type, or something from a specific
+    family. There is a looser, often better answer: do not care what the thing is at all,
+    only what it can do.
+  </p>
+
+  <h2>The duck test</h2>
+  <p>
+    If your function only ever calls one particular method on its argument, then anything
+    that has that method will work, whatever its type or ancestry. The old saying is: if
+    it walks like a duck and quacks like a duck, treat it as a duck. You are not checking
+    for membership in some category; you are checking for a capability.
+  </p>
+
+  <p>
+    This shifts the requirement from "must be one of these approved types" to "must be
+    able to do this one thing." That is a much smaller, more honest demand, because it
+    asks only for what the code actually relies on.
+  </p>
+
+  <h2>Why this is powerful</h2>
+  <p>
+    Depending on capability instead of identity decouples your code from specific types.
+    Anything that fits the shape your code uses can be passed in, including types written
+    later by people who never heard of your function, with no shared family tree required.
+    You are not forcing callers to inherit from some base or belong to a hierarchy; you
+    are just asking them to provide the behavior you use.
+  </p>
+
+  <p>
+    This tends to make code more reusable and more open to extension, because new things
+    slot in simply by having the right capabilities, rather than by being retrofitted
+    into an existing classification.
+  </p>
+
+  <h2>The catch: shape is not meaning</h2>
+  <p>
+    There is an honest limitation. Matching the shape is not the same as matching the
+    meaning. Just because an object has a method with the expected name does not
+    guarantee that method does what you expect. The name lines up; the behavior might
+    not. A structural match is a promise about form, and only loosely about intent.
+  </p>
+
+  <p>
+    So this style is convenient but a little trusting. It works beautifully when the
+    capability you depend on is simple and its meaning is obvious, and it gets riskier as
+    the expected behavior behind a method name grows more subtle. You are taking the
+    presence of a capability as evidence of the behavior, which is usually, but not
+    always, safe.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Instead of asking what type a value is, ask what it can do, and depend only on the
+    capability you actually use. That keeps your code flexible and decoupled: anything of
+    the right shape fits, no shared ancestry needed. Just remember that a matching shape
+    promises form, not behavior, so lean on it most where the expected behavior is simple
+    and clear.
+  </p>

@@ -1,0 +1,76 @@
+---
+title: One Writer, or Many Readers, Never Both
+heading: One Writer, or Many Readers, Never Both
+listTitle: One Writer or Many Readers
+description: What a data race is and why it produces bugs that are almost impossible to reproduce, and how a single rule about who may touch shared data at once makes those races impossible by construction.
+lang: en
+category: Programming
+date: 2027-03-11
+dateText: Mar 11
+tags: programming, data-race, concurrency, borrowing, safety
+---
+  <p>
+    When two parts of a program can touch the same data at the same time, a
+    particular disaster becomes possible. It is called a data race, and it is the
+    source of some of the most maddening bugs in software, the kind that appear once
+    in a thousand runs and vanish when you try to look at them.
+  </p>
+
+  <h2>What a data race is</h2>
+  <p>
+    A data race happens when three things line up: two parts of the program access
+    the same data at the same time, at least one of them is changing it, and nothing
+    coordinates the two. One is halfway through updating the data while the other
+    reads it, or both write at once, and the result is garbage: a value that is
+    neither the old one nor the new one, or an update that silently vanishes.
+  </p>
+
+  <p>
+    These bugs are brutal because they depend on exact timing. They may never show up
+    on your machine, then strike in production under load, and disappear the moment
+    you add the logging that would reveal them. Coordination-free shared mutation is
+    a genuinely dangerous thing to allow.
+  </p>
+
+  <h2>The rule that kills them</h2>
+  <p>
+    There is a strikingly simple rule that prevents every data race: at any one
+    moment, allow either a single part of the program that may change the data, or
+    any number of parts that may only read it, but never both at once. One writer,
+    or many readers. Not both.
+  </p>
+
+  <p>
+    Look at why this works against the three ingredients above. If only readers are
+    touching the data, nothing is changing, so there is nothing to race against. If
+    exactly one writer is touching it, there is no second party present to race with.
+    A race needs a writer and someone else overlapping, and this rule forbids exactly
+    that overlap. Remove the overlap and the whole category of bug becomes impossible,
+    not just unlikely.
+  </p>
+
+  <h2>Enforced early or enforced by hand</h2>
+  <p>
+    Some languages check this rule automatically, before the program even runs, and
+    simply refuse to build code that could break it. In other settings you enforce
+    the same principle yourself, using a lock so that only one writer holds the data
+    at a time. The mechanism differs, but the idea is identical, and it echoes across
+    computing, from how databases isolate transactions to how files are locked.
+  </p>
+
+  <p>
+    The cost is that you sometimes have to restructure code so that a writing access
+    and a reading access do not overlap in time. That can be mildly annoying. In
+    exchange, you rule out an entire class of bugs that would otherwise cost you days
+    of bewildered debugging.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    A data race, uncoordinated access to shared data where at least one side writes,
+    produces corruption and timing-dependent bugs that are agony to track down. The
+    cure is one rule: at any moment, either one writer or any number of readers, never
+    both. It works because a race requires a writer overlapping with someone else, and
+    the rule removes that overlap by construction. Enforce it early with a checker or
+    by hand with a lock; either way, the principle is the same.
+  </p>

@@ -1,0 +1,77 @@
+---
+title: Making Failure Visible: Errors as Values
+heading: Making Failure Visible: Errors as Values
+listTitle: Errors as Values
+description: Why a failure that flies invisibly up through your code is easy to forget, how making "this might fail" part of what a function returns forces you to face it, and why recoverable errors and broken assumptions deserve different treatment.
+lang: en
+category: Programming
+date: 2027-03-15
+dateText: Mar 15
+tags: programming, error-handling, result-type, exceptions, reliability
+---
+  <p>
+    Almost anything real can fail: a file might be missing, input might be malformed,
+    a network might be down. How a language lets a function report that failure
+    shapes how reliable programs written in it tend to be. There are two broad styles,
+    and the difference is bigger than it looks.
+  </p>
+
+  <h2>The invisible failure</h2>
+  <p>
+    One style is to let a failure throw itself upward, flying through the code until
+    something, somewhere, catches it. It is convenient: the function that fails does
+    not have to say anything special, and the failure just travels up on its own.
+  </p>
+
+  <p>
+    The problem is that the failure is invisible from the outside. Looking at how you
+    call the function, nothing tells you it might fail. So it is easy to simply not
+    handle it, and an unhandled failure sails silently past until it finally erupts
+    somewhere far from where it started, in a place with no clue about the original
+    cause. Failures that can be ignored by accident tend to be.
+  </p>
+
+  <h2>Failure as part of the answer</h2>
+  <p>
+    The other style makes "this might fail" part of what the function hands back. It
+    does not return a plain result; it returns a value that is either a success
+    carrying the result, or a failure carrying the reason. The possibility of failure
+    is right there in the shape of the return.
+  </p>
+
+  <p>
+    This flips the situation. Now the caller cannot get at the successful result
+    without first acknowledging that failure is possible, because the success is
+    wrapped up together with the failure case. You have to open the box, and opening
+    it makes you confront both outcomes. Failure stops being something you can forget;
+    it is something the code makes you look at.
+  </p>
+
+  <h2>Two different kinds of "wrong"</h2>
+  <p>
+    Treating failure as a value also draws a useful line between two very different
+    situations.
+  </p>
+  <p>
+    Some failures are expected and recoverable: a file is not there, a user typed
+    something invalid. These should be returned as values, so the caller can decide
+    what to do, retry, ask again, fall back.
+  </p>
+  <p>
+    Other situations are not really "failures" at all but signs that something is
+    fundamentally broken: an assumption the code relied on turned out to be false, a
+    state that should be impossible has occurred. Continuing from there is meaningless
+    or dangerous, so the right response is to stop loudly rather than limp on. Mixing
+    these two up, quietly recovering from a broken assumption, or crashing on an
+    ordinary expected error, is a common mistake.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    A failure that travels invisibly upward is easy to forget until it explodes far
+    from its cause. Making failure part of what a function returns forces the caller
+    to face it, because the result and the possible error come bundled together. And
+    keep two kinds of wrong apart: recoverable failures are values to handle, while
+    broken assumptions should stop the program loudly. Visible failure is handled
+    failure.
+  </p>

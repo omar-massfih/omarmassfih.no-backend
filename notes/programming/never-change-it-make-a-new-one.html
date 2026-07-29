@@ -1,0 +1,65 @@
+---
+title: Never Change It, Make a New One
+heading: Never Change It, Make a New One
+listTitle: Immutability as a Design Choice
+description: Why treating data as unchangeable once created, and making a new version instead of editing in place, buys you safe sharing, easy reasoning, simpler concurrency, and history for free.
+lang: en
+category: Programming
+date: 2027-08-18
+dateText: Aug 18
+tags: programming, immutability, concurrency, design, reasoning
+---
+  <p>
+    There is a design choice that quietly prevents a whole class of bugs: make your data
+    unchangeable once it is created. Instead of editing something in place, you create a new
+    version with the change and leave the original untouched. It sounds wasteful, why make a copy
+    when you could just edit? But the benefits are large enough that it is often the right default.
+  </p>
+
+  <h2>Safe to share</h2>
+  <p>
+    Immutable things are safe to hand out. If a value can never change, you can give it to anyone,
+    anywhere, as many times as you like, and never worry that someone will alter it while you are
+    depending on it. Much of the danger in shared data comes from one party changing what another
+    is relying on. If nothing can change, that danger simply disappears.
+  </p>
+
+  <h2>Easy to reason about</h2>
+  <p>
+    When you look at an immutable value, you know what it is, permanently. You do not have to trace
+    through the rest of the program wondering who might have modified it since you last looked. What
+    you see is what it will always be. That certainty makes code dramatically easier to hold in your
+    head, because a large source of "wait, how did this become that?" is gone.
+  </p>
+
+  <h2>Simpler when things run at once</h2>
+  <p>
+    Immutability also tames concurrency. Trouble between things happening at the same time comes from
+    two parties touching the same data while at least one is changing it. If nothing ever changes,
+    there is nothing to fight over: any number of readers can look at the same value at once,
+    completely safely, with no coordination at all. A whole category of the hardest bugs cannot occur.
+  </p>
+
+  <h2>History for free</h2>
+  <p>
+    Because you create new versions instead of overwriting, the old versions are still around. That
+    gives you a natural record of how things got to where they are, useful for understanding a bug,
+    auditing what happened, or undoing a change. You did not have to build a history feature; it fell
+    out of never destroying the past.
+  </p>
+
+  <h2>The cost, in perspective</h2>
+  <p>
+    The cost is real: you create more objects instead of editing one in place. But it is often smaller
+    than it first appears. You skip a great deal of defensive copying and careful coordination that
+    changeable shared data forces on you, and well-built systems share the unchanged parts between
+    versions rather than duplicating everything. What looks like waste often nets out in your favor.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    Treating data as unchangeable, a new version instead of an edit in place, trades a little copying
+    for safe sharing, easy reasoning, effortless concurrency, and a free history of changes. Those
+    are exactly the things that get hard as programs grow, so reach for immutability more often than
+    the instinct to just edit would suggest.
+  </p>

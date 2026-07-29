@@ -1,0 +1,66 @@
+---
+title: Functions That Remember Where They Came From
+heading: Functions That Remember Where They Came From
+listTitle: Closures
+description: Why a function normally forgets everything when it finishes, how one defined inside another can carry its surrounding variables along, and why that lets you build specialized, context-loaded functions on the fly.
+lang: en
+category: Programming
+date: 2027-07-13
+dateText: Jul 13
+tags: programming, closures, functions, state, scope
+---
+  <p>
+    Normally a function forgets everything when it finishes. Its local variables spring into
+    existence when the function runs and vanish when it returns. But there is a special,
+    powerful case where a function keeps some of those variables alive and carries them with
+    it. That is a closure, and understanding it unlocks a very useful technique.
+  </p>
+
+  <h2>Carrying its birthplace along</h2>
+  <p>
+    When you define a function inside another function, the inner one can use the outer one's
+    variables. The surprising part is that it keeps working even after the outer function has
+    finished. The inner function captures those surrounding variables and holds onto them, so
+    it is really a function bundled together with a little pocket of variables from where it
+    was created. It carries its birthplace along like a backpack.
+  </p>
+
+  <h2>Building context-loaded functions</h2>
+  <p>
+    Why is this useful? It lets you make functions that come pre-loaded with some context. You
+    can write a general function-maker that, given a setting, hands you back a specialized
+    function which "remembers" that setting, so you do not have to pass it in every time you
+    call it.
+  </p>
+
+  <p>
+    Imagine asking for a "multiply by three" function and getting back something that just
+    triples whatever you give it. The three is not global, and you do not pass it as an
+    argument each time; it is privately held inside that particular function. You can make a
+    "multiply by ten" the same way, and each carries its own remembered number. The captured
+    variable is private to that function, tucked away where only it can see.
+  </p>
+
+  <h2>Reading is easy, changing is subtler</h2>
+  <p>
+    There is one wrinkle worth knowing. Reading a remembered variable is effortless. Changing
+    it is trickier, because many languages, trying to avoid confusion, treat assigning to a
+    name as creating a brand-new local variable unless you explicitly say "no, I mean the
+    remembered one from the outer scope." So a closure that just uses its captured values is
+    simple, while one that needs to update them requires a small, deliberate extra step to
+    point at the right variable.
+  </p>
+
+  <p>
+    This means closures are wonderful for carrying context you read, and ask for a little care
+    when you want them to hold state that changes over time.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    A closure is a function that carries the variables from where it was created, keeping them
+    alive after the surrounding code has finished. That lets you build specialized functions
+    on the fly, each privately loaded with its own context, without globals and without passing
+    the same values in over and over. Reading that captured context is easy; updating it just
+    takes an explicit nudge to target the remembered variable rather than making a new one.
+  </p>

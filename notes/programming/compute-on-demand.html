@@ -1,0 +1,61 @@
+---
+title: Don't Build All the Values; Produce Them on Demand
+heading: Don't Build All the Values; Produce Them on Demand
+listTitle: Compute on Demand
+description: Why producing a sequence one value at a time, only when each is asked for, saves memory, skips work you never needed, and even lets you handle sequences that never end.
+lang: en
+category: Programming
+date: 2027-07-25
+dateText: Jul 25
+tags: programming, laziness, generators, streams, efficiency
+---
+  <p>
+    When you need a sequence of values, the obvious approach is to build the whole collection
+    first and then use it. There is a different approach that is often much better: produce the
+    values one at a time, only when each one is actually asked for. This is called being lazy,
+    and it is more powerful than it sounds.
+  </p>
+
+  <h2>A tap, not a bucket</h2>
+  <p>
+    The usual way gives you a finished container holding every value at once, a full bucket. The
+    lazy way gives you something more like a tap: each time you ask, it hands you the next value
+    and remembers where it left off, ready to produce the one after when you ask again. It is a
+    recipe that yields items on demand rather than a list sitting complete in memory.
+  </p>
+
+  <h2>Three things this buys you</h2>
+  <p>
+    First, memory. You never hold the whole sequence at once; you hold one item at a time as it
+    flows past. That means you can process something far larger than would ever fit in memory,
+    because only a single value is present at any moment.
+  </p>
+
+  <p>
+    Second, no wasted work. If you might stop partway, because you found what you were looking
+    for or hit a limit, then you never computed the values past that point. Building the whole
+    collection up front would have computed all of them, including the ones you never reached,
+    for nothing.
+  </p>
+
+  <p>
+    Third, and most striking, you can work with sequences that never end. An endless stream of
+    values is perfectly usable when you only ever pull as many as you need and then stop. You
+    could not do that with a finished container, because building an infinite one never finishes.
+  </p>
+
+  <h2>The mental shift</h2>
+  <p>
+    The change in thinking is from "a container holding all the values" to "a source that
+    produces the next value when asked." Once you see sequences that way, a lot of things click:
+    this is exactly how data pipelines and streams work, with values flowing through one at a
+    time rather than piling up into giant collections at each step.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    When you do not need all the values at once, do not build them all at once. Produce them
+    lazily, one at a time, only as they are asked for. You save memory by never holding the whole
+    thing, you skip work on values you never reach, and you can even handle endless sequences.
+    Think of a tap you draw from, not a bucket you fill.
+  </p>

@@ -1,0 +1,70 @@
+---
+title: Does the Function Get a Copy, or the Real Thing?
+heading: Does the Function Get a Copy, or the Real Thing?
+listTitle: Copy or the Real Thing?
+description: Why it matters enormously whether a function receives a copy of your value or a direct handle to your actual variable, and why two names quietly pointing at the same storage is a classic source of baffling bugs.
+lang: en
+category: Programming
+date: 2027-07-09
+dateText: Jul 9
+tags: programming, call-by-value, call-by-reference, aliasing, functions
+---
+  <p>
+    When you pass something into a function, there is a quiet question with loud
+    consequences: does the function receive a copy of your value, or a direct handle to your
+    actual variable? The two behave very differently, and knowing which you have prevents a
+    lot of confusion.
+  </p>
+
+  <h2>A copy: changes stay inside</h2>
+  <p>
+    If the function gets a copy, then whatever it does to that copy stays inside the function.
+    Your original is untouched, because the function was scribbling on its own duplicate. This
+    is safe and predictable: you can hand something to a function and know for certain it will
+    not come back changed. The isolation is the point.
+  </p>
+
+  <p>
+    The cost is the copying itself. For something large, duplicating it to pass it in is
+    wasted work, and any change the function makes is thrown away when it returns unless it
+    explicitly hands a result back.
+  </p>
+
+  <h2>The real thing: changes leak out</h2>
+  <p>
+    If instead the function gets a direct handle to your variable, then the changes it makes
+    are changes to your actual data, visible to you after the function returns. This is
+    powerful: a function can update your data in place, without the ceremony of returning a
+    new value.
+  </p>
+
+  <p>
+    It is also a source of surprises. A function you called can now reach back and alter
+    something you thought of as yours. If you were not expecting that, the change appears to
+    come from nowhere. Convenience and hidden action are two sides of the same handle.
+  </p>
+
+  <h2>The sharp edge: aliasing</h2>
+  <p>
+    The nastiest version of this is aliasing: when two names refer to the same underlying
+    storage, so changing one changes the other, even though they look like separate things.
+    If you do not realize two references point at the same data, updating "one" mysteriously
+    changes "the other."
+  </p>
+
+  <p>
+    These bugs are maddening because the code reads as if the two are independent. You change
+    a value here and an unrelated-looking value over there shifts too, with no visible
+    connection between them. The connection is real but invisible: they were the same storage
+    all along, wearing two names.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Always know whether you are handing a function a copy or the real thing. A copy protects
+    your data at the cost of duplication and does not let the function change your original. A
+    direct handle lets the function update your data in place, which is either exactly what
+    you want or a lurking surprise. And watch for aliasing, where two names quietly share one
+    piece of storage, because changing one behind the other's back is a bug that hides in plain
+    sight.
+  </p>

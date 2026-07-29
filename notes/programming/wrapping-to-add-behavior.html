@@ -1,0 +1,65 @@
+---
+title: Adding Behavior by Wrapping, Not Editing
+heading: Adding Behavior by Wrapping, Not Editing
+listTitle: Wrapping to Add Behavior
+description: Why putting a function inside another that does a little extra before and after lets you add logging, timing, or checks without touching the original, and why a good wrapper has to be a faithful stand-in.
+lang: en
+category: Programming
+date: 2027-07-17
+dateText: Jul 17
+tags: programming, decorators, wrapping, cross-cutting-concerns, composition
+---
+  <p>
+    Suppose you have a function that does its job well, and you want to add something around
+    it: time how long it takes, record that it was called, or check permission before it runs.
+    You could edit the function to include that extra code, but there is a cleaner way that
+    keeps the original untouched.
+  </p>
+
+  <h2>Put it in a wrapper</h2>
+  <p>
+    The trick is to wrap the function. You put it inside another function that does the extra
+    bit before or after, calls the original in the middle, and passes its result back out. From
+    the outside, the wrapped version looks and behaves just like the original, except now it
+    also does the added thing. The wrapper is a layer around the real work.
+  </p>
+
+  <h2>Why wrap instead of edit</h2>
+  <p>
+    Wrapping keeps two things apart that do not belong together. The original stays focused on
+    its one job, undisturbed. The added behavior, the logging, the timing, the permission
+    check, lives separately in the wrapper. That separation pays off: you can apply the same
+    wrapper to many different functions, and when you want to change how the logging works, you
+    change it in one place instead of in every function.
+  </p>
+
+  <p>
+    This is how you layer on cross-cutting concerns, the things many functions need but none of
+    them are really about, without tangling that code into each one. You can even stack
+    wrappers, each adding its own layer, like nesting boxes inside boxes, so a function can be
+    wrapped for timing, then wrapped again for access checks.
+  </p>
+
+  <h2>A wrapper must be a faithful stand-in</h2>
+  <p>
+    There is one thing you have to get right, or the disguise leaks. The wrapper is standing in
+    for the original, so it must pass along whatever arguments it is handed and return whatever
+    the original returns. If it quietly drops an argument, or forgets to pass the result back,
+    then it is no longer a faithful replacement, and callers who expected the original's
+    behavior get surprised.
+  </p>
+
+  <p>
+    A good wrapper is invisible except for the behavior it adds: same inputs go in, same outputs
+    come out, plus the extra work happens around the edges. That faithfulness is what lets you
+    slip a wrapper in without anything else noticing.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    To add behavior around something without changing it, wrap it in something that does the
+    extra work and then delegates to the original. This keeps the original focused, puts the
+    added behavior in one reusable place, and lets you stack layers cleanly. Just make the
+    wrapper a faithful stand-in, passing arguments and results straight through, and the same
+    trick powers middleware, interceptors, and plugins across all of software.
+  </p>

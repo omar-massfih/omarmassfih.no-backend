@@ -1,0 +1,66 @@
+---
+title: Write It Once, Use It for Many Types
+heading: Write It Once, Use It for Many Types
+listTitle: Write It Once for Many Types
+description: Why copying the same logic once per type is waste, how writing it generically lets one algorithm serve every type, and why you get that reuse without giving up the safety of knowing which type you're using.
+lang: en
+category: Programming
+date: 2027-05-22
+dateText: May 22
+tags: programming, generics, polymorphism, reuse, type-safety
+---
+  <p>
+    Some logic does not care what type it is working with. Finding the biggest item in a
+    list, or a container that just holds things, works the same whether the items are
+    numbers, words, or dates. The steps are identical; only the type of the contents
+    changes. When you meet logic like this, you have a choice about how to write it.
+  </p>
+
+  <h2>Two ways to handle many types</h2>
+  <p>
+    The first way is to write a separate copy for each type: one version for numbers, one
+    for words, and so on, all nearly identical. It works, but it is duplication, and
+    duplication rots. Fix a bug in one copy and you have to remember the others; they
+    drift apart over time.
+  </p>
+
+  <p>
+    The second way is to write the logic once, in a form that works for any type, with
+    the specific type filled in wherever it is actually used. One definition, many types.
+    This is the idea behind writing generically: a single uniform algorithm that serves
+    every type it is given.
+  </p>
+
+  <h2>Not the same as one name, many behaviors</h2>
+  <p>
+    It is worth separating this from a different idea it is easily confused with.
+    Sometimes the same name stands for genuinely different operations depending on the
+    type, like a plus sign that adds numbers but joins words together. Those are different
+    algorithms wearing one name.
+  </p>
+
+  <p>
+    Writing generically is the opposite situation: exactly the same algorithm, applied to
+    many types. The distinction matters. If the logic really differs per type, sharing a
+    name is just convenience. If the logic is truly the same, writing it once is a real
+    removal of duplication.
+  </p>
+
+  <h2>Reuse without losing safety</h2>
+  <p>
+    The pleasant surprise is that you do not have to trade away safety to get this
+    flexibility. You might expect that code working for "any type" must be loose about
+    types. It need not be. The type system can still track which specific type you are
+    using in each particular place, and keep you honest about it, so a list of numbers
+    stays a list of numbers even though the code that handles it was written for anything.
+    You get one reusable definition and the full safety net at the same time.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    When logic is genuinely the same across many types, do not copy it once per type;
+    write it once in a generic form and let the specific type be filled in at each use.
+    That removes duplication that would otherwise drift apart, and, done well, it costs
+    you nothing in safety, because the type of each concrete use is still tracked. Same
+    algorithm, many types, one definition.
+  </p>
