@@ -1,0 +1,82 @@
+---
+title: What Makes a Decision "Architectural"?
+heading: What Makes a Decision "Architectural"?
+listTitle: What Makes a Decision Architectural
+description: Three questions that tell an architecture decision apart from an ordinary design one, and why sorting them this way tells you where to spend your careful thinking.
+lang: en
+category: Software Architecture
+date: 2026-12-29
+dateText: Dec 29
+tags: software-architecture, decisions, design, trade-offs, breadth
+---
+  <p>
+    People use "architecture" and "design" loosely, but there is a useful line
+    between them, and knowing where a decision falls tells you how much care it
+    deserves. Not every choice is a big one. The trick is telling which are.
+  </p>
+
+  <h2>Three questions</h2>
+  <p>
+    Three questions help place a decision on the scale from ordinary design to
+    genuine architecture.
+  </p>
+  <ul>
+    <li>
+      <strong>Is it strategic or tactical?</strong> A tactical decision is local
+      and short-term: how to write this one function. A strategic one is
+      long-lived and broad, shaping how much of the system fits together. The more
+      strategic, the more architectural.
+    </li>
+    <li>
+      <strong>How hard is it to change later?</strong> Something you can adjust in
+      an afternoon is design. Something that would take months to unwind, because
+      everything else came to depend on it, is architecture. Difficulty of change
+      is one of the clearest signals.
+    </li>
+    <li>
+      <strong>How big are the trade-offs?</strong> If the choice barely affects
+      anything beyond itself, it is design. If it swings important qualities across
+      the whole system, speed against flexibility, simplicity against scale, it is
+      architecture.
+    </li>
+  </ul>
+
+  <p>
+    The more a decision is long-lasting, expensive to reverse, and heavy with
+    trade-offs, the more it belongs on the architecture end.
+  </p>
+
+  <h2>Why the sorting matters</h2>
+  <p>
+    This is not labeling for its own sake. It tells you where to spend your
+    attention. The architectural decisions, the strategic, hard-to-undo,
+    trade-off-heavy ones, deserve real deliberation, because getting them wrong is
+    expensive and lasting. The design decisions can be made quickly and revised
+    freely, because they are cheap to change.
+  </p>
+
+  <p>
+    Spending days agonizing over an easily reversible detail, while rushing a
+    choice that will shape the system for years, gets this exactly backwards. Sort
+    first, then spend your care where the stakes actually are.
+  </p>
+
+  <h2>Why breadth beats depth here</h2>
+  <p>
+    This also explains something about the skill involved. Making good
+    architectural choices is mostly about comparing options and picking well, not
+    about being the deepest expert in any one tool. Knowing a little about many
+    approaches lets you weigh alternatives you would not otherwise consider. Deep
+    mastery of a single technology is valuable, but it tempts you to force that one
+    tool onto every problem. The person choosing between paths benefits more from
+    knowing the map than from knowing one road perfectly.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Tell architecture from design by asking whether a decision is strategic, hard
+    to change, and heavy with trade-offs. The more it is all three, the more
+    careful thought it earns; the less it is, the faster you should move. Sorting
+    decisions this way puts your deliberation where being wrong is costly, and lets
+    you be quick everywhere else.
+  </p>

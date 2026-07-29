@@ -1,0 +1,82 @@
+---
+title: Keeping a Workflow Consistent Without One Big Transaction
+heading: Keeping a Workflow Consistent Without One Big Transaction
+listTitle: Consistency Without One Transaction
+description: Why splitting a workflow across services takes away the safety net of a single all-or-nothing transaction, and the two ways to cope: undo what was done, or push forward and repair.
+lang: en
+category: Software Architecture
+date: 2026-11-15
+dateText: Nov 15
+tags: software-architecture, distributed-transactions, sagas, compensation, eventual-consistency, consistency
+---
+  <p>
+    Inside a single database, you can wrap several changes in one transaction so
+    they all succeed or all fail together. It is a wonderful safety net. The moment
+    a workflow spreads across several services, each with its own database, that
+    net is gone. Each service can commit its own step, but nothing makes all the
+    steps happen as one unit. So what do you do when step three fails after steps
+    one and two already succeeded?
+  </p>
+
+  <h2>The problem in plain terms</h2>
+  <p>
+    Say placing an order reserves stock, charges a card, then books shipping. The
+    first two succeed and commit. Then shipping fails. You cannot simply "roll
+    back," because the stock reservation and the charge are already done, in
+    separate systems, as far as each of them is concerned. The workflow is stuck
+    halfway, and half-done is exactly the state the single transaction used to
+    prevent. There are two honest ways out.
+  </p>
+
+  <h2>Option one: undo what was done</h2>
+  <p>
+    The first is to walk the finished steps backward and undo them: refund the
+    charge, release the stock. Each undo is its own action that reverses an earlier
+    one.
+  </p>
+
+  <p>
+    This is harder than it sounds. Because each step already committed, the undo is
+    not a clean rollback but a new operation that tries to reverse the effect, and
+    it can fail too. Worse, something may have already acted on the change before
+    you undid it: a confirmation email went out, another process saw the
+    reservation. You are not rewinding time, you are patching over things that
+    really happened, and the patch itself is not guaranteed.
+  </p>
+
+  <h2>Option two: push forward and repair</h2>
+  <p>
+    The second way accepts that the workflow will be briefly inconsistent and
+    focuses on getting it finished. Instead of undoing, the system keeps track of
+    where the workflow got to and works to complete it: retry the shipping step,
+    or flag it for someone to handle, until the whole thing reaches a proper
+    finished state. The user can often be told "done" right away, while the
+    remaining tightening-up happens in the background.
+  </p>
+
+  <p>
+    The thing that makes this work is knowing the workflow's state at all times.
+    You must be able to say whether an order is complete, still in progress,
+    failed, being retried, or waiting for a human. Without that, a half-finished
+    workflow just gets lost. With it, "briefly inconsistent" becomes a state you
+    manage on purpose rather than a bug.
+  </p>
+
+  <h2>The trade-off</h2>
+  <p>
+    Insisting on strict all-or-nothing across services is possible but expensive:
+    it ties the services tightly together, makes everyone wait, and pushes the
+    complexity of undoing partial work onto you. Accepting eventual consistency
+    keeps the system responsive and loosely joined, but you take on the job of
+    tracking workflow state and living with short windows where things do not yet
+    line up. Neither is free; you are choosing which cost to pay.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    Splitting a workflow across services removes the single transaction that made
+    "all or nothing" easy. You can undo committed steps, which is fiddly and can
+    fail because the world already moved on, or you can push forward and repair,
+    which stays responsive but demands that you always know the workflow's state.
+    Distributed consistency is not something you turn on; it is something you design.
+  </p>

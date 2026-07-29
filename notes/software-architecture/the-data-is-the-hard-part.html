@@ -1,0 +1,71 @@
+---
+title: Splitting the Code Is Easy; Splitting the Data Is Hard
+heading: Splitting the Code Is Easy; Splitting the Data Is Hard
+listTitle: The Data Is the Hard Part
+description: Why breaking a system into independent pieces is really a problem of breaking the data apart, and why entangled relationships and all-or-nothing updates make the data fight the split far harder than the code does.
+lang: en
+category: Software Architecture
+date: 2027-07-01
+dateText: Jul 1
+tags: software-architecture, decomposition, data, coupling, transactions
+---
+  <p>
+    When people set out to break a big system into smaller independent pieces, they picture
+    splitting the code. But there are two things to split, the code and the data, and it is
+    the data, not the code, where the real difficulty lives. Underestimating that is a
+    classic and painful mistake.
+  </p>
+
+  <h2>Why data resists the split</h2>
+  <p>
+    Three things make data the hard part. First, data is a critical asset in a way code is
+    not. If you break the code, you redeploy it. If you corrupt or lose the data, you have
+    harmed the business itself, and there may be no clean undo.
+  </p>
+
+  <p>
+    Second, data is deeply entangled. Tables are wired together with relationships: this
+    record points to that one, this view stitches several together, rules quietly guarantee
+    that certain things stay consistent. Those ties do not want to be cut. Splitting the data
+    means severing relationships the database was maintaining for you, and doing it without
+    breaking anything.
+  </p>
+
+  <p>
+    Third, keeping related data together is what lets a single all-or-nothing update cover it
+    all. Split that data across separate stores and the easy guarantee is gone; a change that
+    used to be one safe unit now has to succeed in several places that can fail
+    independently, which is a genuinely hard problem to handle well.
+  </p>
+
+  <h2>Forces pulling both ways</h2>
+  <p>
+    So the decision is a tug of war. Pulling toward splitting the data: one part needs to
+    scale on its own, or a shared database has become a bottleneck, or a single shared store
+    is a single point of failure that takes everything down when it dies. Pulling toward
+    keeping it together: strong relationships between the data, and the need for all-or-nothing
+    updates across it.
+  </p>
+
+  <p>
+    Which side wins depends on the case, but the point is that these are data forces, not
+    code forces. The interesting part of the analysis is almost always about the data.
+  </p>
+
+  <h2>Spend your caution on the data</h2>
+  <p>
+    The practical upshot is where to focus. When you plan to break a system apart, treat the
+    data as the real project and the code as the easy half. Map out which relationships live
+    safely within one piece and which ones cross between pieces and will have to be severed.
+    Those crossing relationships are the hard, risky work, and they are what determine whether
+    the split is even worth doing.
+  </p>
+
+  <h2>The upshot</h2>
+  <p>
+    Breaking a system into independent pieces is really a problem of breaking the data apart.
+    The code separates easily; the data fights back, because it is a critical asset, its
+    relationships are entangled, and keeping it together is what made all-or-nothing updates
+    simple. When you weigh a decomposition, weigh the data, and spend your care on the
+    relationships that will have to be cut.
+  </p>

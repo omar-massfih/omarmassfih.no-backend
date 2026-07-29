@@ -1,0 +1,71 @@
+---
+title: How Tightly Should Two Systems Agree on Their Data?
+heading: How Tightly Should Two Systems Agree on Their Data?
+listTitle: Strict vs Loose Contracts
+description: Why pinning down every field and type between two systems catches mistakes early but forces everyone to change together, while a looser agreement lets each side evolve freely at the cost of catching mismatches yourself.
+lang: en
+category: Software Architecture
+date: 2027-06-23
+dateText: Jun 23
+tags: software-architecture, contracts, coupling, evolvability, integration
+---
+  <p>
+    When two systems exchange data, there is an agreement between them about what that data
+    looks like: which fields exist, what types they are, which are required. That agreement
+    is a contract, and how tightly you specify it is a real dial with real consequences.
+    You can make it strict or loose, and neither is simply better.
+  </p>
+
+  <h2>A strict contract</h2>
+  <p>
+    A strict contract pins everything down: exact field names, exact types, which fields
+    must be present, even the order. Both sides commit to the precise shape.
+  </p>
+
+  <p>
+    The upside is confidence. Because everything is specified, tools can check that both
+    sides match before anything even runs, and a mismatch is caught early rather than
+    blowing up in production. You know exactly what you are getting. The downside is
+    brittleness: since every detail is fixed, any change to the shape forces every system
+    that depends on it to change in lockstep. Add a field, and even the consumers who do not
+    care about it may have to update just to stay compatible.
+  </p>
+
+  <h2>A loose contract</h2>
+  <p>
+    A loose contract specifies very little, often just named values, and lets each side take
+    what it needs. There is no rigid schema policing the exchange.
+  </p>
+
+  <p>
+    The upside is independence. A system can change its internals, or add unrelated data,
+    without breaking the systems that consume it, because each consumer reads only the
+    specific fields it uses and ignores everything else. Things can evolve on their own
+    schedules. The downside is that mistakes are no longer caught for you: a misspelled name,
+    a missing value, an unexpected type can slip through silently, because nothing is
+    automatically checking that both sides still line up.
+  </p>
+
+  <h2>The dial</h2>
+  <p>
+    So the choice is a genuine trade-off. Strict buys you early, automatic error-catching at
+    the price of everyone having to move together. Loose buys you free, independent evolution
+    at the price of policing mismatches yourself, usually with your own tests. One end
+    optimizes for safety and verification; the other for decoupling and change.
+  </p>
+
+  <p>
+    Where to set the dial depends on your situation. If the two sides change rarely and you
+    value ironclad verification, lean strict. If they change often, are maintained by
+    different teams, or must evolve without constant coordination, lean loose, and invest in
+    tests that confirm each consumer still gets what it needs.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    Contract strictness is a dial between "catch every mismatch, but couple everyone
+    together" and "let everyone evolve freely, but catch mismatches yourself." Strict
+    contracts give confidence and early checking at the cost of lockstep change; loose ones
+    give independent evolution at the cost of your own vigilance. Set the dial by how often
+    things change and how much coordination you can afford.
+  </p>

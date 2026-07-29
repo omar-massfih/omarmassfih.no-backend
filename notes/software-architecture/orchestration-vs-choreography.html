@@ -1,0 +1,82 @@
+---
+title: A Conductor or a Dance? Coordinating Work Across Services
+heading: A Conductor or a Dance? Coordinating Work Across Services
+listTitle: Orchestration vs Choreography
+description: The two ways to run a workflow that spans several services, why one gives you visibility and control while the other gives you looseness and scale, and how to tell which a job needs.
+lang: en
+category: Software Architecture
+date: 2026-11-11
+dateText: Nov 11
+tags: software-architecture, orchestration, choreography, workflow, microservices
+---
+  <p>
+    Once a task is spread across several services, something has to make them work
+    together in the right order. Placing an order might mean checking stock,
+    charging a card, and booking a shipment, each handled by a different service.
+    There are two very different ways to coordinate that, and the choice shapes how
+    the whole system feels.
+  </p>
+
+  <h2>The conductor</h2>
+  <p>
+    The first way puts one service in charge, like a conductor leading an
+    orchestra. It calls the stock service, then the payment service, then the
+    shipping service, watching each result and deciding what happens next. All the
+    workflow logic lives in that one place.
+  </p>
+
+  <p>
+    The big advantage is clarity. If you want to know how the process works, you
+    read the conductor. If something goes wrong, there is one place that knows the
+    whole story and can decide how to recover. This central control is comfortable
+    and easy to reason about.
+  </p>
+
+  <p>
+    The cost is that the conductor becomes a bottleneck and a weak point. Every
+    workflow runs through it, so it has to keep up with all of them, and if it is
+    down, nothing coordinates. The services also lean on it heavily, which ties
+    them more tightly together.
+  </p>
+
+  <h2>The dance</h2>
+  <p>
+    The second way has no conductor at all. Each service simply reacts to things
+    that happen and announces what it did, and the next service picks up from
+    there, like dancers who know their steps and respond to each other without
+    anyone calling the moves. The stock service announces "reserved," which prompts
+    the payment service, whose "charged" announcement prompts shipping.
+  </p>
+
+  <p>
+    This is loose and scales well. No single service is in charge, so there is no
+    central bottleneck, and each part can work at its own pace. The services depend
+    on each other far less directly.
+  </p>
+
+  <p>
+    The cost is that the workflow is now scattered. No single place describes the
+    whole process; it is an emergent result of everyone's reactions. That makes it
+    harder to see what the overall flow is, and harder to follow when something
+    goes wrong, because the story is spread across many services.
+  </p>
+
+  <h2>Which one a job needs</h2>
+  <p>
+    The choice is a straight trade-off between control and looseness. A complex
+    workflow with lots of branches, error paths, and steps that must happen in a
+    precise order benefits from a conductor, because you want one place holding all
+    that logic. A simple, mostly straight-line flow that needs to handle huge
+    volume benefits from the dance, because you want looseness and scale and there
+    is not much complicated logic to centralize.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    To coordinate work across services, you either appoint a conductor or let the
+    services dance. The conductor gives you visibility and control at the price of
+    a bottleneck and tighter coupling. The dance gives you looseness and scale at
+    the price of a workflow you cannot see in one place. Match the choice to the
+    workflow: the more complex the coordination, the more a conductor earns its
+    keep.
+  </p>

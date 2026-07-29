@@ -1,0 +1,63 @@
+---
+title: Do the Work When It's Written, or When It's Read?
+heading: Do the Work When It's Written, or When It's Read?
+listTitle: Write-Time or Read-Time Work?
+description: When something can be computed ahead of time or on demand, why the right choice depends on how much more often it's read than written, using the social feed as the classic example, and why the awkward middle calls for a blend.
+lang: en
+category: Software Architecture
+date: 2027-09-23
+dateText: Sep 23
+tags: software-architecture, precompute, trade-offs, fan-out, read-write-ratio
+---
+  <p>
+    A recurring design choice hides in many systems: when something can be computed either ahead of
+    time or on demand, which do you pick? Do the work early and store the result, or store the raw
+    ingredients and do the work later when someone asks? The classic illustration is a social feed.
+  </p>
+
+  <h2>Two ways to build a feed</h2>
+  <p>
+    When someone posts, you have two options. The first is to immediately push that post into the
+    stored timeline of every one of their followers. Now, when a follower opens the app, their
+    timeline is already assembled and waiting, so reads are instant. But the write was expensive: one
+    post fanned out into maybe millions of followers' timelines, a huge burst of work, and a disaster
+    for anyone with an enormous following.
+  </p>
+
+  <p>
+    The second option is to do almost nothing when the post is made; just store it once. When a
+    follower opens the app, you assemble their timeline right then, pulling recent posts from everyone
+    they follow. Now writes are cheap, but every read is real work, repeated each time anyone looks.
+  </p>
+
+  <h2>The general trade-off</h2>
+  <p>
+    This reaches far beyond feeds. You can do the work at write time, precomputing and storing the
+    result so that reads are cheap, or at read time, storing the raw inputs and computing on demand so
+    that writes are cheap. The same computation, placed at opposite ends of its life.
+  </p>
+
+  <p>
+    Which wins depends on the ratio of reads to writes and how costly the computation is. If something
+    is written once and read a million times, do the work up front, so the million reads are each
+    cheap and the one-time cost is trivial by comparison. If it is written constantly but read rarely,
+    do not waste effort precomputing results almost nobody will look at; compute on demand and skip the
+    work for the reads that never come.
+  </p>
+
+  <h2>The awkward middle</h2>
+  <p>
+    Sometimes neither extreme fits. In the feed example, precomputing works beautifully for ordinary
+    users but breaks for the rare account whose every post would fan out to millions. So you blend:
+    precompute for the common, cheap case, and fall back to computing on demand for the expensive
+    outliers. Recognizing that you can mix, rather than committing to one rule for everything, is often
+    what makes a real system work.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    When work can happen at write time or read time, put it on the cheaper side of your read-to-write
+    ratio. Precompute and store what is read far more than written, so reads stay cheap. Compute on
+    demand what is written far more than read, so you never do work for reads that do not happen. And
+    when the ratio varies across cases, blend the two rather than forcing one choice on all of them.
+  </p>

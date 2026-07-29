@@ -1,0 +1,70 @@
+---
+title: Slice by Technical Role, or by Business Area?
+heading: Slice by Technical Role, or by Business Area?
+listTitle: Technical vs Domain Partitioning
+description: The two fundamentally different ways to divide a system into parts, and why the choice quietly decides whether a typical change stays in one place or smears across everything.
+lang: en
+category: Software Architecture
+date: 2027-06-11
+dateText: Jun 11
+tags: software-architecture, modularity, layered, domain, organization
+---
+  <p>
+    When you break a system into parts, there are two fundamentally different ways to draw
+    the lines, and they lead to very different systems. The choice looks like an
+    organizing detail. It is actually one of the most consequential decisions you make,
+    because it decides what a typical change touches.
+  </p>
+
+  <h2>Two ways to slice</h2>
+  <p>
+    You can slice by technical role. All the screen and presentation code goes in one
+    part, all the business rules in another, all the database code in a third. Each part
+    is defined by the kind of work it does, stacked in horizontal layers.
+  </p>
+
+  <p>
+    Or you can slice by business area. Everything about orders goes in one part,
+    everything about billing in another, everything about shipping in a third. Each part
+    owns one slice of the business from top to bottom, screen to data.
+  </p>
+
+  <h2>What a change touches</h2>
+  <p>
+    Here is the consequence that matters. Real changes almost always arrive shaped like the
+    business: "change how orders work." Now ask where that change lands under each slicing.
+  </p>
+
+  <p>
+    If you sliced by technical role, that one business change is smeared across every layer.
+    You touch the order screen in the presentation part, the order rules in the business
+    part, and the order data in the database part, three separate places, perhaps owned by
+    three separate teams who now must coordinate. If you sliced by business area, the same
+    change stays inside the one "orders" part. One team, one place. The way the system is
+    cut decides whether a normal change is contained or scattered.
+  </p>
+
+  <h2>The flip side</h2>
+  <p>
+    Technical slicing is not without merit. It groups similar code together, so all the
+    database code lives in one tidy place, which is easy to find and easy to police with
+    tools that check the layers are respected. Its weakness is exactly the scattering
+    above.
+  </p>
+
+  <p>
+    Domain slicing keeps each business change in one place, but it demands discipline: you
+    have to keep the business areas from bleeding into one another, or the clean boundaries
+    dissolve and you are back to a tangle. Neither slicing is free; each asks something
+    different of you.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    A system can be divided by technical role or by business area, and the choice quietly
+    determines what a typical change touches. Slice by technical role and a single business
+    change spreads across every layer; slice by business area and it stays put, at the cost
+    of guarding the boundaries. Since change almost always arrives shaped like the business,
+    domain slicing tends to age better as a system grows, which is worth knowing before you
+    draw the first line.
+  </p>

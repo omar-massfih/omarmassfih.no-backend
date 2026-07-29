@@ -1,0 +1,65 @@
+---
+title: Pass Only the Data the Other Side Needs
+heading: Pass Only the Data the Other Side Needs
+listTitle: Share Only What Is Needed
+description: Why handing another system a whole big blob of data when it only needs two fields quietly ties it to changes it doesn't care about, and why keeping exchanges at a need-to-know level shrinks how much unrelated change can hurt you.
+lang: en
+category: Software Architecture
+date: 2027-06-27
+dateText: Jun 27
+tags: software-architecture, coupling, stamp-coupling, contracts, need-to-know
+---
+  <p>
+    When one system passes data to another, there is a lazy temptation: just hand over the
+    whole thing. The entire record, the full document, everything, even if the receiver only
+    needs two fields out of fifty. It is less work than carefully picking what to send. It
+    also quietly creates a problem.
+  </p>
+
+  <h2>The hidden cost of the big blob</h2>
+  <p>
+    By passing the whole blob, you have coupled the receiver to all of that data, not just
+    the parts it uses. Now, when some field the receiver never touches changes, that change
+    can still reach it, forcing it to cope with the new shape or even breaking it outright.
+    You have tied it to information it does not care about, so it can be hurt by changes that
+    have nothing to do with it.
+  </p>
+
+  <p>
+    Passing a large shared structure that everyone only partly uses has a name: stamp
+    coupling. There is also plain waste in it, since you ship, and re-ship, big payloads when
+    a small slice would have done. But the coupling is the deeper cost: every field you send
+    is a field the receiver now depends on, whether it meant to or not.
+  </p>
+
+  <h2>Keep it need-to-know</h2>
+  <p>
+    The fix is to keep every exchange at a need-to-know level: pass only the fields the
+    receiver actually uses, and nothing more. Then a change to some unrelated field simply
+    cannot reach it, because it never depended on that field in the first place. The
+    receiver's exposure to change shrinks to exactly the data it asked for.
+  </p>
+
+  <p>
+    This takes a little more thought than dumping the whole record, but it pays off in
+    reduced fragility. Each connection between systems carries only what it must, so the web
+    of "who breaks when this changes" stays small and predictable.
+  </p>
+
+  <h2>When the big package is fine</h2>
+  <p>
+    There are honest exceptions. Sometimes a standard document, or a bundle of workflow
+    status that has to travel through several steps, genuinely needs to move intact, and
+    carrying the whole thing is the point. The difference is intent: a package you pass whole
+    on purpose, because everyone downstream needs it, is a design choice; a big blob you pass
+    whole because picking fields was too much effort is an accident waiting to bite.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    Coupling is not only about how systems call each other; it is also about how much data
+    you hand around. Passing a whole blob when the receiver needs a sliver ties it to changes
+    in data it never uses. Share only what is needed, and unrelated changes lose their path
+    to hurt you. Send the whole package only when carrying it intact is a deliberate choice,
+    not a shortcut.
+  </p>

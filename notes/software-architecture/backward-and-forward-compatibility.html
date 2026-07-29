@@ -1,0 +1,75 @@
+---
+title: Changing a Format When Old and New Code Coexist
+heading: Changing a Format When Old and New Code Coexist
+listTitle: Backward and Forward Compatibility
+description: Why you rarely get to upgrade everything at once, what backward and forward compatibility each mean, and why letting old code safely ignore what it doesn't understand is the harder half.
+lang: en
+category: Software Architecture
+date: 2027-02-23
+dateText: Feb 23
+tags: software-architecture, compatibility, schema-evolution, contracts, rolling-upgrades
+---
+  <p>
+    Sooner or later you need to change the shape of your data or the fields in an
+    API. In a small program you just change it. In a real system you almost never
+    get to change everything at the same instant, and that single fact drives a
+    whole set of rules for changing formats safely.
+  </p>
+
+  <h2>Why both versions run at once</h2>
+  <p>
+    When you roll out a new version, the old one does not vanish the moment the new
+    one appears. For a while, both run side by side: some machines updated, some
+    not; some clients on the latest version, some lagging behind. During that
+    window, old and new code read and write the same data. So a format change has to
+    survive a period where two versions must understand each other.
+  </p>
+
+  <h2>Two directions of compatibility</h2>
+  <p>
+    That means the change has to work in two directions, and they are not equally
+    easy.
+  </p>
+  <p>
+    <strong>Backward compatibility</strong> means new code can read data written by
+    old code. This is usually the easier one, because when you write the new code
+    you know exactly what the old shape looked like, so you can handle it
+    deliberately.
+  </p>
+  <p>
+    <strong>Forward compatibility</strong> means old code can read data written by
+    new code. This is the hard one, because the old code has to cope with things
+    that did not exist when it was written, fields it has never heard of. The best
+    it can do is not panic: ignore what it does not understand and carry on, rather
+    than choking on the unfamiliar.
+  </p>
+
+  <h2>The rules that fall out</h2>
+  <p>
+    A few practical habits follow directly from wanting both directions to hold:
+  </p>
+  <ul>
+    <li>
+      When you <strong>add</strong> a field, do not make it required. Old data and
+      old code will not have it, so anything that insists on it will break on the
+      records that predate it.
+    </li>
+    <li>
+      When you <strong>remove</strong> a field, do not later reuse its identity for
+      something different. Old data still carries the old meaning, and a reader
+      would misread it as the new one.
+    </li>
+    <li>
+      Be careful <strong>changing the type</strong> of a field, because old and new
+      code may interpret the same value differently and quietly lose or mangle it.
+    </li>
+  </ul>
+
+  <h2>The upshot</h2>
+  <p>
+    Because upgrades roll out gradually, a format change has to let old and new code
+    understand each other during the overlap. New code reading old data is the easy
+    direction; old code gracefully ignoring what it does not recognize is the hard
+    one. Add fields as optional, never recycle a removed field's identity, and treat
+    "both versions coexist" as the normal case rather than an edge case.
+  </p>

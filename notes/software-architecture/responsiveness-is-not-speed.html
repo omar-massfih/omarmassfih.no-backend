@@ -1,0 +1,60 @@
+---
+title: Feeling Fast Is Not the Same as Being Fast
+heading: Feeling Fast Is Not the Same as Being Fast
+listTitle: Responsiveness Is Not Speed
+description: Why accepting a request and doing the work in the background makes a system feel snappy without making it any faster, and why the quick acknowledgment quietly makes handling failures much harder.
+lang: en
+category: Software Architecture
+date: 2027-06-19
+dateText: Jun 19
+tags: software-architecture, asynchronous, responsiveness, error-handling, trade-offs, latency
+---
+  <p>
+    A popular way to make a system feel snappy is to handle requests in the background.
+    Instead of doing all the work while the user waits, you accept the request, immediately
+    reply "got it, I'll take care of this," and do the actual work afterward, out of sight.
+    The user gets a fast answer and moves on. It is a genuine improvement, but it is worth
+    being precise about what it improved.
+  </p>
+
+  <h2>Responsiveness, not speed</h2>
+  <p>
+    This trick improves responsiveness, how quickly you acknowledge the request. It does
+    not improve speed, how long the work actually takes. The work takes exactly as long as
+    before; you have simply stopped making the user stare at a spinner while it happens.
+  </p>
+
+  <p>
+    That distinction is easy to blur, and blurring it leads to muddled thinking. You can
+    convince yourself you made the system faster when all you did was make it feel faster.
+    If the underlying work is genuinely too slow, moving it to the background hides the
+    delay from the user but does nothing about the delay itself. Sometimes hiding it is
+    exactly what you want; sometimes the real problem is still sitting there, unaddressed.
+  </p>
+
+  <h2>The hidden price: failures happen out of sight</h2>
+  <p>
+    The quick acknowledgment is not free, and the cost is easy to overlook. When you handle
+    work in the foreground and the user is still waiting, reporting a problem is trivial:
+    something went wrong, you return an error, and the user is right there to see it and
+    react.
+  </p>
+
+  <p>
+    Once you have said "got it" and the user has walked away, that easy path is gone. If the
+    background work then fails, the person who asked for it is no longer watching. Telling
+    them, retrying safely, or reconciling the mess now requires real extra machinery:
+    somewhere to record the failure, some way to notify them later, some way to recover.
+    Error handling and user feedback, nearly free when the user waits, become a genuine
+    design burden when they do not. That burden is the true price of the snappy reply.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Handling work in the background buys responsiveness and looser coupling, not raw speed:
+    the work still takes as long, you have only stopped the user from waiting on it. And the
+    fast acknowledgment quietly trades away the easy error handling you get when the user is
+    still there, because failures now happen after they have gone. Reach for it when a quick
+    acknowledgment genuinely helps, and go in with a plan for the failures you can no longer
+    just hand back.
+  </p>

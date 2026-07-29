@@ -1,0 +1,66 @@
+---
+title: Own Your Data, and Make Others Knock
+heading: Own Your Data, and Make Others Knock
+listTitle: Own Your Data
+description: Why letting one part of a system read another part's database directly recreates the exact coupling you were trying to escape, and how hiding your data behind an interface you control keeps you free to change it.
+lang: en
+category: Software Architecture
+date: 2027-07-05
+dateText: Jul 5
+tags: software-architecture, data-ownership, encapsulation, coupling, interfaces
+---
+  <p>
+    Suppose you have split a system into pieces and want them to stay genuinely independent.
+    There is one rule that does most of the work: each piece owns its own data, and no other
+    piece is allowed to reach directly into it. If one piece needs something from another, it
+    asks through a defined interface. It does not open the other's database and read its
+    tables.
+  </p>
+
+  <h2>Why direct access ruins independence</h2>
+  <p>
+    The moment one piece reads another's tables directly, it becomes tied to the exact shape
+    of that data: the table names, the columns, the types. That may seem harmless, it is just
+    reading, but it quietly welds the two together.
+  </p>
+
+  <p>
+    Now the owner cannot reorganize its own storage without breaking the reader. Rename a
+    column, restructure a table, and something you did not even know was looking suddenly
+    fails. This is precisely the tangle that made a shared database painful in the first
+    place, and reaching into someone else's tables recreates it. You will have done the work
+    of splitting and kept the coupling anyway.
+  </p>
+
+  <h2>Ownership buys freedom to change</h2>
+  <p>
+    Owning your data means you are free to change how you store it, as long as the interface
+    you expose to others stays the same. You can rename columns, split or merge tables, even
+    switch to an entirely different kind of database underneath, and nobody outside notices,
+    because nobody outside was ever looking at your storage.
+  </p>
+
+  <p>
+    This is why the interface you expose should deliberately not mirror your tables. Its job
+    is to hide them. It presents a stable, sensible view of what you provide, while your
+    actual storage is free to shift around behind it. The interface is a promise about what
+    others can rely on; everything behind it is yours to change.
+  </p>
+
+  <h2>The front door, not the back window</h2>
+  <p>
+    The mental picture is simple. Your data lives inside your house. Others are welcome to
+    what you offer, but they come through the front door you built and controlled, an
+    interface you designed, not by climbing through a back window straight into your rooms.
+    The front door lets you rearrange the furniture whenever you like; the back window ties
+    your hands.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    Independence between the pieces of a system comes from each piece owning its data and
+    hiding it behind an interface it controls. Let another piece read your tables directly
+    and you are coupled to your own schema forever, unable to change it without breaking them.
+    Expose a stable interface instead, keep your storage private behind it, and you stay free
+    to change how you store things without anyone else having to care.
+  </p>

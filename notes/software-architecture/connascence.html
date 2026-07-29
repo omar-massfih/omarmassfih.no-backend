@@ -1,0 +1,86 @@
+---
+title: Connascence: A Sharper Word for Coupling
+heading: Connascence: A Sharper Word for Coupling
+listTitle: Connascence
+description: A precise way to talk about coupling, based on when changing one piece of code forces another to change too, and three simple rules for keeping that dependency manageable.
+lang: en
+category: Software Architecture
+date: 2026-09-04
+dateText: Sep 4
+tags: software-architecture, coupling, connascence, modularity, cohesion
+---
+  <p>
+    "Coupling" is a vague word. Two pieces of code are coupled when they depend
+    on each other, but that covers everything from a shared name to a fragile
+    dependence on exact timing. Connascence is a sharper word for the same idea.
+    Two pieces of code are connascent when changing one forces you to change the
+    other to keep the program correct. It gives us language to say not just that
+    things are coupled, but how badly.
+  </p>
+
+  <h2>Some couplings are easier to change than others</h2>
+  <p>
+    Not all dependencies are equally painful. The simplest is when two places
+    just have to agree on a name: rename a function, and every caller must use
+    the new name. That is annoying but easy, because a tool can find and fix
+    every use.
+  </p>
+
+  <p>
+    Harder ones hide. When two places must agree on the meaning of a value, like
+    both sides "knowing" that a status of 2 means cancelled, nothing points from
+    one to the other. When correctness depends on the order of arguments, or on
+    two things happening in the right sequence at the right time, the dependency
+    is invisible until it breaks. These looser, runtime dependencies are the ones
+    that bite, because you cannot see them by reading a single spot.
+  </p>
+
+  <h2>Three things that decide how much a coupling hurts</h2>
+  <p>
+    Whether a given coupling is a problem depends on three things. How hard it is
+    to change: agreeing on a name is easy, agreeing on hidden timing is hard. How
+    far apart the coupled pieces sit: two lines in the same small function can
+    depend on each other all they like, but two services across the system
+    agreeing on a secret convention is dangerous. And how many pieces are
+    involved: a convention shared by three places is easier to fix than one
+    shared by three hundred.
+  </p>
+
+  <p>
+    These combine in a natural way. A strong, hard-to-change coupling is fine if
+    it is tucked inside one small, close unit. The same coupling stretched across
+    distant parts of a system, touching many of them, is where real fragility
+    lives.
+  </p>
+
+  <h2>Three rules that follow</h2>
+  <p>
+    From this you get three simple rules of thumb:
+  </p>
+  <ul>
+    <li>
+      <strong>Keep tight coupling close.</strong> Inside a single module, where
+      the pieces live together, stronger dependencies are acceptable and often
+      unavoidable.
+    </li>
+    <li>
+      <strong>Keep coupling across boundaries loose.</strong> Where separate
+      modules or services meet, prefer the easy-to-change kinds of dependency,
+      like a plain agreed name, over hidden conventions or timing.
+    </li>
+    <li>
+      <strong>Turn strong couplings into weaker ones where you can.</strong> If
+      two distant parts secretly agree that "2 means cancelled," give it a real
+      name they both refer to, so the dependency becomes visible and easy to
+      follow.
+    </li>
+  </ul>
+
+  <h2>The takeaway</h2>
+  <p>
+    Connascence turns a fuzzy worry about "too much coupling" into questions you
+    can actually answer: how hard is this to change, how far apart are the
+    pieces, and how many are there? Aim to keep the tightest dependencies small
+    and local, and to keep whatever crosses a boundary as easy to change as
+    possible. That is most of what good modularity comes down to.
+  </p>

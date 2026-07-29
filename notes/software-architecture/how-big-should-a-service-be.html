@@ -1,0 +1,99 @@
+---
+title: How Big Should a Service Be?
+heading: How Big Should a Service Be?
+listTitle: How Big Should a Service Be?
+description: Why "one service, one responsibility" is not enough to size a service, and how to weigh the forces pulling a system apart against the forces pulling it back together.
+lang: en
+category: Software Architecture
+date: 2026-11-07
+dateText: Nov 7
+tags: software-architecture, microservices, granularity, coupling, trade-offs
+---
+  <p>
+    When you break a system into services, you have to decide how big each one
+    should be. Splitting into more, smaller pieces is not automatically better,
+    and neither is keeping things large. The right size comes from weighing two
+    opposing sets of forces, not from following a slogan.
+  </p>
+
+  <h2>Why "one responsibility" is not enough</h2>
+  <p>
+    A popular rule says each service should do one thing. It sounds clean, but it
+    hides a problem: what counts as "one thing" is a matter of opinion. Draw the
+    line narrowly and you get lots of tiny services; draw it broadly and you get a
+    few large ones. The slogan does not tell you where to draw it, so on its own it
+    tends to push people toward splitting more than they should.
+  </p>
+
+  <h2>Forces that pull a system apart</h2>
+  <p>
+    There are real reasons to split a piece off into its own service:
+  </p>
+  <ul>
+    <li>
+      <strong>Different change rates.</strong> If one part changes constantly
+      while the rest is stable, separating it means you can update and test the
+      volatile part without touching everything else.
+    </li>
+    <li>
+      <strong>Different scaling needs.</strong> If one part gets hammered with
+      traffic and another barely runs, splitting lets each scale on its own instead
+      of scaling the quiet part just to keep up with the busy one.
+    </li>
+    <li>
+      <strong>Failure isolation.</strong> If one part crashing would otherwise take
+      unrelated features down with it, separating it keeps its failures contained.
+    </li>
+    <li>
+      <strong>Security.</strong> Sensitive operations can be walled off behind
+      their own service with stricter access.
+    </li>
+  </ul>
+
+  <h2>Forces that pull it back together</h2>
+  <p>
+    Pulling in the other direction are equally real reasons to keep things
+    together:
+  </p>
+  <ul>
+    <li>
+      <strong>Shared all-or-nothing work.</strong> If two operations must succeed
+      or fail as one unit, that is far simpler inside a single service, where one
+      transaction can cover both.
+    </li>
+    <li>
+      <strong>Constant back-and-forth.</strong> If two split services would have to
+      talk to each other on almost every request, the chatter can cost more than
+      the split ever saved, in both speed and reliability.
+    </li>
+    <li>
+      <strong>Shared business logic.</strong> If services keep needing the same
+      rules, a change to those rules forces you to update and retest all of them
+      together anyway.
+    </li>
+    <li>
+      <strong>Tangled data.</strong> If one service constantly needs data another
+      one owns, every access becomes a cross-service request, adding coordination
+      you did not have before.
+    </li>
+  </ul>
+
+  <h2>Weigh, do not chant</h2>
+  <p>
+    Sizing a service means putting these forces side by side for the case in front
+    of you and deciding which matter most. A part that changes often but must share
+    an all-or-nothing transaction with its neighbor might be better left where it
+    is. And splitting is not the only tool: sometimes you can keep different-paced
+    logic in one deployable service but tidy it into separate internal components,
+    getting the organization without the cost of another service to run and
+    coordinate.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Do not size services by a rule of thumb. Some forces pull the system apart:
+    different change rates, different scaling, failure isolation, security. Others
+    pull it together: shared transactions, chatty workflows, shared logic, tangled
+    data. Good boundaries come from weighing those forces honestly, and remembering
+    that not every separation needs to become a separate service.
+  </p>

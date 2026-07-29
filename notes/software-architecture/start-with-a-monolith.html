@@ -1,0 +1,70 @@
+---
+title: Start With a Monolith, Split Later
+heading: Start With a Monolith, Split Later
+listTitle: Start With a Monolith
+description: Why reaching for many small independently-deployed pieces at the start of a project buys complexity you don't need and forces you to guess boundaries you don't yet understand, and why a monolith is the wiser first move.
+lang: en
+category: Software Architecture
+date: 2027-06-15
+dateText: Jun 15
+tags: software-architecture, monolith, microservices, boundaries, simplicity
+---
+  <p>
+    When starting a new system, there is a strong pull toward immediately splitting it into
+    many small, independently deployed pieces, because that is what big, admired systems
+    look like. It is usually the wrong first move, and understanding why saves a lot of
+    pain.
+  </p>
+
+  <h2>The monolith's real virtue is simplicity</h2>
+  <p>
+    A monolith, a single deployable unit that holds everything, is simpler to build,
+    understand, test, and deploy, and it is cheaper. For a new or small system, that
+    simplicity is exactly the asset you want. You can move fast and change your mind cheaply
+    while you are still discovering what the system even is. There is one thing to run, one
+    thing to reason about.
+  </p>
+
+  <h2>Splitting early buys what you don't need yet</h2>
+  <p>
+    Breaking the system into many pieces up front buys you operational abilities, scaling
+    each piece on its own, deploying them separately, isolating failures between them, at a
+    steep price in complexity. Early on, you usually do not need those abilities, so you are
+    paying the cost without collecting the benefit.
+  </p>
+
+  <p>
+    And there is a deeper trap. Splitting forces you to decide the boundaries between the
+    pieces before you understand the domain, and early guesses about boundaries are usually
+    wrong. A wrong boundary inside a monolith is a quick refactor. A wrong boundary between
+    separately deployed pieces is painful to move, because now the mistake is spread across
+    deployment, data, and coordination. You are locking in guesses at the worst possible
+    time to be guessing.
+  </p>
+
+  <h2>The weaknesses arrive later</h2>
+  <p>
+    None of this means the monolith is flawless. Its real weaknesses are genuine: you scale
+    and deploy it as one whole rather than in parts, and a bad failure in one corner can
+    take the entire thing down. But notice that these problems show up later, once the
+    system is large, heavily loaded, and worked on by many people. They are the problems of
+    success, and you can address them when they actually start to hurt.
+  </p>
+
+  <h2>Keep the seams clean</h2>
+  <p>
+    The healthy path is to start as a monolith but keep clean boundaries inside it, so the
+    pieces are separable in principle. Then, when the pain of scaling, deploying, or
+    coordinating genuinely justifies it, you split, and by that point you actually
+    understand where the seams should go. The split is earned by real need and informed by
+    real experience, instead of guessed at the start.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    Do not buy the complexity of many independently deployed pieces before you need it.
+    Start with a monolith for its simplicity and low cost, keep tidy internal boundaries so
+    a future split is possible, and split only when the system is big enough that the
+    monolith's real weaknesses start to bite. By then you will know where to cut, which is
+    exactly what you could not know at the beginning.
+  </p>

@@ -1,0 +1,86 @@
+---
+title: Two Kinds of Coupling, and Why "Decouple Everything" Is Bad Advice
+heading: Two Kinds of Coupling, and Why "Decouple Everything" Is Bad Advice
+listTitle: Static and Dynamic Coupling
+description: Why some coupling is necessary, the difference between what must be wired together to run and what ties services together only while they talk, and why speed and consistency choices pull against each other.
+lang: en
+category: Software Architecture
+date: 2026-08-31
+dateText: Aug 31
+tags: software-architecture, coupling, microservices, orchestration, choreography
+---
+  <p>
+    "Decouple everything" sounds wise and is mostly wrong. A useful system has
+    parts that must talk to each other and agree on things. If nothing were
+    connected, nothing would get done. The real job is not to remove all
+    coupling but to decide where coupling belongs and where it costs too much.
+  </p>
+
+  <p>
+    It helps to notice that "coupling" is really two different things wearing one
+    name. Telling them apart makes the trade-offs much clearer.
+  </p>
+
+  <h2>What must be wired together to run</h2>
+  <p>
+    The first kind is about what a service depends on just to exist and start up:
+    its database, the message system it uses, the platform it runs on, the
+    libraries it is built from. Call it structural coupling. If two services
+    share the same database, they are joined at the hip whether they like it or
+    not. Neither can change or deploy fully on its own, because the thing they
+    both lean on is shared.
+  </p>
+
+  <p>
+    This is why a shared database can quietly cancel the benefits of splitting a
+    system into separate services. On paper the services look independent. In
+    practice they all rise and fall with that one database, so they behave like a
+    single unit that just happens to be spread across several pieces.
+  </p>
+
+  <h2>What ties services together only while they talk</h2>
+  <p>
+    The second kind appears only at runtime, when one service calls another.
+    Call it behavioral coupling. Two services can be fully independent to build
+    and deploy, and still get tangled the moment one waits on the other during a
+    request.
+  </p>
+
+  <p>
+    A synchronous call, where the caller waits for an answer, is the tight
+    version. While it waits, the caller's speed and reliability are hostage to
+    the service it called. If that service is slow, the caller is slow. If the
+    two also grow at different rates, a caller that can scale up fast gets stuck
+    behind a callee that cannot, and the whole flow bogs down. Sending the work
+    as a message and not waiting loosens this, because a queue lets each side
+    work on its own schedule.
+  </p>
+
+  <h2>Three choices that pull on each other</h2>
+  <p>
+    When services cooperate on a task, three decisions shape how tightly they are
+    bound: how they communicate (wait for a reply, or not), how consistent the
+    result must be (perfectly all-or-nothing, or eventually settled), and how the
+    work is coordinated (one central conductor, or each service reacting on its
+    own).
+  </p>
+
+  <p>
+    These three cannot be chosen separately, because each pulls on the others. If
+    you want a task to be strictly all-or-nothing, it is far easier with a
+    central coordinator and services that wait for replies, which is the tightly
+    bound end. If you want services to scale freely and stay independent, you
+    lean toward not waiting, accepting that results settle over time, and letting
+    each service react on its own, which is the loosely bound end. You rarely get
+    both looseness and strict, instant agreement at once.
+  </p>
+
+  <h2>Worth remembering</h2>
+  <p>
+    Coupling is not a flaw to eliminate but a choice to place well. Separate
+    "what must be wired together to run" from "what ties services together only
+    while they talk," and remember that speed, consistency, and coordination are
+    a package deal. Strong guarantees buy tight coupling; loose coupling buys
+    independence at the price of waiting and eventual agreement. Good
+    architecture is picking the right point on that line for each situation.
+  </p>

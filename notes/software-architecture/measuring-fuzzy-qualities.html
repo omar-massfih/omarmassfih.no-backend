@@ -1,0 +1,77 @@
+---
+title: Measuring the Fuzzy Qualities, and Why Metrics Get Gamed
+heading: Measuring the Fuzzy Qualities, and Why Metrics Get Gamed
+listTitle: Measuring Fuzzy Qualities
+description: How to turn a vague goal like "fast" or "maintainable" into something you can actually check, why an automated check beats good intentions, and why the moment you measure something people start gaming it.
+lang: en
+category: Software Architecture
+date: 2027-01-02
+dateText: Jan 2
+tags: software-architecture, metrics, fitness-functions, governance, goodharts-law
+---
+  <p>
+    Goals like "the system should be fast" or "the code should be maintainable"
+    sound good and mean almost nothing. They are too vague to act on, and too vague
+    to check. If you cannot tell whether you are meeting a goal, you cannot manage
+    it. So the first job is to turn fuzzy qualities into something concrete.
+  </p>
+
+  <h2>Break the vague word into measurable pieces</h2>
+  <p>
+    A word like "fast" is really an umbrella over several specific things. Pull it
+    apart into pieces you can put a number on: this page should appear within two
+    seconds, this request should finish within half a second, this download should
+    stay under a certain size. Now "fast" has become a handful of concrete limits
+    you can actually test against, instead of a feeling.
+  </p>
+
+  <p>
+    Setting an explicit limit like this, a budget the system is not allowed to
+    exceed, turns a vague aspiration into a clear line. Either you are under the
+    line or you are not.
+  </p>
+
+  <h2>Watch out for averages</h2>
+  <p>
+    Be careful how you measure, though. An average is a famous liar. "Average
+    response time is fine" can be true while a small share of users suffer badly,
+    because their painfully slow experiences are buried under all the fast ones. A
+    quality that looks healthy on average can still be failing the people who
+    matter most. Look at the worst cases, not just the typical one.
+  </p>
+
+  <h2>Automate the check</h2>
+  <p>
+    A limit that nobody enforces quietly rots. The strong move is to make an
+    automatic check that fails when the system drifts past the line: a test that
+    breaks if a page gets too heavy, a monitor that flags when responses get too
+    slow, a rule that rejects a forbidden dependency. Any automated way of
+    objectively verifying that a quality still holds does the job. The point is not
+    the particular tool; it is that the check runs on its own and catches the drift
+    without relying on someone remembering to look.
+  </p>
+
+  <h2>The catch: what you measure gets gamed</h2>
+  <p>
+    There is a hard truth about metrics: the moment people are judged by a number,
+    they tend to optimize the number rather than the thing it was meant to
+    represent. Measure how many tests exist, and you may get many worthless tests.
+    Measure lines of code, and you get bloat. The metric was only ever a stand-in
+    for the real quality, and pressure pries the two apart.
+  </p>
+
+  <p>
+    This does not mean giving up on measurement. It means holding metrics loosely:
+    prefer ones that are hard to fake, keep in mind what real quality they stand
+    for, and be ready to change the measure when people start chasing the number
+    instead of the goal.
+  </p>
+
+  <h2>The point</h2>
+  <p>
+    You cannot manage a quality you cannot check. Break vague goals into concrete,
+    measurable limits, watch out for averages that hide the suffering few, and set
+    up automated checks that catch drift on their own. Then stay honest that a
+    metric is only a proxy: measure what is hard to game, and remember the number
+    was never the real goal.
+  </p>

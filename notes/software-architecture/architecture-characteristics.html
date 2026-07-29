@@ -1,0 +1,77 @@
+---
+title: The Qualities You Can't All Have at Once
+heading: The Qualities You Can't All Have at Once
+listTitle: Architecture Characteristics
+description: Why a system's success depends on qualities that requirements rarely mention, why the most important ones are often the ones nobody wrote down, and why you cannot maximize all of them.
+lang: en
+category: Software Architecture
+date: 2026-12-25
+dateText: Dec 25
+tags: software-architecture, characteristics, trade-offs, scalability, maintainability
+---
+  <p>
+    Requirements tell you what a system must do: take orders, show a dashboard,
+    send a receipt. But whether the system actually succeeds depends on a second
+    set of things that the requirements often skip: how fast it responds, how much
+    downtime is acceptable, how easily it can be changed, how well it copes as
+    usage grows. These qualities are the architecture characteristics, and shaping
+    the system around them is much of what architecture is.
+  </p>
+
+  <h2>The "how well," not the "what"</h2>
+  <p>
+    It helps to separate the two clearly. The "what" is the behavior: the features.
+    The characteristics are the "how well": fast enough, available enough, secure
+    enough, easy enough to change, able to scale. A system can do everything on the
+    feature list and still fail because it falls over under load, or because every
+    small change takes weeks. The characteristics decide whether the features
+    survive contact with the real world.
+  </p>
+
+  <h2>The most important ones are often unwritten</h2>
+  <p>
+    Here is a trap. Many crucial characteristics are never written down, because
+    they are simply assumed. Nobody adds "the site should still work when lots of
+    people use it" to the requirements; they take it for granted. These unspoken
+    expectations are easy to miss precisely because no document points at them, and
+    missing one can sink a project as surely as missing a feature.
+  </p>
+
+  <p>
+    So part of the job is to go looking for the characteristics nobody stated but
+    everybody expects, and make them explicit before they become nasty surprises.
+  </p>
+
+  <h2>You cannot have them all</h2>
+  <p>
+    The bigger lesson is that these qualities fight each other. Every one you decide
+    to support adds cost and complexity, and pushing one up often drags another
+    down. Making a system extremely secure can make it slower and harder to use.
+    Making it handle enormous scale can make it more complex and harder to change.
+    There is no design that maxes out everything at once.
+  </p>
+
+  <p>
+    This is why chasing every desirable quality is a mistake. You pick the few that
+    matter most for this particular system and accept that others will be merely
+    good enough. The honest goal is not a perfect architecture but the least bad
+    balance of competing qualities for your situation.
+  </p>
+
+  <h2>Being wrong more cheaply</h2>
+  <p>
+    Since you are choosing among trade-offs with incomplete information, you will
+    get some of it wrong. That is far less scary if the architecture is easy to
+    change. The easier it is to adjust later, the less pressure there is to pick
+    every characteristic perfectly on the first try. Flexibility turns a
+    high-stakes guess into a decision you can revisit.
+  </p>
+
+  <h2>What to remember</h2>
+  <p>
+    A system succeeds not just on what it does but on how well it does it: its
+    speed, availability, changeability, security, and ability to scale. Hunt down
+    the important qualities nobody bothered to write, accept that you cannot
+    maximize them all, and deliberately choose the few that matter most. Then keep
+    the design changeable, so being partly wrong is cheap to fix.
+  </p>
