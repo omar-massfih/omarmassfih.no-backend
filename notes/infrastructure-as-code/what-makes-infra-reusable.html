@@ -1,0 +1,64 @@
+---
+title: Reusable Infrastructure Is Just Reusable Code
+heading: Reusable Infrastructure Is Just Reusable Code
+listTitle: What Makes Infra Reusable
+description: Why baked-in names and environment-specific values stop a piece of infrastructure setup from being used twice, and why versioning the reusable pieces lets each environment move at its own pace.
+lang: en
+category: Infrastructure as Code
+date: 2027-05-06
+dateText: May 6
+tags: infrastructure-as-code, modules, reuse, versioning, parameterization
+---
+  <p>
+    Once you describe a chunk of infrastructure in code, you naturally want to reuse it:
+    the same setup across several environments, or across several projects. But reuse
+    does not come for free. What blocks it is almost always the same thing, and the fix
+    is the same lesson you would apply to reusable code anywhere.
+  </p>
+
+  <h2>Baked-in specifics kill reuse</h2>
+  <p>
+    The enemy is specifics hardcoded into the piece. If a name is fixed inside it, using
+    the piece twice creates two things with the same name, which clash. If values tied
+    to one particular environment are baked in, the piece only works for that
+    environment and nowhere else. Either way, the chunk is welded to a single situation
+    and cannot travel.
+  </p>
+
+  <h2>Make the differences into inputs</h2>
+  <p>
+    The fix is to stop baking in the parts that differ and instead let the caller supply
+    them. The names, the per-environment values, anything that changes from one use to
+    the next becomes an input the caller passes in. The piece itself describes only the
+    shape that stays the same, and the caller fills in the specifics for their case.
+  </p>
+
+  <p>
+    This is exactly how reusable code works in general: pull the varying parts out as
+    parameters so one definition serves many callers. Infrastructure is no different. A
+    reusable piece is one where the caller, not the piece, decides the specifics.
+  </p>
+
+  <h2>Version the pieces</h2>
+  <p>
+    The second habit is to version your reusable pieces and pin each user to a specific
+    tested version, rather than everyone always tracking the very latest. This matters
+    because it decouples the users from each other. When you improve the piece, one
+    environment can adopt the new version when it is ready and confident, without every
+    other environment being dragged onto the change the instant it lands.
+  </p>
+
+  <p>
+    It also helps to label versions so their impact is clear at a glance: whether an
+    update is a safe bug fix, a safe new capability, or a breaking change that callers
+    must plan around. That way upgrading is an informed choice, not a gamble.
+  </p>
+
+  <h2>Putting it together</h2>
+  <p>
+    Reusable infrastructure follows the same rules as reusable code. Do not bake in the
+    names and environment-specific values that make a piece work in only one place; turn
+    them into inputs the caller supplies. And version the reusable pieces, pinning each
+    user to a tested version, so environments can move at their own pace and know what
+    each upgrade will cost them.
+  </p>

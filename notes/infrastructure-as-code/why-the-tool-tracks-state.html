@@ -1,0 +1,71 @@
+---
+title: To Change What Exists, You First Have to Know What Exists
+heading: To Change What Exists, You First Have to Know What Exists
+listTitle: Why the Tool Tracks State
+description: Why a tool that reconciles your desired setup against reality has to remember what it already built, and why that memory becomes something a team must share and protect.
+lang: en
+category: Infrastructure as Code
+date: 2027-02-19
+dateText: Feb 19
+tags: infrastructure-as-code, state, reconciliation, teams, blast-radius
+---
+  <p>
+    A tool that builds infrastructure from a description of the desired end state has
+    a quiet problem to solve. To make reality match your description, it needs to
+    know two things: what you want, and what already exists. The first is easy, it is
+    right there in your code. The second is the hard part, and it explains a lot
+    about how these tools behave.
+  </p>
+
+  <h2>The gap it has to fill</h2>
+  <p>
+    Imagine you ask for three servers. Should the tool create three, or do two
+    already exist so it only needs one more? Should removing a server from your
+    description delete a real one, or was it never created? The tool cannot answer
+    any of this from your code alone. It has to compare your desired setup against
+    the actual current setup, and for that it needs a reliable picture of what is
+    actually out there.
+  </p>
+
+  <h2>Remembering what it built</h2>
+  <p>
+    So the tool keeps a record of what it created: a stored account of the real
+    things it made last time and how they map to your description. With that record
+    in hand, each run is a comparison. It looks at what you want, looks at what it
+    remembers building, works out the difference, and makes only the changes needed to
+    close the gap.
+  </p>
+
+  <p>
+    Without that memory, it would be flying blind. It could not tell a fresh creation
+    from an update to something existing, and it could not notice that something you
+    deleted from the code still exists in reality and should be removed. The record is
+    what turns "here is the end state" into "here are the specific changes to get
+    there."
+  </p>
+
+  <h2>Why it becomes a team concern</h2>
+  <p>
+    Once more than one person is involved, this record turns into something that has
+    to be shared and guarded. If two people each keep their own private picture of
+    what exists, they will act on different realities and step on each other's work.
+    Everyone has to be looking at the same record.
+  </p>
+
+  <p>
+    It also has to be protected. This record drives real actions on real
+    infrastructure, so if it is wrong or out of date, the tool can do the wrong thing:
+    rebuild something that already exists, or worse, destroy something it should not.
+    That is why teams keep it in one trusted place, and stop two people from changing
+    it at the same time, so a race cannot corrupt the one picture everyone depends on.
+  </p>
+
+  <h2>In short</h2>
+  <p>
+    Any tool that reconciles a desired setup against reality must know the current
+    reality, and the only way it knows is by remembering what it built. That memory
+    is what lets it compute the small set of changes to make instead of guessing.
+    And because it drives real changes, it becomes something a team shares carefully
+    and protects from corruption. To safely change what exists, you first have to
+    keep an honest record of what exists.
+  </p>

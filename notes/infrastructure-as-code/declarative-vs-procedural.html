@@ -1,0 +1,73 @@
+---
+title: Describe the Destination, Not the Directions
+heading: Describe the Destination, Not the Directions
+listTitle: Declarative vs Procedural
+description: Why describing the end state you want and letting a tool figure out the steps is easier to reuse than writing the steps yourself, which quietly depend on where you happen to be starting from.
+lang: en
+category: Infrastructure as Code
+date: 2027-02-11
+dateText: Feb 11
+tags: infrastructure-as-code, declarative, procedural, automation, reproducibility, reconciliation
+---
+  <p>
+    When you automate setting up servers, networks, and databases, there are two
+    styles you can write in. One lists the steps to take. The other describes the
+    result you want. They feel similar at first, but one of them ages far better
+    than the other, and the reason is worth understanding.
+  </p>
+
+  <h2>Steps versus destination</h2>
+  <p>
+    The step-by-step style spells out actions in order: create this server, then
+    attach that disk, then change this setting. You are writing directions, like a
+    recipe.
+  </p>
+
+  <p>
+    The other style describes the destination: "I want three servers of this size,
+    on this network, with this database." You do not say how to get there. A tool
+    reads your description, compares it to what already exists, and works out the
+    actions needed to make reality match. You state the end state; it figures out
+    the route.
+  </p>
+
+  <h2>Why directions get brittle</h2>
+  <p>
+    The trouble with directions is that they secretly depend on your starting point.
+    "Create this server" is the right step only if the server does not already
+    exist. Run the same script again and it may fail, or make a duplicate, because
+    the world is no longer in the state the steps assumed. Directions are tangled up
+    with the history of what has already happened.
+  </p>
+
+  <p>
+    That makes them hard to reuse and hard to reason about. To know what a script
+    will do, you have to know the exact state of things before it runs. As the
+    number of steps and the number of possible starting states grow, that becomes a
+    guessing game.
+  </p>
+
+  <h2>Why a destination stays clean</h2>
+  <p>
+    A description of the end state has no such baggage. It simply says what should be
+    true. Whether you are starting from nothing, from a half-built setup, or from a
+    complete one, the same description applies, because the tool computes the
+    difference each time and does only what is needed. Run it against an empty world
+    and it builds everything; run it again and it does nothing, because reality
+    already matches.
+  </p>
+
+  <p>
+    This is why the destination style reads like the current desired reality rather
+    than a diary of changes. You can look at it and know what the system is supposed
+    to be, without replaying every step that got you there.
+  </p>
+
+  <h2>The takeaway</h2>
+  <p>
+    Automating infrastructure by listing steps ties your code to the exact situation
+    it runs in, so it is fragile and awkward to reuse. Describing the end state you
+    want, and letting a tool work out the steps, gives you code that means the same
+    thing no matter where you start from. Write down the destination, not the
+    directions, and the tool handles the route.
+  </p>

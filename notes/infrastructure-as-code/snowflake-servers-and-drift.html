@@ -1,0 +1,72 @@
+---
+title: Snowflake Servers and the Slow Drift Apart
+heading: Snowflake Servers and the Slow Drift Apart
+listTitle: Snowflake Servers and Drift
+description: Why hand-tweaking machines over time creates one-of-a-kind servers nobody can reproduce, why supposedly identical machines quietly diverge, and how defining setup in code fixes both.
+lang: en
+category: Infrastructure as Code
+date: 2027-02-15
+dateText: Feb 15
+tags: infrastructure-as-code, configuration-drift, snowflake-servers, reproducibility, immutable-infrastructure
+---
+  <p>
+    A server starts life clean and known. Then, over months, people log in and make
+    small manual changes: a setting here, a patch there, a quick fix during an
+    incident. None of it is written down in one place. Slowly, that server becomes
+    something nobody fully understands anymore.
+  </p>
+
+  <h2>The snowflake</h2>
+  <p>
+    A machine that has been hand-tweaked into a unique, undocumented state is often
+    called a snowflake: one of a kind, and impossible to reproduce exactly. That is
+    dangerous in a specific way. When a snowflake breaks, you cannot confidently
+    rebuild it, because you do not actually know everything that was done to it. Its
+    real configuration lives only in its current running state, not in any record you
+    can rerun.
+  </p>
+
+  <h2>The drift</h2>
+  <p>
+    It gets worse with more than one machine. Suppose you have several servers that
+    are supposed to be identical. Over time, different small manual changes land on
+    each one. Bit by bit, they diverge, until "identical" servers behave
+    differently for reasons no one can explain. This gradual divergence is
+    configuration drift, and it is the source of maddening bugs that happen on one
+    machine but not its twin.
+  </p>
+
+  <p>
+    Drift is insidious because each individual change seems harmless. Nobody decides
+    to make the servers different; they just become different, one tiny untracked
+    edit at a time.
+  </p>
+
+  <h2>The fix: put the setup in code</h2>
+  <p>
+    The cure is to stop hand-editing machines and instead describe their setup in
+    code. Every machine is then built from the same written description, so they
+    start identical and, crucially, can be rebuilt identically. The configuration no
+    longer hides inside a running server; it lives in a file you can read, review,
+    and run again. Reproducing a machine becomes re-running its definition, not
+    archaeology.
+  </p>
+
+  <h2>Replace, don't patch</h2>
+  <p>
+    There is a stronger version of this idea. Instead of changing a live machine when
+    you need an update, you build a fresh one from the updated definition and throw
+    the old one away. Because nothing is ever tweaked in place, drift has no chance to
+    accumulate: every machine is exactly what its definition says, always. Servers
+    become disposable and interchangeable rather than precious and unique.
+  </p>
+
+  <h2>The bottom line</h2>
+  <p>
+    Hand-tweaking machines over time turns them into snowflakes you cannot reproduce
+    and lets supposedly identical ones drift apart into mysterious differences. Define
+    the setup in code so every machine is built the same way and can be rebuilt on
+    demand, and prefer replacing machines wholesale over patching them in place.
+    Then a server is never a mystery, because its truth lives in a file, not in
+    whatever someone typed last month.
+  </p>
