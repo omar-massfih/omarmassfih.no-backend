@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
+from collections import Counter
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from typing import Any
@@ -213,6 +215,7 @@ class RetrievedChunk:
     title: str
     url: str
     distance: float
+    chunk_index: int = 0
 
 
 def _row_to_chunk(row: dict[str, Any]) -> RetrievedChunk:
@@ -222,7 +225,8 @@ def _row_to_chunk(row: dict[str, Any]) -> RetrievedChunk:
         text=row["text"],
         title=row["title"],
         url=row["url"],
-        distance=row["distance"],
+        distance=row.get("distance", 0.0),
+        chunk_index=row.get("chunk_index", 0),
     )
 
 
@@ -231,7 +235,7 @@ async def search_chunks(
 ) -> list[RetrievedChunk]:
     result = await client.execute(
         """
-        select c.slug, c.heading, c.text, n.title, n.url,
+        select c.slug, c.chunk_index, c.heading, c.text, n.title, n.url,
                vector_distance_cos(c.embedding, vector32(?)) as distance
         from note_chunks c
         join notes n on n.slug = c.slug and n.published = 1 and n.date <= ?
@@ -242,6 +246,121 @@ async def search_chunks(
     )
 
     return [_row_to_chunk(row) for row in result.rows]
+
+
+TOKEN_PATTERN = re.compile(r"[a-z0-9]+(?:[._:/-][a-z0-9]+)*")
+BM25_K1 = 1.5
+BM25_B = 0.75
+
+
+def lexical_tokens(text: str) -> list[str]:
+    return TOKEN_PATTERN.findall(text.casefold())
+
+
+def rank_lexical(
+    query: str, chunks: list[RetrievedChunk], k: int
+) -> list[RetrievedChunk]:
+    """Rank chunks with deterministic BM25, excluding documents with no lexical match."""
+    query_terms = lexical_tokens(query)
+    if not query_terms or not chunks or k <= 0:
+        return []
+
+    documents = [
+        lexical_tokens(f"{chunk.title} {chunk.heading or ''} {chunk.text}")
+        for chunk in chunks
+    ]
+    average_length = sum(map(len, documents)) / len(documents)
+    document_frequency = Counter(
+        term for document in documents for term in set(document)
+    )
+    scores: list[tuple[float, int, RetrievedChunk]] = []
+
+    for source_order, (chunk, document) in enumerate(zip(chunks, documents, strict=True)):
+        frequencies = Counter(document)
+        score = 0.0
+        for term in query_terms:
+            frequency = frequencies[term]
+            if not frequency:
+                continue
+            inverse_frequency = math.log(
+                1 + (len(documents) - document_frequency[term] + 0.5)
+                / (document_frequency[term] + 0.5)
+            )
+            length_factor = 1 - BM25_B + BM25_B * len(document) / (average_length or 1)
+            score += inverse_frequency * (
+                frequency * (BM25_K1 + 1) / (frequency + BM25_K1 * length_factor)
+            )
+        if score > 0:
+            scores.append((score, source_order, chunk))
+
+    scores.sort(key=lambda item: (-item[0], item[2].slug, item[2].chunk_index, item[1]))
+    return [item[2] for item in scores[:k]]
+
+
+def reciprocal_rank_fusion(
+    semantic: list[RetrievedChunk],
+    lexical: list[RetrievedChunk],
+    *,
+    k: int,
+    rrf_k: int,
+    semantic_weight: float,
+    lexical_weight: float,
+) -> list[RetrievedChunk]:
+    chunks: dict[tuple[str, int], RetrievedChunk] = {}
+    scores: Counter[tuple[str, int]] = Counter()
+
+    for weight, ranking in ((semantic_weight, semantic), (lexical_weight, lexical)):
+        seen: set[tuple[str, int]] = set()
+        for rank, chunk in enumerate(ranking, start=1):
+            identity = (chunk.slug, chunk.chunk_index)
+            if identity in seen:
+                continue
+            seen.add(identity)
+            chunks.setdefault(identity, chunk)
+            scores[identity] += weight / (rrf_k + rank)
+
+    identities = sorted(scores, key=lambda identity: (-scores[identity], identity))
+    return [chunks[identity] for identity in identities[:k]]
+
+
+async def load_lexical_candidates(client: Any) -> list[RetrievedChunk]:
+    result = await client.execute(
+        """
+        select c.slug, c.chunk_index, c.heading, c.text, n.title, n.url
+        from note_chunks c
+        join notes n on n.slug = c.slug and n.published = 1 and n.date <= ?
+        order by c.slug, c.chunk_index
+        """,
+        [today_iso()],
+    )
+    return [_row_to_chunk(row) for row in result.rows]
+
+
+async def hybrid_search_chunks(
+    client: Any,
+    query: str,
+    query_embedding: list[float],
+    k: int,
+    *,
+    candidate_k: int,
+    semantic_weight: float,
+    lexical_weight: float,
+    rrf_k: int,
+) -> list[RetrievedChunk]:
+    if k <= 0:
+        return []
+    depth = max(k, candidate_k)
+    semantic = await search_chunks(client, query_embedding, depth)
+    candidates = await load_lexical_candidates(client)
+    lexical = rank_lexical(query, candidates, depth)
+    return reciprocal_rank_fusion(
+        semantic,
+        lexical,
+        k=k,
+        rrf_k=rrf_k,
+        semantic_weight=semantic_weight,
+        lexical_weight=lexical_weight,
+    )
 
 
 @dataclass(frozen=True)
@@ -283,7 +402,7 @@ async def search_chunks_in_slugs(
     placeholders = ", ".join("?" for _ in slugs)
     result = await client.execute(
         f"""
-        select c.slug, c.heading, c.text, n.title, n.url,
+        select c.slug, c.chunk_index, c.heading, c.text, n.title, n.url,
                vector_distance_cos(c.embedding, vector32(?)) as distance
         from note_chunks c
         join notes n on n.slug = c.slug and n.published = 1 and n.date <= ?

@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.config import settings
 from app.database import turso_client
 from app.gateway import embed_texts, stream_chat
-from app.rag import RelatedChunk, RetrievedChunk, expand_neighbors, search_chunks
+from app.rag import RelatedChunk, RetrievedChunk, expand_neighbors, hybrid_search_chunks
 
 SITE_URL = "https://omarmassfih.no"
 HISTORY_LIMIT = 8
@@ -90,7 +90,16 @@ async def stream_answer(request: ChatRequest, token: str | None = None) -> Async
         query = request.messages[-1].content
         query_embedding = (await embed_texts([query], token=token))[0]
         async with turso_client() as client:
-            chunks = await search_chunks(client, query_embedding, settings.chat_top_k)
+            chunks = await hybrid_search_chunks(
+                client,
+                query,
+                query_embedding,
+                settings.chat_top_k,
+                candidate_k=settings.hybrid_candidate_k,
+                semantic_weight=settings.hybrid_semantic_weight,
+                lexical_weight=settings.hybrid_lexical_weight,
+                rrf_k=settings.hybrid_rrf_k,
+            )
             try:
                 related = await expand_neighbors(
                     client, query_embedding, chunks, settings.chat_graph_top_k
