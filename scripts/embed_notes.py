@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.database import postgres_client
-from app.gateway import embed_texts
+from app.embeddings import embed_texts
 from app.notes import parse_notes_tree
 from app.rag import (
     chunk_hash,
@@ -39,9 +39,7 @@ async def embed_notes(notes_root: Path) -> tuple[int, int]:
             unchanged += len(pending) - len(changed)
 
             if changed:
-                embeddings = await embed_texts(
-                    [chunk.text for _, chunk, _ in changed], max_attempts=5
-                )
+                embeddings = await embed_texts([chunk.text for _, chunk, _ in changed])
                 for (index, chunk, content_hash), embedding in zip(
                     changed, embeddings, strict=True
                 ):

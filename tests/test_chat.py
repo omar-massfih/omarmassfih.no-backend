@@ -56,7 +56,8 @@ def configure(
     monkeypatch.setattr(main, "settings", CONFIGURED)
     monkeypatch.setattr(gateway_module, "settings", CONFIGURED)
 
-    async def fake_embed_texts(texts, *, token=None):
+    async def fake_embed_texts(texts, *, kind="passage"):
+        assert kind == "query"
         return [[0.1, 0.2] for _ in texts]
 
     async def fake_hybrid_search_chunks(db, query, embedding, k, **ranking):

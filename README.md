@@ -30,6 +30,11 @@ For Neon, use the pooled connection string for a serverless deployment. On the
 self-hosted platform, the backend receives CloudNativePG's generated connection URI.
 The seed scripts create the required tables and enable the `vector` extension.
 
+Note and query embeddings run locally in the backend with FastEmbed and
+`BAAI/bge-small-en-v1.5` (384 dimensions). The model is baked into the container
+image, so embedding refreshes do not call Vercel. Vercel AI Gateway remains the
+chat-completion provider.
+
 Use `GET /db-health` to verify the database connection.
 
 Seed notes from the backend repo:

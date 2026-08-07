@@ -8,7 +8,8 @@ from pydantic import BaseModel, Field, model_validator
 
 from app.config import settings
 from app.database import postgres_client
-from app.gateway import embed_texts, stream_chat
+from app.embeddings import embed_texts
+from app.gateway import stream_chat
 from app.rag import RelatedChunk, RetrievedChunk, expand_neighbors, hybrid_search_chunks
 
 SITE_URL = "https://omarmassfih.no"
@@ -88,7 +89,7 @@ def _gateway_messages(
 async def stream_answer(request: ChatRequest, token: str | None = None) -> AsyncIterator[str]:
     try:
         query = request.messages[-1].content
-        query_embedding = (await embed_texts([query], token=token))[0]
+        query_embedding = (await embed_texts([query], kind="query"))[0]
         async with postgres_client() as client:
             chunks = await hybrid_search_chunks(
                 client,
