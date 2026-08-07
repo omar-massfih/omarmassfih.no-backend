@@ -97,23 +97,38 @@ except UserNotFound:
   </p>
 
   <table>
+    <caption>
+      Choose the action from the error's origin and whether this layer can recover.
+    </caption>
     <thead>
       <tr>
-        <th></th>
-        <th>Recoverable here</th>
-        <th>Not recoverable here</th>
+        <th scope="col">Where did the error originate?</th>
+        <th scope="col">This layer can recover</th>
+        <th scope="col">This layer cannot recover</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <th>This code detected it</th>
-        <td>Correct it locally and continue</td>
-        <td>Raise an exception</td>
+        <th scope="row">This code detected a problem</th>
+        <td>
+          <strong>Handle it locally.</strong> Use a valid default, correction, or
+          fallback, then continue.
+        </td>
+        <td>
+          <strong>Raise an exception.</strong> Stop this function and let a caller
+          with more context decide.
+        </td>
       </tr>
       <tr>
-        <th>Called code raised it</th>
-        <td>Catch it, recover, and continue</td>
-        <td>Let it bubble up</td>
+        <th scope="row">Called code raised an exception</th>
+        <td>
+          <strong>Catch the specific exception.</strong> Take a valid alternative
+          path, such as retrying or falling back, then continue.
+        </td>
+        <td>
+          <strong>Do not catch it here.</strong> Let the original exception and
+          traceback bubble up unchanged.
+        </td>
       </tr>
     </tbody>
   </table>
