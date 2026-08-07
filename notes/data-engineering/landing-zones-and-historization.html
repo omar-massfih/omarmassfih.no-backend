@@ -1,0 +1,195 @@
+---
+title: The Doorway and the Memory: Landing Zones and Historization
+heading: The Doorway and the Memory: Landing Zones and Historization
+listTitle: Landing Zones and Historization
+description: Why a landing zone is an operational handoff rather than another medallion quality layer, how historization preserves changing truth, and where raw history and business history belong.
+lang: en
+category: Data Engineering
+date: 2026-08-06
+dateText: Aug 6
+tags: data-engineering, landing-zone, historization, change-data-capture, slowly-changing-dimensions, medallion-architecture
+---
+  <p>
+    A data platform has two needs that are easy to mix together. It needs a safe place
+    for incoming data to arrive, and it needs a way to remember how that data changed.
+    A <strong>landing zone</strong> solves the first problem. <strong>Historization</strong>
+    solves the second.
+  </p>
+
+  <p>
+    The landing zone is the platform's doorway: an operational handoff between a source
+    and the ingestion pipeline. Historization is its memory: a deliberate representation
+    of past states so the platform can answer not only “what is true now?” but also “what
+    was known or true then?” Neither term is just another name for bronze.
+  </p>
+
+  <h2>A landing zone is where ownership changes hands</h2>
+  <p>
+    External systems often deliver files rather than write governed tables. They might
+    upload a CSV every night, place an encrypted archive in object storage, or stream
+    messages into a queue. A landing zone gives those producers a narrow place to write
+    and gives the data platform a controlled place to receive.
+  </p>
+
+  <p>A landing zone commonly supports work such as:</p>
+  <ul>
+    <li>checking that a delivery is complete and has the expected checksum;</li>
+    <li>scanning, decrypting, decompressing, or masking sensitive fields;</li>
+    <li>recording a delivery manifest and triggering ingestion;</li>
+    <li>quarantining corrupt files before they enter governed datasets;</li>
+    <li>isolating external write permissions from the rest of the data platform.</li>
+  </ul>
+
+  <p>
+    The landing zone is therefore usually operational and short-lived. A file may be
+    removed or archived after the pipeline has safely committed it to bronze. Consumers
+    should not query it, and downstream transformations should not depend on files
+    remaining there forever.
+  </p>
+
+  <h2>Landing and bronze can be separate—or the same</h2>
+  <p>
+    Bronze is a durable, governed record of what the source delivered. Landing is the
+    handoff point before that durable record exists. The distinction is useful when a
+    source needs its own drop location, when files must be inspected before admission,
+    or when landing and governed data need different access and retention policies:
+  </p>
+
+  <pre><code>source
+  → landing: delivery accepted, not yet trusted to be durable
+  → bronze: delivery recorded durably and available for replay
+  → silver: source records interpreted as trustworthy facts
+  → gold: facts shaped for a consumer</code></pre>
+
+  <p>
+    But a separate physical landing layer is not mandatory. A managed connector or event
+    stream may commit directly and atomically into bronze. In that design, bronze also
+    acts as the landing point. Add a separate zone only when the handoff needs a real
+    operational boundary; otherwise it becomes another copy with no distinct promise.
+  </p>
+
+  <h2>Historization asks which past you need</h2>
+  <p>
+    Keeping old files is useful, but it is not yet a complete history model. A useful
+    history must say what changed, which entity changed, and when the change applies.
+    That last question hides two different clocks:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Valid time:</strong> when the fact was true in the business world. A customer
+      moved on Monday.
+    </li>
+    <li>
+      <strong>System time:</strong> when the platform received or recorded the fact. The
+      source told us on Thursday.
+    </li>
+  </ul>
+
+  <p>
+    If late and corrected data matters, retain both. Then the platform can answer two
+    different questions: “what do we now believe the customer's address was on Tuesday?”
+    and “what address did Thursday morning's report use?” This is bitemporal history. Not
+    every system needs it, but every system should be clear about which clock its
+    timestamps represent.
+  </p>
+
+  <h2>Three common ways to retain change</h2>
+
+  <h3>Periodic snapshots</h3>
+  <p>
+    Copy the full source state every hour or day. Snapshots are simple and make
+    point-in-time reconstruction intuitive, but unchanged rows are repeated, changes
+    between snapshots are invisible, and a missing row is ambiguous unless deletion
+    semantics are defined.
+  </p>
+
+  <h3>Change data capture or an event log</h3>
+  <p>
+    Record each insert, update, and delete with ordering information. This is compact and
+    precise, and it can reconstruct state at any captured point. The price is more careful
+    processing: duplicates, out-of-order events, missed offsets, and tombstones all need
+    explicit handling. Retention must cover the entire period from which the platform may
+    need to rebuild.
+  </p>
+
+  <h3>Slowly changing dimensions</h3>
+  <p>
+    In a Type 1 dimension, an update overwrites the previous value. That is correction,
+    not historization. In a Type 2 dimension, a change closes the current row and creates
+    a new version:
+  </p>
+
+  <pre><code>customer_id  city    valid_from  valid_to    is_current
+42           Oslo    2025-01-01  2026-03-14  false
+42           Bergen  2026-03-15  NULL        true</code></pre>
+
+  <p>
+    Type 2 makes business history easy to query and lets a fact join to the dimension
+    version that was valid when the event occurred. It requires stable business keys,
+    non-overlapping validity ranges, and a defined policy for late corrections.
+  </p>
+
+  <h2>History exists at more than one medallion layer</h2>
+  <p>
+    Bronze and silver preserve different kinds of history. Bronze normally keeps
+    <strong>source history</strong>: every delivery or change as it arrived, with ingestion
+    metadata and without silently rewriting the evidence. This supports replay, audit,
+    and debugging.
+  </p>
+
+  <p>
+    Silver may build <strong>interpreted business history</strong>: deduplicated changes,
+    stable entity keys, normalized timestamps, valid-from and valid-to ranges, and
+    explicit deletes. This is where raw technical change becomes a reusable statement
+    about how a customer, product, or account evolved.
+  </p>
+
+  <p>
+    Gold keeps only the history its product needs. A finance model might retain daily
+    balances, while an operational dashboard exposes only current state. Gold should be
+    rebuildable from the more detailed history behind it; it should not be the only place
+    yesterday's truth survives.
+  </p>
+
+  <h2>The customer-address test</h2>
+  <p>
+    Imagine customer 42 changes address, the source sends the update twice, and a late
+    correction arrives a week later. A robust design can explain all of these:
+  </p>
+
+  <ul>
+    <li>Landing proves which deliveries were accepted and whether each was processed.</li>
+    <li>Bronze retains both received messages, their source positions, and arrival times.</li>
+    <li>Silver recognizes the retry as a duplicate and models the corrected validity period.</li>
+    <li>Gold attributes historical orders using the agreed business rule.</li>
+  </ul>
+
+  <p>
+    If the design cannot explain a duplicate, a deletion, a late event, and a replay,
+    “we keep history” is still only an aspiration.
+  </p>
+
+  <h2>What to decide explicitly</h2>
+  <ol>
+    <li>Is landing temporary, and what proves that a delivery was safely ingested?</li>
+    <li>Which data is immutable, and how long is it retained?</li>
+    <li>Are changes captured as snapshots, events, CDC records, versioned rows, or a mix?</li>
+    <li>Do timestamps mean source event time, business-valid time, or ingestion time?</li>
+    <li>How are deletes, duplicates, out-of-order changes, and late corrections represented?</li>
+    <li>From which layer can every derived table be rebuilt?</li>
+  </ol>
+
+  <p>
+    The clean mental model is: landing receives, bronze remembers what arrived, silver
+    interprets how truth changed, and gold serves the history a particular use case needs.
+    Keep these responsibilities distinct even when two of them share the same physical
+    storage. A layer earns its place through a clear contract, not through its name.
+  </p>
+
+  <p>
+    Further reading:
+    <a href="https://learn.microsoft.com/en-us/azure/databricks/lakehouse-architecture/deployment-guide/delta-lake">Azure Databricks guidance on bronze layers and landing zones</a>
+    and
+    <a href="https://learn.microsoft.com/en-us/azure/databricks/lakehouse/medallion">the medallion architecture overview</a>.
+  </p>
