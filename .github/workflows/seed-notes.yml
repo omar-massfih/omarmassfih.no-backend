@@ -1,19 +1,6 @@
 name: Seed notes
 
 on:
-  push:
-    branches: ["main"]
-    paths:
-      - "notes/**"
-      - "app/notes.py"
-      - "app/database.py"
-      - "app/gateway.py"
-      - "app/rag.py"
-      - "scripts/seed_notes.py"
-      - "scripts/embed_notes.py"
-      - "pyproject.toml"
-      - "uv.lock"
-      - ".github/workflows/seed-notes.yml"
   workflow_dispatch:
 
 jobs:

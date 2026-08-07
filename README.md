@@ -26,8 +26,9 @@ Set a Postgres connection string locally, in Vercel, and as a GitHub Actions sec
 DATABASE_URL=postgresql://user:password@host-pooler.region.aws.neon.tech/database?sslmode=require
 ```
 
-For Neon, use the pooled connection string for the serverless application. The seed
-scripts create the required tables and enable the `vector` extension.
+For Neon, use the pooled connection string for a serverless deployment. On the
+self-hosted platform, the backend receives CloudNativePG's generated connection URI.
+The seed scripts create the required tables and enable the `vector` extension.
 
 Use `GET /db-health` to verify the database connection.
 
@@ -50,4 +51,7 @@ Note endpoints send `ETag` and `Cache-Control` headers so the Vercel edge cache 
 
 ## Deployment
 
-Deployed on Vercel using zero-config FastAPI detection of `app/main.py:app` — there is no `vercel.json` or `api/` directory, and none is needed. Pushes to `main` deploy via the Vercel git integration; the seed workflow (`.github/workflows/seed-notes.yml`) writes notes to Postgres whenever files under `notes/` change.
+The container image is published to GHCR for `linux/arm64`. The platform repository
+pins that image in k3s, runs note synchronization before the API starts, and connects
+the backend to its cluster-internal CloudNativePG service. The database is never
+exposed publicly; only the FastAPI service is routed through HTTPS.
