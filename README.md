@@ -18,14 +18,16 @@ uv run pytest
 uv run ruff check .
 ```
 
-## Turso
+## Postgres
 
-Set these environment variables locally and in Vercel:
+Set a Postgres connection string locally, in Vercel, and as a GitHub Actions secret:
 
 ```sh
-TURSO_DATABASE_URL=libsql://your-database.turso.io
-TURSO_AUTH_TOKEN=your-token
+DATABASE_URL=postgresql://user:password@host-pooler.region.aws.neon.tech/database?sslmode=require
 ```
+
+For Neon, use the pooled connection string for the serverless application. The seed
+scripts create the required tables and enable the `vector` extension.
 
 Use `GET /db-health` to verify the database connection.
 
@@ -39,7 +41,7 @@ uv run python scripts/seed_notes.py
 
 - `GET /` returns service metadata.
 - `GET /health` returns service health.
-- `GET /db-health` checks the Turso connection.
+- `GET /db-health` checks the Postgres connection.
 - `GET /notes` returns published note metadata. Add `?include=content` to also get `heading` and `content_html` for every note.
 - `GET /notes/{slug}` returns a published note.
 - `GET /docs` opens the FastAPI docs.
@@ -48,4 +50,4 @@ Note endpoints send `ETag` and `Cache-Control` headers so the Vercel edge cache 
 
 ## Deployment
 
-Deployed on Vercel using zero-config FastAPI detection of `app/main.py:app` — there is no `vercel.json` or `api/` directory, and none is needed. Pushes to `main` deploy via the Vercel git integration; the seed workflow (`.github/workflows/seed-notes.yml`) writes notes to Turso whenever files under `notes/` change.
+Deployed on Vercel using zero-config FastAPI detection of `app/main.py:app` — there is no `vercel.json` or `api/` directory, and none is needed. Pushes to `main` deploy via the Vercel git integration; the seed workflow (`.github/workflows/seed-notes.yml`) writes notes to Postgres whenever files under `notes/` change.

@@ -33,14 +33,12 @@ jobs:
 
       - name: Seed notes
         env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: uv run python scripts/seed_notes.py
 
       - name: Embed notes
         env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           AI_GATEWAY_API_KEY: ${{ secrets.AI_GATEWAY_API_KEY }}
           EMBEDDING_MODEL: ${{ vars.EMBEDDING_MODEL }}
           EMBEDDING_DIM: ${{ vars.EMBEDDING_DIM }}

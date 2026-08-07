@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.database import turso_client
+from app.database import postgres_client
 from app.notes import (
     delete_stale_notes,
     init_notes_schema,
@@ -19,7 +19,7 @@ from app.notes import (
 async def seed_notes(notes_root: Path) -> int:
     notes = parse_notes_tree(notes_root)
 
-    async with turso_client() as client:
+    async with postgres_client() as client:
         await init_notes_schema(client)
         for note in notes:
             await upsert_note(client, note)
@@ -30,7 +30,7 @@ async def seed_notes(notes_root: Path) -> int:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Seed notes into Turso.")
+    parser = argparse.ArgumentParser(description="Seed notes into Postgres.")
     parser.add_argument(
         "--notes-root",
         default="notes",

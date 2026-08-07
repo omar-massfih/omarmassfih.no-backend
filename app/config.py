@@ -10,8 +10,7 @@ load_dotenv(".env.local")
 
 @dataclass(frozen=True)
 class Settings:
-    turso_database_url: str | None = os.getenv("TURSO_DATABASE_URL")
-    turso_auth_token: str | None = os.getenv("TURSO_AUTH_TOKEN")
+    database_url: str | None = os.getenv("DATABASE_URL")
     ai_gateway_api_key: str | None = os.getenv("AI_GATEWAY_API_KEY")
     vercel_oidc_token: str | None = os.getenv("VERCEL_OIDC_TOKEN")
     ai_gateway_base_url: str = os.getenv("AI_GATEWAY_BASE_URL") or "https://ai-gateway.vercel.sh/v1"

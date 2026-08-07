@@ -150,10 +150,9 @@ async def init_notes_schema(client: Any) -> None:
         )
         """
     )
-    try:
-        await client.execute("alter table notes add column tags text not null default '[]'")
-    except Exception:
-        pass  # column already exists
+    await client.execute(
+        "alter table notes add column if not exists tags text not null default '[]'"
+    )
     await client.execute(
         "create index if not exists notes_published_category_date_idx on notes "
         "(published, category, date desc)"
@@ -166,7 +165,7 @@ async def upsert_note(client: Any, note: ParsedNote) -> None:
         insert into notes (
           slug, url, title, heading, list_title, description, lang, category,
           date, date_text, content_html, published, tags
-        ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         on conflict(slug) do update set
           url = excluded.url,
           title = excluded.title,
@@ -205,7 +204,7 @@ async def delete_stale_notes(client: Any, keep_slugs: list[str]) -> None:
         await client.execute("delete from notes")
         return
 
-    placeholders = ", ".join("?" for _ in keep_slugs)
+    placeholders = ", ".join("%s" for _ in keep_slugs)
     await client.execute(
         f"delete from notes where slug not in ({placeholders})",
         keep_slugs,
@@ -219,7 +218,7 @@ async def list_published_notes(client: Any, include_content: bool = False) -> li
             select slug, url, title, heading, list_title, description, lang, category,
                    date, date_text, content_html, tags
             from notes
-            where published = 1 and date <= ?
+            where published = 1 and date <= %s
             order by category asc, date desc, title asc
             """,
             [today_iso()],
@@ -231,7 +230,7 @@ async def list_published_notes(client: Any, include_content: bool = False) -> li
         """
         select slug, url, title, list_title, description, lang, category, date, date_text, tags
         from notes
-        where published = 1 and date <= ?
+        where published = 1 and date <= %s
         order by category asc, date desc, title asc
         """,
         [today_iso()],
@@ -246,7 +245,7 @@ async def get_published_note(client: Any, slug: str) -> Note | None:
         select slug, url, title, heading, list_title, description, lang, category,
                date, date_text, content_html, tags
         from notes
-        where published = 1 and slug = ? and date <= ?
+        where published = 1 and slug = %s and date <= %s
         limit 1
         """,
         [slug, today_iso()],

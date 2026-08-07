@@ -38,9 +38,9 @@ def make_note(content_html: str, title: str = "Failure Detection") -> ParsedNote
 
 
 class FakeChunksClient:
-    def __init__(self, table_sql: str | None = None) -> None:
+    def __init__(self, vector_type: str | None = None) -> None:
         self.executed: list[tuple[str, list[object] | None]] = []
-        self.table_sql = table_sql
+        self.vector_type = vector_type
         self.search_rows: list[dict[str, object]] = []
         self.tags_rows: list[dict[str, object]] = []
         self.neighbor_rows: list[dict[str, object]] = []
@@ -49,8 +49,8 @@ class FakeChunksClient:
         self.executed.append((query, args))
         normalized = " ".join(query.split()).lower()
 
-        if "from sqlite_master" in normalized:
-            rows = [{"sql": self.table_sql}] if self.table_sql else []
+        if "from pg_attribute" in normalized:
+            rows = [{"data_type": self.vector_type}] if self.vector_type else []
             return SimpleNamespace(rows=rows)
 
         if "select slug, tags" in normalized:
@@ -59,7 +59,7 @@ class FakeChunksClient:
         if "where c.slug in" in normalized:
             return SimpleNamespace(rows=self.neighbor_rows)
 
-        if "vector_distance_cos" in normalized:
+        if "<=>" in normalized:
             return SimpleNamespace(rows=self.search_rows)
 
         return SimpleNamespace(rows=[])
@@ -123,14 +123,14 @@ def test_init_chunks_schema_creates_table() -> None:
 
     queries = [query for query, _ in fake_client.executed]
     assert not any(query.strip().lower().startswith("drop") for query in queries)
+    assert any("create extension if not exists vector" in query for query in queries)
     assert any("create table if not exists note_chunks" in query for query in queries)
-    assert any(f"F32_BLOB({settings.embedding_dim})" in query for query in queries)
+    assert any(f"vector({settings.embedding_dim})" in query for query in queries)
+    assert any("using hnsw" in query for query in queries)
 
 
 def test_init_chunks_schema_recreates_on_dim_mismatch() -> None:
-    fake_client = FakeChunksClient(
-        table_sql="CREATE TABLE note_chunks (embedding F32_BLOB(42) not null)"
-    )
+    fake_client = FakeChunksClient(vector_type="vector(42)")
 
     asyncio.run(init_chunks_schema(fake_client))
 
@@ -139,9 +139,7 @@ def test_init_chunks_schema_recreates_on_dim_mismatch() -> None:
 
 
 def test_init_chunks_schema_keeps_matching_table() -> None:
-    fake_client = FakeChunksClient(
-        table_sql=f"CREATE TABLE note_chunks (embedding F32_BLOB({settings.embedding_dim}))"
-    )
+    fake_client = FakeChunksClient(vector_type=f"vector({settings.embedding_dim})")
 
     asyncio.run(init_chunks_schema(fake_client))
 
@@ -155,7 +153,7 @@ def test_upsert_chunk_binds_embedding_as_json() -> None:
     asyncio.run(upsert_chunk(fake_client, "slug", 0, "Heading", "text", "hash", [0.1, 0.2]))
 
     query, args = fake_client.executed[0]
-    assert "vector32(?)" in query
+    assert "%s::vector" in query
     assert args is not None
     assert json.loads(str(args[-1])) == [0.1, 0.2]
 
@@ -234,7 +232,7 @@ def test_search_chunks_in_slugs_binds_slugs_and_limit() -> None:
     asyncio.run(search_chunks_in_slugs(fake_client, [0.1, 0.2], ["a", "b"], k=3))
 
     query, args = fake_client.executed[0]
-    assert "where c.slug in (?, ?)" in query
+    assert "where c.slug in (%s, %s)" in query
     assert args is not None
     assert json.loads(str(args[0])) == [0.1, 0.2]
     assert args[2:] == ["a", "b", 3]
@@ -274,7 +272,7 @@ def test_expand_neighbors_returns_related_chunks_with_shared_tags() -> None:
     assert related[0].shared_tags == ("distributed-systems",)
 
     neighbor_query, neighbor_args = fake_client.executed[1]
-    assert "where c.slug in (?)" in neighbor_query
+    assert "where c.slug in (%s)" in neighbor_query
     assert neighbor_args is not None
     assert neighbor_args[2:] == ["distributed-systems/consensus", 2]
 

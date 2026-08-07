@@ -35,37 +35,37 @@ def test_root_returns_service_links() -> None:
     }
 
 
-def test_db_health_returns_503_without_turso_config() -> None:
+def test_db_health_returns_503_without_postgres_config() -> None:
     @asynccontextmanager
-    async def fake_turso_client():
-        raise DatabaseConfigError("Turso is not configured")
+    async def fake_postgres_client():
+        raise DatabaseConfigError("Postgres is not configured")
         yield
 
-    original_turso_client = main.turso_client
-    main.turso_client = fake_turso_client
+    original_postgres_client = main.postgres_client
+    main.postgres_client = fake_postgres_client
     response = client.get("/db-health")
-    main.turso_client = original_turso_client
+    main.postgres_client = original_postgres_client
 
     assert response.status_code == 503
-    assert response.json() == {"detail": "Turso is not configured"}
+    assert response.json() == {"detail": "Postgres is not configured"}
 
 
-def test_db_health_returns_turso_status(monkeypatch) -> None:
+def test_db_health_returns_postgres_status(monkeypatch) -> None:
     class FakeClient:
         async def execute(self, query: str):
             assert query == "select 1 as ok"
             return SimpleNamespace(rows=[{"ok": 1}])
 
     @asynccontextmanager
-    async def fake_turso_client():
+    async def fake_postgres_client():
         yield FakeClient()
 
-    monkeypatch.setattr(main, "turso_client", fake_turso_client)
+    monkeypatch.setattr(main, "postgres_client", fake_postgres_client)
 
     response = client.get("/db-health")
 
     assert response.status_code == 200
     assert response.json() == {
         "ok": True,
-        "database": "turso",
+        "database": "postgres",
     }

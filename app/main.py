@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 
 from app.chat import ChatRequest, stream_answer
 from app.config import settings
-from app.database import DatabaseConfigError, turso_client
+from app.database import DatabaseConfigError, postgres_client
 from app.gateway import GatewayConfigError, resolve_token
 from app.notes import get_published_note, list_published_notes
 
@@ -67,16 +67,16 @@ def read_health() -> dict[str, Any]:
 @app.get("/db-health")
 async def read_db_health() -> dict[str, Any]:
     try:
-        async with turso_client() as client:
+        async with postgres_client() as client:
             result = await client.execute("select 1 as ok")
     except DatabaseConfigError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
-        raise HTTPException(status_code=503, detail="Turso health check failed") from error
+        raise HTTPException(status_code=503, detail="Postgres health check failed") from error
 
     return {
         "ok": result.rows[0]["ok"] == 1,
-        "database": "turso",
+        "database": "postgres",
     }
 
 
@@ -89,8 +89,8 @@ async def post_chat(chat_request: ChatRequest, request: Request) -> StreamingRes
     except GatewayConfigError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
 
-    if not (settings.turso_database_url and settings.turso_auth_token):
-        raise HTTPException(status_code=503, detail="Turso is not configured")
+    if not settings.database_url:
+        raise HTTPException(status_code=503, detail="Postgres is not configured")
 
     return StreamingResponse(
         stream_answer(chat_request, token=token),
@@ -102,12 +102,12 @@ async def post_chat(chat_request: ChatRequest, request: Request) -> StreamingRes
 @app.get("/notes")
 async def read_notes(request: Request, include: str | None = None) -> Response:
     try:
-        async with turso_client() as client:
+        async with postgres_client() as client:
             notes = await list_published_notes(client, include_content=include == "content")
     except DatabaseConfigError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
-        raise HTTPException(status_code=503, detail="Turso notes query failed") from error
+        raise HTTPException(status_code=503, detail="Postgres notes query failed") from error
 
     return cached_json([note.model_dump() for note in notes], request)
 
@@ -117,12 +117,12 @@ async def read_note(slug: str, request: Request) -> Response:
     slug = slug.removesuffix(".html")
 
     try:
-        async with turso_client() as client:
+        async with postgres_client() as client:
             note = await get_published_note(client, slug)
     except DatabaseConfigError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except Exception as error:
-        raise HTTPException(status_code=503, detail="Turso note query failed") from error
+        raise HTTPException(status_code=503, detail="Postgres note query failed") from error
 
     if note is None:
         raise HTTPException(status_code=404, detail="Note not found")

@@ -132,11 +132,18 @@ def chunk_hash(text: str) -> str:
 
 
 async def init_chunks_schema(client: Any) -> None:
+    await client.execute("create extension if not exists vector")
     result = await client.execute(
-        "select sql from sqlite_master where type = 'table' and name = 'note_chunks'"
+        """
+        select format_type(attribute.atttypid, attribute.atttypmod) as data_type
+        from pg_attribute attribute
+        where attribute.attrelid = to_regclass('note_chunks')
+          and attribute.attname = 'embedding'
+          and not attribute.attisdropped
+        """
     )
     if result.rows:
-        declared = re.search(r"F32_BLOB\((\d+)\)", result.rows[0]["sql"] or "", re.IGNORECASE)
+        declared = re.fullmatch(r"vector\((\d+)\)", result.rows[0]["data_type"] or "")
         if declared is None or int(declared.group(1)) != settings.embedding_dim:
             await client.execute("drop table note_chunks")
 
@@ -148,17 +155,21 @@ async def init_chunks_schema(client: Any) -> None:
           heading text,
           text text not null,
           content_hash text not null,
-          embedding F32_BLOB({settings.embedding_dim}) not null,
-          updated_at text not null default current_timestamp,
+          embedding vector({settings.embedding_dim}) not null,
+          updated_at timestamp with time zone not null default current_timestamp,
           primary key (slug, chunk_index)
         )
         """
+    )
+    await client.execute(
+        "create index if not exists note_chunks_embedding_hnsw_idx "
+        "on note_chunks using hnsw (embedding vector_cosine_ops)"
     )
 
 
 async def get_existing_hashes(client: Any, slug: str) -> dict[int, str]:
     result = await client.execute(
-        "select chunk_index, content_hash from note_chunks where slug = ?",
+        "select chunk_index, content_hash from note_chunks where slug = %s",
         [slug],
     )
     return {row["chunk_index"]: row["content_hash"] for row in result.rows}
@@ -176,7 +187,7 @@ async def upsert_chunk(
     await client.execute(
         """
         insert into note_chunks (slug, chunk_index, heading, text, content_hash, embedding)
-        values (?, ?, ?, ?, ?, vector32(?))
+        values (%s, %s, %s, %s, %s, %s::vector)
         on conflict(slug, chunk_index) do update set
           heading = excluded.heading,
           text = excluded.text,
@@ -190,7 +201,7 @@ async def upsert_chunk(
 
 async def delete_chunks(client: Any, slug: str, from_index: int) -> None:
     await client.execute(
-        "delete from note_chunks where slug = ? and chunk_index >= ?",
+        "delete from note_chunks where slug = %s and chunk_index >= %s",
         [slug, from_index],
     )
 
@@ -200,7 +211,7 @@ async def delete_stale_slugs(client: Any, keep_slugs: list[str]) -> None:
         await client.execute("delete from note_chunks")
         return
 
-    placeholders = ", ".join("?" for _ in keep_slugs)
+    placeholders = ", ".join("%s" for _ in keep_slugs)
     await client.execute(
         f"delete from note_chunks where slug not in ({placeholders})",
         keep_slugs,
@@ -236,11 +247,11 @@ async def search_chunks(
     result = await client.execute(
         """
         select c.slug, c.chunk_index, c.heading, c.text, n.title, n.url,
-               vector_distance_cos(c.embedding, vector32(?)) as distance
+               c.embedding <=> %s::vector as distance
         from note_chunks c
-        join notes n on n.slug = c.slug and n.published = 1 and n.date <= ?
+        join notes n on n.slug = c.slug and n.published = 1 and n.date <= %s
         order by distance
-        limit ?
+        limit %s
         """,
         [json.dumps(query_embedding), today_iso(), k],
     )
@@ -328,7 +339,7 @@ async def load_lexical_candidates(client: Any) -> list[RetrievedChunk]:
         """
         select c.slug, c.chunk_index, c.heading, c.text, n.title, n.url
         from note_chunks c
-        join notes n on n.slug = c.slug and n.published = 1 and n.date <= ?
+        join notes n on n.slug = c.slug and n.published = 1 and n.date <= %s
         order by c.slug, c.chunk_index
         """,
         [today_iso()],
@@ -371,7 +382,7 @@ class RelatedChunk:
 
 async def get_published_tags(client: Any) -> dict[str, tuple[str, ...]]:
     result = await client.execute(
-        "select slug, tags from notes where published = 1 and date <= ?",
+        "select slug, tags from notes where published = 1 and date <= %s",
         [today_iso()],
     )
     return {row["slug"]: tuple(json.loads(row["tags"] or "[]")) for row in result.rows}
@@ -399,16 +410,16 @@ async def search_chunks_in_slugs(
     if not slugs or k <= 0:
         return []
 
-    placeholders = ", ".join("?" for _ in slugs)
+    placeholders = ", ".join("%s" for _ in slugs)
     result = await client.execute(
         f"""
         select c.slug, c.chunk_index, c.heading, c.text, n.title, n.url,
-               vector_distance_cos(c.embedding, vector32(?)) as distance
+               c.embedding <=> %s::vector as distance
         from note_chunks c
-        join notes n on n.slug = c.slug and n.published = 1 and n.date <= ?
+        join notes n on n.slug = c.slug and n.published = 1 and n.date <= %s
         where c.slug in ({placeholders})
         order by distance
-        limit ?
+        limit %s
         """,
         [json.dumps(query_embedding), today_iso(), *slugs, k],
     )

@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.database import turso_client
+from app.database import postgres_client
 from app.gateway import embed_texts
 from app.notes import parse_notes_tree
 from app.rag import (
@@ -27,7 +27,7 @@ async def embed_notes(notes_root: Path) -> tuple[int, int]:
     embedded = 0
     unchanged = 0
 
-    async with turso_client() as client:
+    async with postgres_client() as client:
         await init_chunks_schema(client)
 
         for note in notes:
@@ -64,7 +64,7 @@ async def embed_notes(notes_root: Path) -> tuple[int, int]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Embed note chunks into Turso.")
+    parser = argparse.ArgumentParser(description="Embed note chunks into Postgres.")
     parser.add_argument(
         "--notes-root",
         default="notes",

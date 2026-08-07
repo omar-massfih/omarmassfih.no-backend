@@ -77,9 +77,9 @@ class FakeNotesClient:
             return SimpleNamespace(rows=[])
 
         if normalized.startswith("alter table"):
-            raise RuntimeError("duplicate column name: tags")
+            return SimpleNamespace(rows=[])
 
-        if "where published = 1 and slug = ?" in normalized:
+        if "where published = 1 and slug = %s" in normalized:
             today = args[1] if args and len(args) > 1 else "9999-12-31"
             rows = [
                 note
@@ -187,7 +187,7 @@ def test_init_notes_schema_creates_table_and_index() -> None:
 
     assert len(fake_client.executed) == 3
     assert "create table if not exists notes" in fake_client.executed[0][0]
-    assert "alter table notes add column tags" in fake_client.executed[1][0]
+    assert "alter table notes add column if not exists tags" in fake_client.executed[1][0]
     assert "create index if not exists" in fake_client.executed[2][0]
 
 
@@ -246,7 +246,7 @@ def test_delete_stale_notes_keeps_current_slugs() -> None:
     asyncio.run(delete_stale_notes(client, ["a", "b"]))
 
     query, args = client.executed[0]
-    assert "delete from notes where slug not in (?, ?)" in " ".join(query.split()).lower()
+    assert "delete from notes where slug not in (%s, %s)" in " ".join(query.split()).lower()
     assert args == ["a", "b"]
 
 
@@ -271,10 +271,10 @@ def test_get_published_note_returns_note_or_none() -> None:
 
 def test_notes_endpoint_returns_published_notes(monkeypatch) -> None:
     @asynccontextmanager
-    async def fake_turso_client():
+    async def fake_postgres_client():
         yield FakeNotesClient()
 
-    monkeypatch.setattr(main, "turso_client", fake_turso_client)
+    monkeypatch.setattr(main, "postgres_client", fake_postgres_client)
 
     response = client.get("/notes")
 
@@ -285,10 +285,10 @@ def test_notes_endpoint_returns_published_notes(monkeypatch) -> None:
 
 def test_notes_endpoint_includes_content_when_requested(monkeypatch) -> None:
     @asynccontextmanager
-    async def fake_turso_client():
+    async def fake_postgres_client():
         yield FakeNotesClient()
 
-    monkeypatch.setattr(main, "turso_client", fake_turso_client)
+    monkeypatch.setattr(main, "postgres_client", fake_postgres_client)
 
     response = client.get("/notes?include=content")
 
@@ -298,10 +298,10 @@ def test_notes_endpoint_includes_content_when_requested(monkeypatch) -> None:
 
 def test_notes_endpoint_sends_cache_headers_and_304(monkeypatch) -> None:
     @asynccontextmanager
-    async def fake_turso_client():
+    async def fake_postgres_client():
         yield FakeNotesClient()
 
-    monkeypatch.setattr(main, "turso_client", fake_turso_client)
+    monkeypatch.setattr(main, "postgres_client", fake_postgres_client)
 
     response = client.get("/notes")
 
@@ -316,10 +316,10 @@ def test_notes_endpoint_sends_cache_headers_and_304(monkeypatch) -> None:
 
 def test_note_endpoint_returns_detail_or_404(monkeypatch) -> None:
     @asynccontextmanager
-    async def fake_turso_client():
+    async def fake_postgres_client():
         yield FakeNotesClient()
 
-    monkeypatch.setattr(main, "turso_client", fake_turso_client)
+    monkeypatch.setattr(main, "postgres_client", fake_postgres_client)
 
     response = client.get("/notes/software-architecture/three-laws.html")
     missing = client.get("/notes/missing.html")

@@ -14,8 +14,7 @@ client = TestClient(app)
 CONFIGURED = SimpleNamespace(
     ai_gateway_api_key="test-key",
     vercel_oidc_token=None,
-    turso_database_url="libsql://test.turso.io",
-    turso_auth_token="token",
+    database_url="postgresql://test:test@localhost/test",
     chat_top_k=6,
     chat_graph_top_k=2,
     chat_max_tokens=1000,
@@ -73,14 +72,14 @@ def configure(
             yield delta
 
     @asynccontextmanager
-    async def fake_turso_client():
+    async def fake_postgres_client():
         yield SimpleNamespace()
 
     monkeypatch.setattr(chat_module, "embed_texts", fake_embed_texts)
     monkeypatch.setattr(chat_module, "hybrid_search_chunks", fake_hybrid_search_chunks)
     monkeypatch.setattr(chat_module, "expand_neighbors", fake_expand_neighbors)
     monkeypatch.setattr(chat_module, "stream_chat", fake_stream_chat)
-    monkeypatch.setattr(chat_module, "turso_client", fake_turso_client)
+    monkeypatch.setattr(chat_module, "postgres_client", fake_postgres_client)
 
 
 def post_chat(payload):
@@ -115,8 +114,7 @@ def test_chat_returns_503_when_gateway_unconfigured(monkeypatch) -> None:
     unconfigured = SimpleNamespace(
         ai_gateway_api_key=None,
         vercel_oidc_token=None,
-        turso_database_url="libsql://test.turso.io",
-        turso_auth_token="token",
+        database_url="postgresql://test:test@localhost/test",
     )
     monkeypatch.setattr(main, "settings", unconfigured)
     monkeypatch.setattr(gateway_module, "settings", unconfigured)

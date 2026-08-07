@@ -7,7 +7,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, model_validator
 
 from app.config import settings
-from app.database import turso_client
+from app.database import postgres_client
 from app.gateway import embed_texts, stream_chat
 from app.rag import RelatedChunk, RetrievedChunk, expand_neighbors, hybrid_search_chunks
 
@@ -89,7 +89,7 @@ async def stream_answer(request: ChatRequest, token: str | None = None) -> Async
     try:
         query = request.messages[-1].content
         query_embedding = (await embed_texts([query], token=token))[0]
-        async with turso_client() as client:
+        async with postgres_client() as client:
             chunks = await hybrid_search_chunks(
                 client,
                 query,
