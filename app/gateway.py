@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import AsyncIterator
 from typing import Any
@@ -10,6 +11,9 @@ from app.config import settings
 
 EMBED_TIMEOUT = 30.0
 CHAT_TIMEOUT = 120.0
+EMBED_RETRY_BASE_DELAY = 5.0
+EMBED_RETRY_MAX_DELAY = 60.0
+RETRYABLE_GATEWAY_STATUSES = frozenset({429, 500, 502, 503, 504})
 
 
 class GatewayConfigError(RuntimeError):
@@ -31,16 +35,39 @@ def _headers(token: str | None) -> dict[str, str]:
     return {"Authorization": f"Bearer {resolve_token(token)}"}
 
 
-async def embed_texts(texts: list[str], *, token: str | None = None) -> list[list[float]]:
-    async with httpx.AsyncClient(timeout=EMBED_TIMEOUT) as client:
-        response = await client.post(
-            f"{settings.ai_gateway_base_url}/embeddings",
-            headers=_headers(token),
-            json={"model": settings.embedding_model, "input": texts},
-        )
+def _embedding_retry_delay(response: httpx.Response, attempt: int) -> float:
+    retry_after = response.headers.get("Retry-After")
+    if retry_after is not None:
+        try:
+            return min(max(float(retry_after), 0.0), EMBED_RETRY_MAX_DELAY)
+        except ValueError:
+            pass
 
-    if response.status_code != 200:
-        raise GatewayError(f"Embedding request failed with status {response.status_code}")
+    return min(EMBED_RETRY_BASE_DELAY * (2**attempt), EMBED_RETRY_MAX_DELAY)
+
+
+async def embed_texts(
+    texts: list[str], *, token: str | None = None, max_attempts: int = 1
+) -> list[list[float]]:
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be at least 1")
+
+    async with httpx.AsyncClient(timeout=EMBED_TIMEOUT) as client:
+        for attempt in range(max_attempts):
+            response = await client.post(
+                f"{settings.ai_gateway_base_url}/embeddings",
+                headers=_headers(token),
+                json={"model": settings.embedding_model, "input": texts},
+            )
+
+            if response.status_code == 200:
+                break
+
+            is_retryable = response.status_code in RETRYABLE_GATEWAY_STATUSES
+            if not is_retryable or attempt == max_attempts - 1:
+                raise GatewayError(f"Embedding request failed with status {response.status_code}")
+
+            await asyncio.sleep(_embedding_retry_delay(response, attempt))
 
     data = sorted(response.json()["data"], key=lambda item: item["index"])
     return [item["embedding"] for item in data]

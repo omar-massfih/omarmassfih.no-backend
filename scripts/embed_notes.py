@@ -34,15 +34,14 @@ async def embed_notes(notes_root: Path) -> tuple[int, int]:
             chunks = chunk_note(note)
             existing = await get_existing_hashes(client, note.slug)
 
-            pending = [
-                (index, chunk, chunk_hash(chunk.text))
-                for index, chunk in enumerate(chunks)
-            ]
+            pending = [(index, chunk, chunk_hash(chunk.text)) for index, chunk in enumerate(chunks)]
             changed = [item for item in pending if existing.get(item[0]) != item[2]]
             unchanged += len(pending) - len(changed)
 
             if changed:
-                embeddings = await embed_texts([chunk.text for _, chunk, _ in changed])
+                embeddings = await embed_texts(
+                    [chunk.text for _, chunk, _ in changed], max_attempts=5
+                )
                 for (index, chunk, content_hash), embedding in zip(
                     changed, embeddings, strict=True
                 ):
