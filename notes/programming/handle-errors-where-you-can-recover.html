@@ -1,0 +1,281 @@
+---
+title: Handle Errors Where You Can Recover
+heading: Handle Errors Where You Can Recover
+listTitle: Handle Errors Where You Can Recover
+description: A practical way to decide when to catch, raise, translate, or simply let an exception bubble up—and why doing nothing can be the correct error-handling strategy.
+lang: en
+category: Programming
+date: 2026-08-07
+dateText: Aug 7
+tags: programming, python, exceptions, error-handling, eafp, separation-of-concerns
+---
+  <p>
+    Good Python error handling is not mainly about knowing the syntax of
+    <code>try</code> and <code>except</code>. It is about deciding <em>which layer</em>
+    has enough context to respond meaningfully to a failure. The central rule is:
+    catch an exception only where the program can make a useful decision about it.
+    If the current function cannot recover, let the exception travel upward.
+  </p>
+
+  <h2>Not catching can be correct handling</h2>
+  <p>
+    Imagine an HTTP endpoint calling <code>create_user()</code>, which calls
+    <code>save_user()</code>, which calls the database. If PostgreSQL is temporarily
+    unavailable, <code>save_user()</code> probably cannot repair it. Catching the
+    failure there merely to print a message does not make the operation succeed:
+  </p>
+
+  <pre><code class="language-python">def save_user(user):
+    try:
+        database.insert(user)
+    except DatabaseError:
+        print("Something went wrong")</code></pre>
+
+  <p>
+    Unless the function can retry safely, use another store, or otherwise restore a
+    valid outcome, the simpler version is usually more honest:
+  </p>
+
+  <pre><code class="language-python">def save_user(user):
+    database.insert(user)</code></pre>
+
+  <p>
+    Python will automatically offer the exception to each caller in turn. This code is
+    not ignoring the error. It is saying, “this layer cannot decide what to do; a layer
+    with more context must decide.” The eventual handler might return an HTTP 500, retry
+    a background job, show a dialog, or terminate a CLI command. Those are application
+    decisions, not database-helper decisions.
+  </p>
+
+  <h2>Ask forgiveness, but do not catch everything</h2>
+  <p>
+    “Look before you leap” (LBYL) checks whether an operation appears safe before doing
+    it. “Easier to ask forgiveness than permission” (EAFP) attempts the operation and
+    responds if it fails. Deleting a file shows why EAFP is often stronger:
+  </p>
+
+  <pre><code class="language-python"># LBYL
+if os.path.exists(path):
+    os.remove(path)
+
+# EAFP
+try:
+    os.remove(path)
+except FileNotFoundError:
+    handle_missing_file(path)</code></pre>
+
+  <p>
+    The LBYL check can become false between the check and the removal, and existence is
+    only one possible problem. Permissions, a read-only filesystem, or a directory at
+    that path can still make the operation fail. The operation itself is the final
+    authority on whether it succeeded.
+  </p>
+
+  <p>
+    EAFP does <strong>not</strong> mean wrapping every call in
+    <code>except Exception</code>. Catch only failures you expect and can handle. A broad
+    catch can turn a programming bug such as a <code>NameError</code> into a misleading
+    “user not found” result:
+  </p>
+
+  <pre><code class="language-python">try:
+    user = get_user()
+except UserNotFound:
+    return None</code></pre>
+
+  <p>
+    Here an expected <code>UserNotFound</code> changes the program's path, while an
+    unexpected bug still produces a traceback. Specific catches protect the distinction
+    between an anticipated failure and broken code.
+  </p>
+
+  <h2>The four cases</h2>
+  <p>
+    Two questions classify almost every error-handling decision. First, did this
+    function discover a new problem, or did a called function raise it? Second, can
+    this layer recover and continue with a valid result?
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Recoverable here</th>
+        <th>Not recoverable here</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>This code detected it</th>
+        <td>Correct it locally and continue</td>
+        <td>Raise an exception</td>
+      </tr>
+      <tr>
+        <th>Called code raised it</th>
+        <td>Catch it, recover, and continue</td>
+        <td>Let it bubble up</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>New and recoverable: correct it locally</h3>
+  <p>
+    If a missing song year has a legitimate default, use it. No other layer needs to
+    participate in a decision already made:
+  </p>
+
+  <pre><code class="language-python">if song.year is None:
+    song.year = "Unknown"</code></pre>
+
+  <p>
+    An unusual condition does not automatically need an exception. Raise only when the
+    current layer needs somebody else to decide.
+  </p>
+
+  <h3>Bubbled up and recoverable: catch and take the alternative path</h3>
+  <p>
+    A lower-level failure can be meaningful control flow when the caller knows the
+    fallback:
+  </p>
+
+  <pre><code class="language-python">try:
+    artist = get_artist_from_database(song.artist)
+except NotFound:
+    artist = add_artist_to_database(song.artist)</code></pre>
+
+  <p>
+    This is genuine handling. The exception has been consumed because the program now
+    has a valid artist and can continue. Logging alone is not recovery; choosing a valid
+    alternative is.
+  </p>
+
+  <h3>New and not recoverable: raise</h3>
+  <p>
+    If a function discovers that it cannot fulfill its contract, it should stop and
+    tell its caller:
+  </p>
+
+  <pre><code class="language-python">def register_user(user):
+    if user.email is None:
+        raise ValueError("email is required")</code></pre>
+
+  <p>
+    The condition is non-recoverable for <code>register_user()</code>, but it may be
+    recoverable for an HTTP endpoint that turns it into a 400 response. Recoverability
+    is relative to a layer, not an intrinsic property of the error.
+  </p>
+
+  <h3>Bubbled up and not recoverable: let it travel</h3>
+  <p>
+    If a called function fails and the current function has no valid fallback, the best
+    implementation may contain no error-handling code at all:
+  </p>
+
+  <pre><code class="language-python">def new_song():
+    song = get_song_from_user()
+    add_song_to_database(song)</code></pre>
+
+  <p>
+    If the database is offline, <code>new_song()</code> cannot fix it. Adding a catch that
+    only prints “database failed” couples business logic to a console and discards the
+    richer traceback. Letting the exception bubble preserves both the failure and the
+    freedom for a higher layer to present it appropriately.
+  </p>
+
+  <h2>Why the outer boundary is different</h2>
+  <p>
+    Catching <code>Exception</code> deep in business logic can hide bugs. At the outer
+    boundary of a unit of work, however, a broad catch can be appropriate because the
+    application finally knows what every escaped exception means: this request, job,
+    event, or command failed.
+  </p>
+
+  <pre><code class="language-python">try:
+    run_cli()
+except Exception:
+    logger.exception("Command failed")
+    sys.exit(1)</code></pre>
+
+  <p>
+    A web framework can perform the equivalent operation for each request: log the
+    traceback, return a generic 500 response, clean up request-scoped resources, and
+    keep the server alive. A worker can mark a job failed and schedule a retry. This is
+    why generic handling belongs at boundaries instead of being duplicated throughout
+    the call stack.
+  </p>
+
+  <p>
+    <code>except Exception</code> also intentionally leaves some process-control signals
+    alone. <code>KeyboardInterrupt</code> and <code>SystemExit</code> inherit directly from
+    <code>BaseException</code>, so an ordinary catch-all does not normally interfere with
+    them.
+  </p>
+
+  <h2>Handling, observing, and swallowing are different</h2>
+  <p>A catch can serve very different purposes:</p>
+
+  <pre><code class="language-python"># Handle: produce a valid alternative and continue.
+try:
+    config = load_config()
+except FileNotFoundError:
+    config = default_config()
+
+# Observe: add useful context, then preserve the failure.
+try:
+    process(order)
+except ProcessingError:
+    logger.exception("Processing order %s failed", order.id)
+    raise
+
+# Swallow: claim success when the program may be broken.
+try:
+    process(order)
+except Exception:
+    pass</code></pre>
+
+  <p>
+    Logging does not by itself handle an exception. If this layer cannot recover after
+    recording it, re-raise it. Silencing a broad class of failures is dangerous because
+    it erases the signal that anything went wrong.
+  </p>
+
+  <h2>Translate at real abstraction boundaries</h2>
+  <p>
+    Sometimes a layer cannot recover but should prevent implementation details from
+    leaking into its public contract. A service may translate a database-driver error
+    into application language while preserving the original cause:
+  </p>
+
+  <pre><code class="language-python">try:
+    repository.save(user)
+except PsycopgError as error:
+    raise UserStorageError("Could not store user") from error</code></pre>
+
+  <p>
+    Translation is not recovery; the operation still failed. It is useful when callers
+    should depend on <code>UserStorageError</code>, not on whichever database driver is
+    currently installed. Do this at genuine abstraction boundaries, not mechanically at
+    every level, or the code becomes a stack of wrappers that add no information.
+  </p>
+
+  <h2>A practical decision rule</h2>
+  <ol>
+    <li>If this layer can produce a valid outcome, catch or correct the problem and continue.</li>
+    <li>If this layer discovers an invalid condition it cannot resolve, raise an appropriate exception.</li>
+    <li>If called code fails and this layer cannot recover, usually let the exception bubble untouched.</li>
+    <li>At a real abstraction boundary, translate the exception if callers should not know the implementation detail.</li>
+    <li>At the application's outer boundary, log or report unexpected failures and fail that unit of work safely.</li>
+  </ol>
+
+  <p>
+    The question that unlocks the whole subject is not “where should I put
+    <code>try</code>/<code>except</code>?” It is “which layer has enough information to
+    make a sensible decision about this failure?” Put the handler there. Everything
+    below it can remain straightforward business logic, and unexpected bugs retain the
+    tracebacks that make them diagnosable.
+  </p>
+
+  <p>
+    Source and further reading:
+    <a href="https://blog.miguelgrinberg.com/post/the-ultimate-guide-to-error-handling-in-python">Miguel Grinberg, “The Ultimate Guide to Error Handling in Python”</a>.
+  </p>
